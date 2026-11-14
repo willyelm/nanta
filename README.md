@@ -34,11 +34,6 @@ In development during the hackathon, November 14 to 15, 2026.
 
 - [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/), for Sun and Earth positions
   from lunar coordinates.
-- [LRO LOLA](https://pds-geosciences.wustl.edu/missions/lro/lola.htm) gridded
-  elevation, for terrain horizons.
-
-Raw elevation data is not committed. See `data/README.md` once the pipeline
-lands.
 
 ## Use of AI tools
 
