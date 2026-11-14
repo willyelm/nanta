@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"strict": true,
+		"noEmit": true,
+		"skipLibCheck": true,
+		"verbatimModuleSyntax": true,
+		"lib": ["DOM", "DOM.Iterable", "ESNext"],
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"jsx": "react-jsx",
+		"types": ["node"],
+		"allowImportingTsExtensions": true,
+		"paths": {
+			"system": ["./system"],
+			"interface": ["./interface"],
+			"position": ["./position"],
+			"site": ["./site"]
+		}
+	},
+	"include": ["**/*.ts", "**/*.tsx"],
+	"exclude": ["node_modules", "dist"]
+}
