@@ -1,0 +1,9 @@
+name = "vantage"
+main = "dist/main.js"
+compatibility_date = "2026-03-01"
+
+# No routes: deploys to the default vantage.<account>.workers.dev URL.
+
+# Files here are served before the Worker runs; everything else goes to main.tsx.
+[assets]
+directory = "./dist/public"
