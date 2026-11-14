@@ -1,0 +1,29 @@
+{
+	"name": "vantage",
+	"type": "module",
+	"private": true,
+	"description": "Plan locations against changing conditions",
+	"author": "Will Medina <williams.medinaa@gmail.com>",
+	"license": "Apache-2.0",
+	"scripts": {
+		"build": "node scripts/build.ts",
+		"dev": "node scripts/build.ts dev",
+		"typecheck": "tsc",
+		"lint": "biome lint",
+		"fix": "biome check --write",
+		"deploy": "wrangler deploy"
+	},
+	"dependencies": {
+		"react": "^19.3.1",
+		"react-dom": "^19.3.1"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.6.7",
+		"@types/node": "^24.19.2",
+		"@types/react": "^19.3.0",
+		"@types/react-dom": "^19.3.0",
+		"esbuild": "^0.28.2",
+		"typescript": "^7.0.2",
+		"wrangler": "^4.162.0"
+	}
+}
