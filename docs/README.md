@@ -65,25 +65,23 @@ the default, stored as no value, and follows the system live. The resolved
 | `--background-color-neutral`       | Page, and buttons and inputs at rest     |
 | `--background-color-neutralHover`  | Hover on a neutral item                  |
 | `--background-color-neutralActive` | Pressed or current neutral item          |
-| `--background-color-accent`        | Accent buttons, the same in both schemes |
-| `--background-color-accentHover`   | Hover on an accent button                |
-| `--background-color-accentActive`  | Pressed accent button                    |
 | `--text-color-default`             | Text                                     |
 | `--text-color-secondary`           | Secondary text                           |
-| `--text-color-onAccent`            | Text on the accent                       |
 | `--border-color-control`           | Buttons and links that act as controls   |
 | `--border-color-input`             | Text inputs                              |
 | `--border-color-divider`           | Panels and page dividers                 |
-| `--outline-color-focus`            | The focus outline, the text color        |
+| `--outline-color-focus`            | The focus outline, the accent, inside    |
 | `--chart-color-sun`, `-earth`      | Sun and Earth lines and curves, fixed    |
 | `--chart-color-horizon`            | Horizon, orbits, and the ground, fixed   |
-| `--chart-color-select`             | The selection outline in the model       |
+| `--chart-color-select`             | The accent: selection and focus outlines |
 | `--body-color-*`                   | Each body's sphere in the model          |
 
 The accent is cochineal, the Andean dye behind the crimson and magenta of
-Paracas and Inca textiles and quipu cords. The selection outline is the same
-hue, lighter. Blue only means the Earth. Panels sit over the model as
-`bg-neutral/75` with a blur, so the scene shows through.
+Paracas and Inca textiles and quipu cords. It is only ever a line: the selection
+outline in the model and the focus outline, drawn inside the edge. Nothing is
+filled with it, so the focus outline always shows. Blue only means the Earth.
+Panels sit over the model as `bg-neutral/75` with a blur, so the scene shows
+through.
 
 The chart colors are hex, because WebGL reads hex and rgb only, and are the same
 in both schemes: each sits at mid luminance, 3:1 on every neutral step, light
@@ -145,11 +143,11 @@ Each view is one step. The URL changes. The reading updates in place.
 `/` lists the bodies a site can stand on. Pointing at or focusing one moves the
 model to it. A body opens `/{code}/sites`.
 
-| Name  | NAIF ID | Air                      | Solar day       | Radius   |
-| ----- | ------- | ------------------------ | --------------- | -------- |
-| Moon  | `301`   | None. Airless horizon.   | 29.5 Earth days | 1,737 km |
-| Earth | `399`   | Yes. Refracted horizon.  | 24 h            | 6,371 km |
-| Mars  | `499`   | Thin. Refracted horizon. | 24 h 40 min     | 3,390 km |
+| Name  | NAIF ID | Air | Horizon   | Solar day     | Radius     |
+| ----- | ------- | --- | --------- | ------------- | ---------- |
+| Moon  | `301`   | No  | Geometric | `29d 12h 44m` | 1,737.4 km |
+| Earth | `399`   | Yes | Refracted | `01d 00h 00m` | 6,371.0 km |
+| Mars  | `499`   | Yes | Geometric | `01d 00h 40m` | 3,389.5 km |
 
 The whole card is the link. The air line is why elevation `0°` is not the same
 fact on every body. The Sun and the reference stars are in the model, never in
@@ -231,7 +229,8 @@ one at a time: Horizons refuses parallel requests from one client. Space is one
 state per body for the current hour. Repeat requests are cached; dev starts with
 an empty cache.
 
-The Moon is requested airless. Earth and Mars use refraction. No request
+Horizons refracts only for sites on Earth, so Earth is requested refracted, and
+the Moon and Mars airless: their horizons are geometric. No request
 includes terrain, so the horizon is the smooth sphere. Moon Trek images and LOLA
 heights are not used yet. The camera angle is kept in the URL.
 
