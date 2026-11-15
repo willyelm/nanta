@@ -79,7 +79,7 @@ export default [
 
 			// Where: a catalog site, or coordinates.
 			const id = q.get("site");
-			const site = id ? sites.find((s) => s.id === id) : null;
+			const site = id ? sites.find((s) => s.code === id) : null;
 			if (id && !site) return fail(404, `unknown site ${id}`);
 			const lat = site ? site.lat : Number(q.get("lat"));
 			const lon = site ? site.lon : Number(q.get("lon"));
@@ -108,7 +108,7 @@ export default [
 			try {
 				const result: Positions = {
 					body,
-					site: site?.id ?? null,
+					site: site?.code ?? null,
 					center,
 					lat,
 					lon,
