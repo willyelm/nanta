@@ -69,12 +69,26 @@ the default, stored as no value, and follows the system live. The resolved
 | `--background-color-accentHover`   | Hover on an accent button                |
 | `--background-color-accentActive`  | Pressed accent button                    |
 | `--text-color-default`             | Text                                     |
-| `--text-color-secondary`           | Secondary text, Earth line               |
+| `--text-color-secondary`           | Secondary text                           |
 | `--text-color-onAccent`            | Text on the accent                       |
 | `--border-color-control`           | Buttons and links that act as controls   |
 | `--border-color-input`             | Text inputs                              |
 | `--border-color-divider`           | Panels and page dividers                 |
 | `--outline-color-focus`            | The focus outline, the text color        |
+| `--chart-color-sun`, `-earth`      | Sun and Earth lines and curves, fixed    |
+| `--chart-color-horizon`            | Horizon, orbits, and the ground, fixed   |
+| `--chart-color-select`             | The selection outline in the model       |
+| `--body-color-*`                   | Each body's sphere in the model          |
+
+The accent is cochineal, the Andean dye behind the crimson and magenta of
+Paracas and Inca textiles and quipu cords. The selection outline is the same
+hue, lighter. Blue only means the Earth. Panels sit over the model as
+`bg-neutral/75` with a blur, so the scene shows through.
+
+The chart colors are hex, because WebGL reads hex and rgb only, and are the same
+in both schemes: each sits at mid luminance, 3:1 on every neutral step, light
+and dark. The body colors are a picture rather than a cue, so they are not held
+to 3:1, and the dark scheme lightens them.
 
 Operational text on its background is 6:1, the NASA-STD-3001[^nasa3001] contrast
 for text that an operator reads. Control and input borders, the focus outline,
@@ -95,12 +109,22 @@ cm console. Confirmation is on the real display.
 
 ### 2.1 Application shell
 
-A header and a main region. The header carries the name, one line of purpose,
-and the scheme switch (Auto, Light, Dark). The matched page renders in `main`.
-The page may scroll. There is no second frame.
+The model fills the screen behind everything. Over it, a header and a stable
+shape that does not change between pages:
 
-The header, the body cards, and the place list come from the server. The horizon
-chart is drawn in the browser after the samples arrive.
+- The header: the name, the camera readout at the center, the UTC clock, and the
+  scheme switch (Auto, Light, Dark).
+- A row of side panels: navigation on the left, the context of the selection on
+  the right. Each panel is as tall as its content, up to the row, then scrolls.
+- A panel across the bottom: data over time.
+
+Pages only fill the panels. Empty space passes the pointer to the model, so it
+can be turned anywhere it shows. On narrow screens the panels stack below the
+model.
+
+The camera readout names the frame and the camera's angle around what it looks
+at: azimuth and elevation in the body's frame at a site, or longitude and
+latitude on the ecliptic in space, then the distance.
 
 ### 2.2 Navigation
 
@@ -118,60 +142,81 @@ Each view is one step. The URL changes. The reading updates in place.
 
 ### 3.1 Body selector
 
-`/` is three cards. One card opens `/{code}/sites`.
+`/` lists the bodies a site can stand on. Pointing at or focusing one moves the
+model to it. A body opens `/{code}/sites`.
 
-| IAU name | Latin | Horizons | Air                      | Solar day       | Radius   |
-| -------- | ----- | -------- | ------------------------ | --------------- | -------- |
-| Moon     | Luna  | `301`    | None. Airless horizon.   | 29.5 Earth days | 1,737 km |
-| Mars     | —     | `499`    | Thin. Refracted horizon. | 24 h 40 min     | 3,390 km |
-| Earth    | Terra | `399`    | Yes. Refracted horizon.  | 24 h            | 6,371 km |
+| Name  | NAIF ID | Air                      | Solar day       | Radius   |
+| ----- | ------- | ------------------------ | --------------- | -------- |
+| Moon  | `301`   | None. Airless horizon.   | 29.5 Earth days | 1,737 km |
+| Earth | `399`   | Yes. Refracted horizon.  | 24 h            | 6,371 km |
+| Mars  | `499`   | Thin. Refracted horizon. | 24 h 40 min     | 3,390 km |
 
 The whole card is the link. The air line is why elevation `0°` is not the same
-fact on every body.
+fact on every body. The Sun and the reference stars are in the model, never in
+the list: they are references, not places.
 
 ### 3.2 Sites
 
-The catalog is a fixed list of coordinates. The south pole is the selection when
-`site` is absent. Another place updates the coordinates. A chosen window stays.
+Each body has its own sites. No site is chosen until one is picked; until then
+the model shows the body in space. A site names what it is judged on:
+
+- `sunlight`: the Sun above the horizon, which is power.
+- `earth_visibility`: the Earth above the horizon, a direct link home.
+
+Moon sites have both. Earth and Mars sites have sunlight only. The conditions
+decide which bodies Horizons is asked about and what is drawn.
 
 The windows in this version are 2027 Mar 1–3 and 2027 Jun 1–3. A window is what
-starts the fetch. The place stays when the window changes.
+starts the fetch. The site stays when the window changes. `aria-current` marks
+the site and the window.
 
-The current place is named, with latitude and longitude. `aria-current` marks
-the place and the window. The same coordinates on Earth or Mars are a stand-in.
-The catalog was written for the Moon.
+### 3.3 The model
 
-### 3.3 Horizon lines
+One scene, built once, never swapped. A selection moves only the camera.
 
-Time runs across. Elevation runs up, in degrees. The flat line is the horizon at
-`0°`. The bright line is the Sun. The dim line is the Earth. Above the line is
-up. Below the line is set.
+- Space, before a site: the Sun at the center, and the bodies where they are
+  now, from one Horizons state each, advanced by the clock. Directions and
+  distances from the Sun are true; sizes are enlarged so each body can be seen,
+  with Earth, Moon, and Mars in their true ratio.
+- A site: the body at the center and the site on it, with its horizon and an
+  outline. The camera stands on the skyline with the site's zenith as up,
+  looking toward the Earth's bearing, or the Sun's. The other bodies sit along
+  their true directions from the site; distance is drawn on a log scale.
+- The Sun lights every body from where it is, so day, night, and the line
+  between them show. Sight lines run from the site to the Sun and the Earth.
+- The brightest stars, and the four on the ecliptic, are placed in their true
+  directions, over a faint filler.
 
-The chart is a picture of the table. It draws once when the numbers arrive. It
-does not animate.
+The chart and the model are pictures of the numbers. The panels hold the
+reading.
 
 ### 3.4 Detail
 
-The table under the chart is the reading: time in UTC, Sun elevation, Earth
-elevation. Units sit on the number. A missing sample is a dash. This is the text
-a planner can quote. The chart does not replace it.
+The right panel holds each condition at the chosen time: hours above the horizon
+in the window, and the next rise or set. Under it, the table: time in UTC and
+each condition's elevation. Units sit on the number. A missing sample is a dash.
+This is the text a planner can quote.
+
+The bottom panel holds the time slider and one curve per condition, like a
+forecast. The slider moves the model, the table row, and the curves together.
 
 ## 4. System
 
 ### 4.1 Loading and rendering
 
-The server renders the frame, the body cards, and the place list. The horizon
-chart is drawn in the browser with Three.js after the samples arrive. The table
-is rendered with those same samples.
+The server renders the shell and the panels. The model is drawn in the browser
+with Three.js, on demand, only while something moves. It loads one body at a
+time and says so in a status line.
 
-| State        | What triggers it           | What the user sees                                                           |
-| ------------ | -------------------------- | ---------------------------------------------------------------------------- |
-| Body list    | `/` loads                  | Three body cards, with the reference facts.                                  |
-| No window    | `/{code}/sites` loads      | The place list, south pole selected, and "Choose a window."                  |
-| Loading      | Horizons request in flight | "Loading horizon…" The rest of the page stays.                               |
-| Ready        | Samples arrive             | The lines and the table.                                                     |
-| Error        | A request fails            | "Couldn't load sites." or "Couldn't load the horizon." The other parts stay. |
-| Unknown path | No route matches           | "Page not found." The server answers 404.                                    |
+| State        | What triggers it            | What the user sees                                           |
+| ------------ | --------------------------- | ------------------------------------------------------------ |
+| Space        | `/` loads                   | The bodies where they are now, and the body list.            |
+| No site      | `/{code}/sites` loads       | The body in space, its sites, and "Choose a site."           |
+| No window    | A site is chosen            | The site's skyline, the other bodies, and "Choose a window." |
+| Loading      | Horizons requests in flight | A panel of the same shape says what is loading.              |
+| Ready        | Samples arrive              | Conditions, the table, the curves, and exact directions.     |
+| Error        | A request fails             | A panel says what failed. The other panels stay.             |
+| Unknown path | No route matches            | "Page not found." The server answers 404.                    |
 
 ### 4.2 URL
 
@@ -181,12 +226,14 @@ reading.
 
 ### 4.3 Data and limits
 
-A window is one Sun request and one Earth request, step `6h`, at most 31 days.
-This app calls JPL Horizons. The chart does not. Repeat requests for the same
-place and window are cached.
+A window is one request per condition's body, step `1h`, at most 31 days, made
+one at a time: Horizons refuses parallel requests from one client. Space is one
+state per body for the current hour. Repeat requests are cached; dev starts with
+an empty cache.
 
-The Moon is requested airless. Earth and Mars use refraction. Neither request
-includes terrain. Moon Trek images and LOLA heights are not used.
+The Moon is requested airless. Earth and Mars use refraction. No request
+includes terrain, so the horizon is the smooth sphere. Moon Trek images and LOLA
+heights are not used yet. The camera angle is kept in the URL.
 
 There is no success percentage, no dust, no slope limit, and no hidden rank.
 
