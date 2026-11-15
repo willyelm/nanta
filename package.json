@@ -12,10 +12,9 @@
 		"lint": "biome lint",
 		"fix": "biome check --write",
 		"deploy": "wrangler deploy",
-		"test": "node --enable-source-maps --import ./scripts/test.ts --test --test-isolation=none ${npm_config_coverage:+--experimental-test-coverage --test-coverage-exclude=\"**/*.test.*\" --test-coverage-exclude=\"**/*.css\" --test-coverage-exclude=\"scripts/**\"} \"{interface,system,position,site}/**/*.test.{ts,tsx}\""
+		"test": "node --enable-source-maps --import ./scripts/test.ts --test --test-isolation=none ${npm_config_coverage:+--experimental-test-coverage --test-coverage-exclude=\"**/*.test.*\" --test-coverage-exclude=\"**/*.css\" --test-coverage-exclude=\"scripts/**\"} \"{interface,system,body,position,site}/**/*.test.{ts,tsx}\""
 	},
 	"dependencies": {
-		"iconoir-react": "^7.12.2",
 		"react": "^19.3.1",
 		"react-dom": "^19.3.1",
 		"three": "^0.187.0"
