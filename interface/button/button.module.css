@@ -1,26 +1,26 @@
 .Button {
-	font: var(--font);
-	color: var(--fgColor-body);
-	background: var(--bgColor-control);
-	border: 1px solid var(--bdColor-interactive);
-	min-block-size: var(--control);
-	min-inline-size: var(--control);
-	padding-block: var(--space-2);
-	padding-inline: var(--space-3);
-	cursor: pointer;
+  font: var(--fontSize-body) / var(--leading-standard) var(--fontFamily);
+  color: var(--fgColor-default);
+  background: var(--bgColor-neutral);
+  border: 1px solid var(--bdColor-control);
+  min-block-size: var(--size-control);
+  min-inline-size: var(--size-control);
+  padding-block: var(--space-sm);
+  padding-inline: var(--space-md);
+  cursor: pointer;
+  border-radius: var(--radius-full);
 }
 
-.Button:hover:not(:disabled),
+.Button:hover:not(:disabled) {
+  background: var(--bgColor-neutralHover);
+}
+
+.Button:active:not(:disabled),
 .Button[aria-pressed="true"] {
-	background: var(--bgColor-interactive);
-}
-
-.Button:focus-visible {
-	outline: var(--focus);
-	outline-offset: 2px;
+  background: var(--bgColor-neutralActive);
 }
 
 .Button:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
