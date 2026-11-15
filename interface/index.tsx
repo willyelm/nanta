@@ -1,4 +1,4 @@
-import { HomePage } from "interface/pages/HomePage";
+import { BodiesPage } from "interface/pages/BodiesPage";
 import { Layout } from "interface/pages/Layout";
 import { NotFoundPage } from "interface/pages/NotFoundPage";
 import { SitesPage } from "interface/pages/SitesPage";
@@ -8,6 +8,6 @@ export const routes: Routes = define([
 	route("/", {
 		index: Layout,
 		notFound: NotFoundPage,
-		children: [route("", { index: HomePage }), route("{code}/sites", { index: SitesPage })],
+		children: [route("", { index: BodiesPage }), route("{code}/sites", { index: SitesPage })],
 	}),
 ]);
