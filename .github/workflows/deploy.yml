@@ -1,8 +1,7 @@
 name: Deploy
 
+# CI paused. Re-enable the push trigger when you want auto-deploys again.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
