@@ -1,12 +1,17 @@
 import type { ReactNode } from "react";
+import { SchemeSwitch } from "../scheme/switch";
+import styles from "./Layout.module.css";
 
-// The shared page frame: header and <main>. Pages wrap themselves in it.
-export function Layout({ children }: { children: ReactNode }) {
+// The shared page frame. The matched child is `children`.
+export function Layout({ children }: { children?: ReactNode }) {
 	return (
 		<>
-			<header>
-				<h1>Nanta</h1>
-				<p>Plan locations against changing conditions.</p>
+			<header className={styles.header}>
+				<div className={styles.title}>
+					<h1>nanta</h1>
+					<p>Plan locations against changing conditions.</p>
+				</div>
+				<SchemeSwitch />
 			</header>
 			<main>{children}</main>
 		</>

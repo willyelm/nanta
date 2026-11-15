@@ -1,6 +1,7 @@
 import {
 	type ComponentType,
 	createContext,
+	type ReactNode,
 	Suspense,
 	use,
 	useEffect,
@@ -13,32 +14,65 @@ import { hydrateRoot } from "react-dom/client";
 import { browser, type Data, DataContext, DataScript, whenResumed } from "./resumable.tsx";
 import { app } from "./router.ts";
 
-export type Routes = Record<string, ComponentType>;
 export type Params = Record<string, string>;
 
-// Patterns match in order: literal segments, `:name` params, and "*" (keep it last).
-export function match(routes: Routes, pathname: string) {
-	for (const [pattern, Page] of Object.entries(routes)) {
-		const params = test(pattern, pathname);
-		if (params) return { pattern, Page, params };
-	}
-	return null;
+export type RouteNode = {
+	path: string;
+	index?: ComponentType<{ children?: ReactNode }>;
+	notFound?: ComponentType<{ children?: ReactNode }>;
+	children?: RouteNode[];
+};
+
+export function route(path: string, spec: Omit<RouteNode, "path"> = {}): RouteNode {
+	return { path, ...spec };
 }
 
-function test(pattern: string, pathname: string): Params | null {
-	if (pattern === "*") return {};
-	const parts = pattern.split("/").filter(Boolean);
+type Part = { text?: string; param?: string };
+type Page = ComponentType<{ children?: ReactNode }>;
+type Leaf = { parts: Part[]; chain: Page[] };
+
+export type Routes = { table: Map<string, Leaf>; notFound?: { chain: Page[] } };
+
+const partsOf = (path: string): Part[] =>
+	path
+		.split("/")
+		.filter(Boolean)
+		.map((segment) => (/^\{(.+)\}$/.exec(segment) ? { param: segment.slice(1, -1) } : { text: segment }));
+
+// `/{code}/sites` is `2|1=sites`. A URL probes the same shape, static bits first.
+const key = (parts: Part[]) =>
+	parts.reduce((id, part, i) => (part.text !== undefined ? `${id}|${i}=${part.text}` : id), String(parts.length));
+
+// Flatten once, at startup. More static keys are longer, so they win a shared slot.
+export function define(nodes: RouteNode[]): Routes {
+	const leaves: Leaf[] = [];
+	let notFound: Routes["notFound"];
+	const walk = (node: RouteNode, parts: Part[], chain: Page[]) => {
+		const next = parts.concat(partsOf(node.path));
+		const frame = node.index ? chain.concat(node.index) : chain;
+		if (node.notFound) notFound = { chain: frame.concat(node.notFound) };
+		if (node.children) for (const child of node.children) walk(child, next, frame);
+		else if (node.index) leaves.push({ parts: next, chain: frame });
+	};
+	for (const node of nodes) walk(node, [], []);
+	leaves.sort((a, b) => key(b.parts).length - key(a.parts).length);
+	const table = new Map<string, Leaf>();
+	for (const leaf of leaves) if (!table.has(key(leaf.parts))) table.set(key(leaf.parts), leaf);
+	return { table, notFound };
+}
+
+export function match(routes: Routes, pathname: string) {
 	const segments = pathname.split("/").filter(Boolean);
-	if (parts.length !== segments.length) return null;
-	const params: Params = {};
-	for (let i = 0; i < parts.length; i++) {
-		if (parts[i].startsWith(":")) {
-			params[parts[i].slice(1)] = decodeURIComponent(segments[i]);
-		} else if (parts[i] !== segments[i]) {
-			return null;
-		}
+	for (let mask = (1 << segments.length) - 1; mask >= 0; mask--) {
+		const leaf = routes.table.get(
+			segments.reduce((id, segment, i) => (mask & (1 << i) ? `${id}|${i}=${segment}` : id), String(segments.length)),
+		);
+		if (!leaf) continue;
+		const params: Params = {};
+		for (const [i, part] of leaf.parts.entries()) if (part.param) params[part.param] = decodeURIComponent(segments[i]);
+		return { params, chain: leaf.chain, notFound: false as const };
 	}
-	return params;
+	return routes.notFound ? { params: {}, chain: routes.notFound.chain, notFound: true as const } : null;
 }
 
 // Router
@@ -70,8 +104,8 @@ export function Router({ routes, url }: { routes: Routes; url: string }) {
 		const to = new URL(event.destination.url);
 		if (!event.canIntercept || event.hashChange || event.formData) return;
 		if (event.downloadRequest !== null || to.origin !== location.origin) return;
-		// Paths only "*" matches go to the server: 404s, API links, files.
-		if (match(routes, to.pathname)?.pattern === "*") return;
+		// Unmatched paths go to the server: 404s, API links, files.
+		if (match(routes, to.pathname)?.notFound !== false) return;
 		event.intercept({
 			handler: () =>
 				new Promise<void>((resolve) => {
@@ -90,17 +124,30 @@ export function Router({ routes, url }: { routes: Routes; url: string }) {
 	const current = new URL(href);
 	const found = match(routes, current.pathname);
 	if (!found) throw new Error(`no route matches ${current.pathname}`);
-	const { Page, params } = found;
 	return (
 		<DataContext value={data}>
-			<RouterContext value={{ url: current, params, pending }}>
-				<Page />
+			<RouterContext value={{ url: current, params: found.params, pending }}>
+				<Nest chain={found.chain} />
 			</RouterContext>
 			{/* Streams last, once every load has settled. */}
 			<Suspense fallback={null}>
 				<DataScript data={data} />
 			</Suspense>
 		</DataContext>
+	);
+}
+
+function Nest({ chain }: { chain: Page[] }) {
+	return <Level chain={chain} at={0} />;
+}
+
+function Level({ chain, at }: { chain: Page[]; at: number }) {
+	const Page = chain[at];
+	if (at + 1 >= chain.length) return <Page />;
+	return (
+		<Page>
+			<Level chain={chain} at={at + 1} />
+		</Page>
 	);
 }
 

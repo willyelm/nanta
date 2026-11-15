@@ -2,6 +2,7 @@
 // import map, style, and the script that hydrates <body> once the page's data has streamed in.
 // Static files in dist/public are served before this runs (wrangler.toml [assets]).
 
+import { schemeBoot } from "./interface/scheme";
 import { routes } from "interface";
 import position from "position";
 import { renderToReadableStream } from "react-dom/server.browser";
@@ -21,14 +22,16 @@ const importMap = JSON.stringify({
 
 const page = get("*", async (request) => {
 	const stream = await renderToReadableStream(
-		<html lang="en">
+		<html lang="en" data-scheme="light">
 			<head>
+				<script>{schemeBoot}</script>
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<title>Nanta</title>
 				<meta name="description" content="Plan locations against changing conditions." />
 				<script type="importmap">{importMap}</script>
 				<link rel="stylesheet" href={MANIFEST.style} />
+				<link rel="stylesheet" href={MANIFEST.modules} />
 				<script type="module">
 					{`import { hydrate } from "system";
 					import { routes } from "interface";
@@ -43,7 +46,7 @@ const page = get("*", async (request) => {
 
 	const found = match(routes, new URL(request.url).pathname);
 	return new Response(stream, {
-		status: found?.pattern === "*" ? 404 : 200,
+		status: found?.notFound ? 404 : 200,
 		headers: { "content-type": "text/html; charset=utf-8" },
 	});
 });
