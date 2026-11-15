@@ -4,6 +4,9 @@
 import { readFile } from "node:fs/promises";
 import type { Plugin } from "esbuild";
 
+// With `icon`, the svg gets the `icon` utility (style.css) and sizes to the text around it.
+const size = ' className={[icon && "icon", className].filter(Boolean).join(" ") || undefined}';
+
 // stroke-width to strokeWidth, xlink:href to xlinkHref; data-* and aria-* stay as they are.
 const camel = (name: string) =>
 	/^(data|aria)-/.test(name)
@@ -19,10 +22,10 @@ export function svgToJsx(source: string): string {
 		.replace(
 			/<svg([^>]*)>/,
 			(_, attrs: string) =>
-				`<svg${attrs}${attrs.includes("aria-") ? "" : ' aria-hidden="true"'} {...props}>`,
+				`<svg${attrs}${attrs.includes("aria-") ? "" : ' aria-hidden="true"'} {...props}${size}>`,
 		)
 		.trim();
-	return `export default (props) => (${svg});`;
+	return `export default ({ icon, className, ...props }) => (${svg});`;
 }
 
 export function svg(): Plugin {
