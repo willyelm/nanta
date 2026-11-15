@@ -30,6 +30,7 @@ const base: BuildOptions = {
 	jsx: "automatic",
 	logLevel: "error",
 	metafile: true,
+	loader: { ".woff2": "file" },
 };
 
 const runtimeBuild: BuildOptions = {
@@ -56,12 +57,21 @@ function output(meta: Metafile | undefined, entry: string): string {
 const url = (file: string) => `/${relative(`${dist}/public`, file)}`;
 const fromMain = (file: string) => `./${relative(dist, file)}`;
 
+// CSS imported from JS (CSS modules) is emitted next to that JS entry.
+function cssBundle(meta: Metafile | undefined, entry: string): string {
+	for (const out of Object.values(meta?.outputs ?? {})) {
+		if (out.entryPoint === entry && out.cssBundle) return out.cssBundle;
+	}
+	throw new Error(`no css bundle for ${entry}`);
+}
+
 function serverBuild(runtimeMeta?: Metafile, interfaceMeta?: Metafile): BuildOptions {
 	const system = fromMain(output(runtimeMeta, "system/index.ts"));
 	const manifest = {
 		runtime: url(output(runtimeMeta, "system/index.ts")),
 		interface: url(output(interfaceMeta, "interface/index.tsx")),
 		style: url(output(interfaceMeta, "interface/style.css")),
+		modules: url(cssBundle(interfaceMeta, "interface/index.tsx")),
 	};
 	return {
 		...base,
