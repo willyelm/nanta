@@ -40,5 +40,6 @@ export * from "./log.ts";
 export * from "./Router.tsx";
 export * from "./resumable.tsx";
 export * from "./router.ts";
+export * from "./useHydrated.ts";
 // Whole modules, for the server build's require shim: react-dom/server requires these.
 export { React, ReactDOM };
