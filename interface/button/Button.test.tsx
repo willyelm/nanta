@@ -49,3 +49,20 @@ test("passes other props and events through", async () => {
 	assert.equal(button.getAttribute("aria-pressed"), "true");
 	assert.equal(clicks, 1);
 });
+
+test("as a link, renders an anchor that looks like the button", async () => {
+	const container = document.body.appendChild(document.createElement("div"));
+	const root = createRoot(container);
+	roots.push(root);
+	await act(async () =>
+		root.render(
+			<Button as="a" href="/301/sites/new" aria-label="Add a site">
+				+
+			</Button>,
+		),
+	);
+	const link = container.querySelector("a") as HTMLAnchorElement;
+	assert.equal(link.getAttribute("href"), "/301/sites/new");
+	assert.equal(container.querySelector("button"), null);
+	assert.match(link.className, /\bborder-control\b/);
+});
