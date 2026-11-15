@@ -2,9 +2,12 @@ import { sites } from "site";
 import { get, type Handler } from "system";
 import { type Body, ephemeris, type Position } from "./ephemeris";
 
+export type { Position };
+
 export type Positions = {
 	body: Body;
 	site: string | null;
+	center: string;
 	lat: number;
 	lon: number;
 	from: string;
@@ -59,6 +62,8 @@ export default [
 			const from = q.get("from") ?? "";
 			const to = q.get("to") ?? "";
 			const step = q.get("step") ?? "1h";
+			const center = q.get("center") ?? "301";
+			if (center !== "301" && center !== "399" && center !== "499") return fail(400, "center must be 301, 399, or 499");
 			if (!DATE.test(from) || !DATE.test(to)) {
 				return fail(400, "from and to must be YYYY-MM-DD");
 			}
@@ -74,12 +79,13 @@ export default [
 				const result: Positions = {
 					body,
 					site: site?.id ?? null,
+					center,
 					lat,
 					lon,
 					from,
 					to,
 					step,
-					positions: await ephemeris(body, lat, lon, from, to, step),
+					positions: await ephemeris(body, lat, lon, from, to, step, center),
 				};
 				return Response.json(result, {
 					headers: { "cache-control": "public, max-age=86400" },

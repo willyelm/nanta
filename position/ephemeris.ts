@@ -31,11 +31,12 @@ export async function ephemeris(
 	from: string,
 	to: string,
 	step: string,
+	center = "301",
 ): Promise<Position[]> {
 	const params = new URLSearchParams({
 		format: "json",
 		COMMAND: `'${ids[body]}'`,
-		CENTER: "'coord@301'",
+		CENTER: `'coord@${center}'`,
 		COORD_TYPE: "'GEODETIC'",
 		SITE_COORD: `'${lon},${lat},0'`,
 		MAKE_EPHEM: "'YES'",
@@ -44,7 +45,8 @@ export async function ephemeris(
 		STOP_TIME: `'${to}'`,
 		STEP_SIZE: `'${step}'`,
 		QUANTITIES: "'4'",
-		APPARENT: "'AIRLESS'",
+		// The Moon has no air. Earth and Mars use refraction.
+		APPARENT: center === "301" ? "'AIRLESS'" : "'REFRACTED'",
 	});
 	const response = await fetch(`${SOURCE}?${params}`);
 	if (!response.ok) throw new Error(`source returned ${response.status}`);
