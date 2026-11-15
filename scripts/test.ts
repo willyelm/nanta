@@ -74,11 +74,6 @@ registerHooks({
 	},
 	load(url, context, next) {
 		if (!ours(url)) return next(url, context);
-		// CSS modules: every class name maps to itself.
-		if (url.endsWith(".css")) {
-			const source = "export default new Proxy({}, { get: (_, key) => key });";
-			return { format: "module", source, shortCircuit: true };
-		}
 		const loader = url.endsWith(".tsx") ? "tsx" : url.endsWith(".ts") ? "ts" : null;
 		if (!loader) return next(url, context);
 		const { code } = transformSync(readFileSync(fileURLToPath(url), "utf8"), {
