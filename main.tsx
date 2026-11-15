@@ -37,7 +37,6 @@ const page = get("*", async (request) => {
 				<meta name="description" content="Plan locations against changing conditions." />
 				<script type="importmap">{importMap}</script>
 				<link rel="stylesheet" href={MANIFEST.style} />
-				<link rel="stylesheet" href={MANIFEST.modules} />
 				<script type="module">
 					{`import { hydrate } from "system";
 					import { routes } from "interface";
