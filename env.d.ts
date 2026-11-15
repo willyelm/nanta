@@ -22,6 +22,7 @@ declare module "three" {
 		lerp(vector: Vector3, alpha: number): this;
 		distanceTo(vector: Vector3): number;
 		project(camera: PerspectiveCamera): this;
+		unproject(camera: PerspectiveCamera): this;
 		normalize(): this;
 		add(vector: Vector3): this;
 		sub(vector: Vector3): this;

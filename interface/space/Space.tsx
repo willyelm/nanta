@@ -31,16 +31,27 @@ import { advance } from "./orbit";
 
 // What the model shows: the body by Horizons code, a site on it (degrees, east longitude), and
 // the other bodies seen from that site over a window, at sample `at`.
-export type View = { body?: string; lat?: number; lon?: number; sky?: Sky; at?: number };
+export type View = {
+	body?: string;
+	lat?: number;
+	lon?: number;
+	radius?: number; // km around the site
+	sky?: Sky;
+	at?: number;
+	// Set while a site is being placed: a click on the body reports its latitude and longitude.
+	onPick?: (lat: number, lon: number) => void;
+};
 
 let view: View = {};
 let apply: ((view: View) => void) | undefined;
 
 // Sets the given parts of the view while the calling component is mounted, and clears them after.
 export function useView(part: View) {
-	const { body, lat, lon, sky, at } = part;
+	const { body, lat, lon, radius, sky, at, onPick } = part;
 	useEffect(() => {
-		const set = Object.entries({ body, lat, lon, sky, at }).filter(([, v]) => v !== undefined);
+		const set = Object.entries({ body, lat, lon, radius, sky, at, onPick }).filter(
+			([, v]) => v !== undefined,
+		);
 		view = { ...view, ...Object.fromEntries(set) };
 		apply?.(view);
 		return () => {
@@ -48,7 +59,7 @@ export function useView(part: View) {
 			for (const [key] of set) delete view[key as keyof View];
 			apply?.(view);
 		};
-	}, [body, lat, lon, sky, at]);
+	}, [body, lat, lon, radius, sky, at, onPick]);
 }
 
 // Radii in km, label names, and the body each Horizons center code names.
@@ -519,6 +530,9 @@ export function Space() {
 			}
 		};
 
+		// The body the camera last aimed at with its real position.
+		let aimed: string | undefined;
+
 		const space = (next: View) => {
 			for (const star of named) star.mesh.position.copy(starAt(star.ra, star.dec));
 			Object.assign(axes, {
@@ -561,7 +575,11 @@ export function Space() {
 				ring.position.copy(meshes[selected].position);
 				ring.scale.set(k, k, k);
 			}
-			if (next.body !== last.body || last.lat !== undefined) {
+			// Aim when the selection changes, and again once the selected body has its real position
+			// (on first load the URL picks it before its Horizons state has arrived).
+			const placed = !!selected && (selected === "sun" || meshes[selected].visible);
+			if (next.body !== last.body || last.lat !== undefined || (placed && aimed !== next.body)) {
+				aimed = placed ? next.body : undefined;
 				const at = selected ? meshes[selected].position : vec();
 				// Close enough to fill the view with the body, or the inner orbits with none.
 				// Far enough back that perspective doesn't swell a small body next to a large one.
@@ -601,9 +619,12 @@ export function Space() {
 			horizon.visible = outline.visible = hasSite;
 			ring.visible = !hasSite && next.body !== undefined;
 			if (hasSite) {
+				// The outline at the site's true radius, never smaller than can be seen.
+				const k = Math.max((next.radius ?? 0) / radius[home] / 0.155, 0.08);
 				for (const mesh of [horizon, outline]) {
 					mesh.position.copy(plus(vec(), site, 1.002));
 					mesh.lookAt(plus(vec(), site, 2));
+					mesh.scale.set(k, k, k);
 				}
 			}
 
@@ -685,9 +706,11 @@ export function Space() {
 		};
 
 		// A drag stops any ease; its movement becomes spin.
+		let pressed = { x: 0, y: 0 };
 		const down = (event: PointerEvent) => {
 			easing = false;
 			dragging = { x: event.clientX, y: event.clientY };
+			pressed = dragging;
 			el.setPointerCapture(event.pointerId);
 		};
 		const move = (event: PointerEvent) => {
@@ -698,8 +721,28 @@ export function Space() {
 			dragging = { x: event.clientX, y: event.clientY };
 			draw();
 		};
-		const up = () => {
+		// A click (not a drag) on the body, while a site is being placed, picks that point: the ray
+		// from the camera meets the unit sphere, and its direction is the latitude and longitude.
+		const up = (event: PointerEvent) => {
 			dragging = null;
+			const pick = view.onPick;
+			if (!pick || view.lat === undefined) return;
+			if (Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y) > 4) return;
+			const box = el.getBoundingClientRect();
+			const ndc = vec(
+				((event.clientX - box.left) / box.width) * 2 - 1,
+				-((event.clientY - box.top) / box.height) * 2 + 1,
+				0.5,
+			);
+			const ray = ndc.unproject(camera).sub(camera.position).normalize();
+			const b = camera.position.dot(ray);
+			const c = camera.position.dot(camera.position) - 1;
+			if (b * b - c < 0) return;
+			const t = -b - Math.sqrt(b * b - c);
+			const p = plus(camera.position, ray, t);
+			const lat = Math.asin(Math.max(-1, Math.min(1, p.y))) / toRad;
+			const lon = (Math.atan2(-p.z, p.x) / toRad + 360) % 360;
+			pick(lat, lon);
 		};
 		const wheel = (event: WheelEvent) => {
 			event.preventDefault();
