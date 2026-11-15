@@ -13,9 +13,15 @@
 		"allowImportingTsExtensions": true,
 		"paths": {
 			"system": ["./system"],
+			"system/*": ["./system/*"],
 			"interface": ["./interface"],
+			"interface/*": ["./interface/*"],
+			"body": ["./body"],
+			"body/*": ["./body/*"],
 			"position": ["./position"],
-			"site": ["./site"]
+			"position/*": ["./position/*"],
+			"site": ["./site"],
+			"site/*": ["./site/*"]
 		}
 	},
 	"include": ["**/*.ts", "**/*.tsx"],

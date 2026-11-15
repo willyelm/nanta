@@ -2,12 +2,13 @@
 // import map, style, and the script that hydrates <body> once the page's data has streamed in.
 // Static files in dist/public are served before this runs (wrangler.toml [assets]).
 
+import body from "body";
 import { routes } from "interface";
+import { schemeBoot } from "interface/scheme";
 import position from "position";
 import { renderToReadableStream } from "react-dom/server.browser";
 import site from "site";
 import { get, log, match, Router, router, since } from "system";
-import { schemeBoot } from "./interface/scheme";
 import { splash } from "./scripts/splash.ts";
 
 // Runs when the Worker loads: at dev startup and reloads, and once per production instance.
@@ -63,4 +64,4 @@ const page = get("*", async (request) => {
 	});
 });
 
-export default router(position, site, [page]);
+export default router(body, position, site, [page]);
