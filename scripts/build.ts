@@ -143,6 +143,8 @@ async function production() {
 }
 
 async function dev() {
+	// Start from an empty local cache, so answers cached by older code never come back.
+	await rm(".wrangler/state/v3/cache", { recursive: true, force: true });
 	const define = defines("development");
 	const runtimeCtx = await context({ ...runtimeBuild, define });
 	const interfaceCtx = await context({
