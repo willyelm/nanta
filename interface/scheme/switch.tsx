@@ -1,20 +1,23 @@
 import { useSyncExternalStore } from "react";
 import { Button } from "../button";
-import { readScheme, setScheme, subscribeScheme } from "./index";
-import styles from "./switch.module.css";
+import { readScheme, type Scheme, setScheme, subscribeScheme } from "./index";
 
-const serverScheme = () => "light" as const;
+const serverScheme = () => "auto" as const;
+const choices: [Scheme, string][] = [
+	["auto", "Auto"],
+	["light", "Light"],
+	["dark", "Dark"],
+];
 
 export function SchemeSwitch() {
 	const scheme = useSyncExternalStore(subscribeScheme, readScheme, serverScheme);
 	return (
-		<fieldset className={styles.SchemeSwitch} aria-label="Color scheme">
-			<Button aria-pressed={scheme === "light"} onClick={() => setScheme("light")}>
-				Light
-			</Button>
-			<Button aria-pressed={scheme === "dark"} onClick={() => setScheme("dark")}>
-				Dark
-			</Button>
+		<fieldset className="flex items-center gap-xs border-0" aria-label="Color scheme">
+			{choices.map(([value, label]) => (
+				<Button key={value} aria-pressed={scheme === value} onClick={() => setScheme(value)}>
+					{label}
+				</Button>
+			))}
 		</fieldset>
 	);
 }

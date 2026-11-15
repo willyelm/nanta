@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes } from "react";
-import styles from "./Button.module.css";
+import { classNames } from "system";
 
 export function Button({
 	className,
@@ -10,7 +10,14 @@ export function Button({
 		<button
 			{...props}
 			type={type}
-			className={className ? `${styles.Button} ${className}` : styles.Button}
+			className={classNames(
+				"font-mono text-body leading-standard text-default",
+				"bg-neutral border border-control rounded-full",
+				"min-h-control min-w-control py-sm px-md cursor-pointer",
+				"enabled:hover:bg-neutralHover pressed:bg-neutralActive",
+				"disabled:opacity-50 disabled:cursor-not-allowed",
+				className,
+			)}
 		/>
 	);
 }

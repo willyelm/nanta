@@ -1,105 +1,145 @@
-@import "./tokens.css";
+/* Tailwind's reset (preflight) and utilities. The theme below is the whole design language:
+   Tailwind's own colors and scales are cleared. Utility classes win over the base layer. */
+@layer base, utilities;
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css" layer(utilities);
 
-/* Resets */
-*,
-*::before,
-*::after {
-	box-sizing: border-box;
-}
-/* Remove default margin & padding */
-body,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-p,
-figure,
-blockquote,
-dl,
-dd,
-dialog,
-fieldset,
-svg,
-legend {
-	margin: 0;
-	padding: 0;
-}
-/* Remove list styles */
-ol,
-ul {
-	list-style: none;
-	padding: 0;
-	margin: 0;
+/* Nanta Mono: subset of Commit Mono Regular. SIL OFL 1.1.
+   https://github.com/eigilnikolajsen/commit-mono */
+@font-face {
+	font-family: "Nanta Mono";
+	src:
+		url("./nanta-mono.woff2") format("woff2"),
+		url("./nanta-mono.ttf") format("truetype");
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
 }
 
-img,
-video,
-canvas,
-audio,
-iframe,
-embed,
-object {
-	max-width: 100%;
-	display: block;
-}
-dialog {
-	background: none;
-}
-input,
-button,
-textarea,
-select {
-	font-family: var(--fontFamily);
-	color: inherit;
-	margin: 0;
-	padding: 0;
-	background: none;
-	border: none;
-	font-size: var(--fontSize-body);
+/* The bounded tokens, light values. Static: every token is declared, used or not. */
+@theme static {
+	--*: initial;
+
+	/* Neutral steps away from the page: hover, then active. */
+	--background-color-neutral: oklch(100% 0 0);
+	--background-color-neutralHover: oklch(96% 0 0);
+	--background-color-neutralActive: oklch(92% 0 0);
+	/* Accent: cobalt blue, the same in both schemes. Each step is darker; white text holds 6:1. */
+	--background-color-accent: oklch(50% 0.21 262);
+	--background-color-accentHover: oklch(45% 0.2 262);
+	--background-color-accentActive: oklch(40% 0.18 262);
+
+	--text-color-default: oklch(17.8% 0 0);
+	--text-color-secondary: oklch(38.7% 0 0);
+	--text-color-onAccent: oklch(100% 0 0);
+
+	/* Buttons and inputs sit on neutral: their border is the cue. Dividers are decorative. */
+	--border-color-control: oklch(52% 0 0);
+	--border-color-input: oklch(58% 0 0);
+	--border-color-divider: oklch(88% 0 0);
+
+	/* The focus outline: the text color, 3:1 or more on every bg. */
+	--outline-color-focus: var(--text-color-default);
+
+	/* A 4px grid. Sizes: utility is WCAG 2.5.8's 24px minimum, control the 44px target. */
+	--spacing-xs: 0.25rem;
+	--spacing-sm: 0.5rem;
+	--spacing-md: 1rem;
+	--spacing-lg: 1.5rem;
+	--spacing-utility: 1.5rem;
+	--spacing-control: 2.75rem;
+	--spacing-row: 2.5rem;
+
+	/* Corners are fixed details, so px. */
+	--radius-sm: 2px;
+	--radius-md: 4px;
+	--radius-lg: 8px;
+	--radius-full: 9999px;
+
+	/* Type: one family, seven sizes from caption to display, body at 16px. */
+	--font-mono: "Nanta Mono", ui-monospace, monospace;
+	--default-font-family: var(--font-mono);
+	--default-mono-font-family: var(--font-mono);
+	--text-caption: 0.75rem;
+	--text-label: 0.875rem;
+	--text-body: 1rem;
+	--text-subheading: 1.125rem;
+	--text-heading: 1.25rem;
+	--text-title: 1.5rem;
+	--text-display: 2rem;
+	--leading-standard: 1.5;
+	--leading-relaxed: 1.75;
 }
 
-/* Every focusable element: the text color, 2px, clear of the element. 3:1 or more on every bg. */
-:focus-visible {
-	outline: var(--focus);
-	outline-offset: -2px;
-}
-/* Chrome, Safari, Edge */
-::-webkit-scrollbar {
-	width: 4px;
-	height: 4px;
-}
-::-webkit-scrollbar-track {
-	background-color: var(--scrollbar-trackColor);
-}
-::-webkit-scrollbar-thumb {
-	background-color: var(--scrollbar-thumbColor);
-	border-radius: var(--radius-full);
-	margin: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-	background-color: var(--scrollbar-thumbColor-hover);
-}
-[data-scheme] {
-	scrollbar-width: thin;
-	scrollbar-color: var(--scrollbar-thumbColor) var(--scrollbar-trackColor);
-	--scrollbar-thumbColor: var(--bdColor-input);
-	--scrollbar-trackColor: var(--bgColor-neutralHover);
-	--scrollbar-thumbColor-hover: var(--fgColor-secondary);
+/* The scheme switch sets data-scheme on <html>. Dark overrides the colors that change. */
+[data-scheme="light"] {
+	color-scheme: light;
 }
 
-body {
-	background: var(--bgColor-neutral);
-	color: var(--fgColor-default);
-	font: var(--fontSize-body) / var(--leading-standard) var(--fontFamily);
+[data-scheme="dark"] {
+	color-scheme: dark;
+
+	--background-color-neutral: oklch(15% 0.002 286);
+	--background-color-neutralHover: oklch(21% 0.004 286);
+	--background-color-neutralActive: oklch(27% 0.006 286);
+
+	--text-color-default: oklch(94.6% 0 0);
+	--text-color-secondary: oklch(77.3% 0 0);
+
+	--border-color-control: oklch(64% 0 0);
+	--border-color-input: oklch(58% 0 0);
+	--border-color-divider: oklch(30% 0.004 286);
 }
 
-p {
-	color: var(--fgColor-secondary);
-}
+/* dark: for the rare one-off; the colors above already switch. */
+@custom-variant dark (&:where([data-scheme="dark"], [data-scheme="dark"] *));
 
-/* Results dim while the next page loads (useNavigating in system/Router.tsx). */
-[aria-busy="true"] {
-	opacity: 0.6;
+/* pressed: the selected neutral item. Being clicked, a toggle's choice, or the current link. */
+@custom-variant pressed (
+	&:active,
+	&[aria-pressed="true"],
+	&[aria-current]:not([aria-current="false"])
+);
+
+@layer base {
+	body {
+		background: var(--background-color-neutral);
+		color: var(--text-color-default);
+		font: var(--text-body) / var(--leading-standard) var(--font-mono);
+	}
+
+	p {
+		color: var(--text-color-secondary);
+	}
+
+	/* Every focusable element: the text color, 2px, clear of the element. 3:1 or more on every bg. */
+	:focus-visible {
+		outline: 2px solid var(--outline-color-focus);
+		outline-offset: -2px;
+	}
+
+	/* Thin scrollbars in the token colors. */
+	[data-scheme] {
+		scrollbar-width: thin;
+		scrollbar-color: var(--border-color-input) var(--background-color-neutralHover);
+	}
+	::-webkit-scrollbar {
+		width: 4px;
+		height: 4px;
+	}
+	::-webkit-scrollbar-track {
+		background-color: var(--background-color-neutralHover);
+	}
+	::-webkit-scrollbar-thumb {
+		background-color: var(--border-color-input);
+		border-radius: var(--radius-full);
+	}
+	::-webkit-scrollbar-thumb:hover {
+		background-color: var(--text-color-secondary);
+	}
+
+	/* Results dim while the next page loads (useNavigating in system/Router.tsx). */
+	[aria-busy="true"] {
+		opacity: 0.6;
+	}
 }

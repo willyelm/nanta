@@ -1,5 +1,4 @@
 import { TextBox } from "../text/TextBox";
-import styles from "./date.module.css";
 import { DateSegments } from "./segments";
 
 // A UTC window: start date, then end date.
@@ -19,7 +18,7 @@ export function DateRangeInput({
 	return (
 		<TextBox as="fieldset" aria-label={label}>
 			<DateSegments name={`${label} start`} value={start} onChange={onStartChange} />
-			<span className={styles.literal}>to</span>
+			<span className="text-secondary">to</span>
 			<DateSegments name={`${label} end`} value={end} onChange={onEndChange} />
 		</TextBox>
 	);

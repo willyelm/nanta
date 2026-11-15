@@ -9,7 +9,6 @@ import {
 	Scene,
 	WebGLRenderer,
 } from "three";
-import styles from "./Horizon.module.css";
 
 // Elevation over the window. 0 is the horizon. Sun and Earth are separate lines.
 export function Horizon({ sun, earth }: { sun: Position[]; earth: Position[] }) {
@@ -18,8 +17,10 @@ export function Horizon({ sun, earth }: { sun: Position[]; earth: Position[] }) 
 	useEffect(() => {
 		const el = canvas.current;
 		if (!el) return;
-		const color = getComputedStyle(el).color;
-		const muted = getComputedStyle(el).borderTopColor;
+		// The Sun takes the text color, the Earth and the horizon the secondary text color.
+		const style = getComputedStyle(el);
+		const color = style.color;
+		const muted = style.getPropertyValue("--text-color-secondary").trim();
 		const renderer = new WebGLRenderer({ canvas: el, antialias: true, alpha: true });
 		const scene = new Scene();
 		const camera = new OrthographicCamera(-1.05, 1.05, 1.05, -1.05, 0, 1);
@@ -52,26 +53,30 @@ export function Horizon({ sun, earth }: { sun: Position[]; earth: Position[] }) 
 	}, [sun, earth]);
 
 	return (
-		<figure className={styles.Horizon}>
-			<canvas ref={canvas} />
+		<figure className="flex flex-col gap-md text-default">
+			<canvas ref={canvas} className="w-full h-[16rem] border border-divider" />
 			<figcaption>
 				Elevation in degrees. The flat line is the horizon. Bright line is the Sun, dim line is the
 				Earth.
 			</figcaption>
-			<table>
+			<table className="border-collapse">
 				<thead>
 					<tr>
-						<th>Time (UTC)</th>
-						<th>Sun</th>
-						<th>Earth</th>
+						<th className="py-xs px-sm text-start tabular-nums">Time (UTC)</th>
+						<th className="py-xs px-sm text-start tabular-nums">Sun</th>
+						<th className="py-xs px-sm text-start tabular-nums">Earth</th>
 					</tr>
 				</thead>
 				<tbody>
 					{sun.map((point, i) => (
 						<tr key={point.time}>
-							<td>{point.time.slice(0, 16).replace("T", " ")}</td>
-							<td>{point.elevation.toFixed(1)}°</td>
-							<td>{earth[i] ? `${earth[i].elevation.toFixed(1)}°` : "—"}</td>
+							<td className="py-xs px-sm text-start tabular-nums">
+								{point.time.slice(0, 16).replace("T", " ")}
+							</td>
+							<td className="py-xs px-sm text-start tabular-nums">{point.elevation.toFixed(1)}°</td>
+							<td className="py-xs px-sm text-start tabular-nums">
+								{earth[i] ? `${earth[i].elevation.toFixed(1)}°` : "—"}
+							</td>
 						</tr>
 					))}
 				</tbody>

@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import type { Site, SitePage } from "site";
 import { type Api, Catch, json, resumable, useParams, useSearchParams } from "system";
 import { Horizon } from "../horizon/Horizon";
-import styles from "./SitesPage.module.css";
 
 const windows = [
 	{ label: "2027 Mar 1–3", from: "2027-03-01", to: "2027-03-03" },
@@ -18,7 +17,7 @@ export function SitesPage() {
 	const to = params.get("to") ?? "";
 
 	return (
-		<div className={styles.page}>
+		<div className="flex flex-col gap-lg">
 			<p>
 				<a href="/">← Spheres</a>
 			</p>
@@ -57,10 +56,11 @@ function List({ code, site, from, to }: { code: string; site: string; from: stri
 
 	return (
 		<>
-			<ul className={styles.sites}>
+			<ul className="flex flex-wrap gap-sm">
 				{items.map((item) => (
 					<li key={item.id}>
 						<a
+							className="inline-flex items-center min-h-control px-md border border-control text-default no-underline hover:bg-neutralHover pressed:bg-neutralActive"
 							href={href({ site: item.id })}
 							aria-current={item.id === selected?.id ? "true" : undefined}
 						>
@@ -88,15 +88,16 @@ function Place({
 	href: (next: { from?: string; to?: string }) => string;
 }) {
 	return (
-		<section className={styles.place}>
+		<section className="flex flex-col gap-md">
 			<h3>{site.name}</h3>
 			<p>
 				{site.lat.toFixed(3)}°, {site.lon.toFixed(3)}°E
 			</p>
-			<ul className={styles.windows}>
+			<ul className="flex flex-wrap gap-sm">
 				{windows.map((window) => (
 					<li key={window.from}>
 						<a
+							className="inline-flex items-center min-h-control px-md border border-control text-default no-underline hover:bg-neutralHover pressed:bg-neutralActive"
 							href={href({ from: window.from, to: window.to })}
 							aria-current={from === window.from && to === window.to ? "true" : undefined}
 						>

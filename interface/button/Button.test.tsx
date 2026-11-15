@@ -32,9 +32,10 @@ test("keeps an explicit type", async () => {
 	assert.equal(button.type, "submit");
 });
 
-test("adds a className after its own class", async () => {
-	assert.equal((await render(<Button />)).className, "Button");
-	assert.equal((await render(<Button className="wide" />)).className, "Button wide");
+test("adds a className after its own classes", async () => {
+	const own = (await render(<Button />)).className;
+	assert.match(own, /\bborder-control\b/);
+	assert.equal((await render(<Button className="wide" />)).className, `${own} wide`);
 });
 
 test("passes other props and events through", async () => {

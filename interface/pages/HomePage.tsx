@@ -1,5 +1,3 @@
-import styles from "./HomePage.module.css";
-
 const bodies = [
 	{
 		code: "301",
@@ -29,26 +27,30 @@ const bodies = [
 
 export function HomePage() {
 	return (
-		<div className={styles.page}>
+		<div className="flex flex-col gap-lg">
 			<h2>Body</h2>
-			<nav className={styles.choices} aria-label="Body">
+			<nav className="flex flex-col flex-wrap gap-md" aria-label="Body">
 				{bodies.map((body) => (
-					<a key={body.code} className={styles.choice} href={`/${body.code}/sites`}>
-						<span className={styles.name}>{body.name}</span>
-						<dl>
+					<a
+						key={body.code}
+						className="flex flex-col gap-md flex-[1_1_16rem] min-h-control p-lg border border-control bg-neutral text-default no-underline hover:bg-neutralHover pressed:bg-neutralActive"
+						href={`/${body.code}/sites`}
+					>
+						<span className="text-heading">{body.name}</span>
+						<dl className="grid grid-cols-[6.5rem_1fr] gap-x-md gap-y-xs">
 							{body.latin ? (
 								<>
-									<dt>Latin</dt>
+									<dt className="text-secondary">Latin</dt>
 									<dd>{body.latin}</dd>
 								</>
 							) : null}
-							<dt>Horizons</dt>
+							<dt className="text-secondary">Horizons</dt>
 							<dd>{body.code}</dd>
-							<dt>Air</dt>
+							<dt className="text-secondary">Air</dt>
 							<dd>{body.air}</dd>
-							<dt>Solar day</dt>
+							<dt className="text-secondary">Solar day</dt>
 							<dd>{body.day}</dd>
-							<dt>Radius</dt>
+							<dt className="text-secondary">Radius</dt>
 							<dd>{body.radius}</dd>
 						</dl>
 					</a>

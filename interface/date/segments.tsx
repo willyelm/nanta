@@ -1,5 +1,4 @@
 import { Fragment, type KeyboardEvent, useRef, useState } from "react";
-import styles from "./date.module.css";
 
 type Part = "year" | "month" | "day";
 
@@ -160,7 +159,7 @@ export function DateSegments({
 				return (
 					<Fragment key={part}>
 						{index > 0 ? (
-							<span className={styles.literal} aria-hidden="true">
+							<span className="text-secondary" aria-hidden="true">
 								-
 							</span>
 						) : null}
@@ -173,7 +172,7 @@ export function DateSegments({
 							aria-valuetext={show(part, valueNow)}
 							tabIndex={focus === part ? 0 : -1}
 							data-empty={valueNow == null}
-							className={styles.segment}
+							className="px-xs tabular-nums focus:bg-neutralActive focus:outline-none data-[empty=true]:text-secondary"
 							ref={(node) => {
 								if (node) refs.current[part] = node;
 							}}
