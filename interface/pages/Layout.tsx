@@ -12,9 +12,10 @@ export function Layout({ children }: { children?: ReactNode }) {
 			<Space />
 			{/* Three equal columns, so the camera readout sits at the center of the screen. */}
 			<header className="grid grid-cols-3 items-center gap-lg ">
-				<div className="flex items-center flex-row gap-sm">
+				{/* The logo goes home. The svg is hidden, so the link's name comes from its label. */}
+				<a href="/" aria-label="Nanta, home" className="flex items-center justify-self-start">
 					<Nanta height={40} />
-				</div>
+				</a>
 				<div className="justify-self-center">
 					<CameraReadout />
 				</div>
