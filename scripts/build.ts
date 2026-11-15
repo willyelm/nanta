@@ -13,6 +13,7 @@ import {
 	type Metafile,
 	type Plugin,
 } from "esbuild";
+import { splash } from "./splash.ts";
 
 const dist = "dist";
 const statics = `${dist}/public/static`;
@@ -30,7 +31,7 @@ const base: BuildOptions = {
 	jsx: "automatic",
 	logLevel: "error",
 	metafile: true,
-	loader: { ".woff2": "file" },
+	loader: { ".woff2": "file", ".ttf": "file" },
 };
 
 const runtimeBuild: BuildOptions = {
@@ -146,7 +147,7 @@ async function dev() {
 	await Promise.all([runtimeCtx.watch(), interfaceCtx.watch(), serverCtx.watch()]);
 
 	// Own process group, so stopping dev also stops workerd and esbuild services.
-	const wrangler = spawn("npx", ["wrangler", "dev", "--port", "3000"], {
+	const wrangler = spawn("npx", ["wrangler", "dev", "--port", "3000", "--live-reload"], {
 		stdio: "inherit",
 		detached: true,
 	});
@@ -172,6 +173,8 @@ if (!run) {
 	console.error("usage: node scripts/build.ts [build|dev]");
 	process.exit(1);
 }
+const command = process.argv[2] ?? "build";
+splash("build", command === "build" ? "prod" : "dev");
 run().catch((error: unknown) => {
 	console.error("[build]", error);
 	process.exit(1);
