@@ -25,7 +25,7 @@ const page = get("*", async (request) => {
 			<head>
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
-				<title>Vantage</title>
+				<title>Nanta</title>
 				<meta name="description" content="Plan locations against changing conditions." />
 				<script type="importmap">{importMap}</script>
 				<link rel="stylesheet" href={MANIFEST.style} />

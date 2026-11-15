@@ -5,7 +5,7 @@ export function Layout({ children }: { children: ReactNode }) {
 	return (
 		<>
 			<header>
-				<h1>Vantage</h1>
+				<h1>Nanta</h1>
 				<p>Plan locations against changing conditions.</p>
 			</header>
 			<main>{children}</main>
