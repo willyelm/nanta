@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { transformSync } from "esbuild";
 import { JSDOM } from "jsdom";
 import { splash } from "./splash.ts";
+import { svgToJsx } from "./svg.ts";
 
 // Tests run in one process (--test-isolation=none), so this file and the splash load once.
 splash("test", "dev");
@@ -36,6 +37,29 @@ Object.assign(window, stubs);
 // No canvas in jsdom: getContext returns null quietly instead of logging "not implemented".
 window.HTMLCanvasElement.prototype.getContext = () => null;
 
+// No Popover API in jsdom, and its stylesheet hides every [popover]. Show and hide with an inline
+// display, and fire toggle with newState like browsers, so onToggle runs.
+const open = new WeakSet<HTMLElement>();
+function toggle(element: HTMLElement, show: boolean) {
+	if (open.has(element) === show) return;
+	if (show) open.add(element);
+	else open.delete(element);
+	element.style.display = show ? "block" : "";
+	const event = Object.assign(new window.Event("toggle"), { newState: show ? "open" : "closed" });
+	element.dispatchEvent(event);
+}
+Object.assign(window.HTMLElement.prototype, {
+	showPopover(this: HTMLElement) {
+		toggle(this, true);
+	},
+	hidePopover(this: HTMLElement) {
+		toggle(this, false);
+	},
+	togglePopover(this: HTMLElement) {
+		toggle(this, !open.has(this));
+	},
+});
+
 Object.assign(globalThis, { window, IS_REACT_ACT_ENVIRONMENT: true });
 
 // Every window property Node lacks becomes a global. Node has its own versions of these, but the
@@ -57,14 +81,15 @@ afterEach(() => {
 after(() => window.close());
 
 const root = new URL("../", import.meta.url);
-const aliases = new Set(["system", "interface", "position", "site"]);
+const aliases = new Set(["system", "interface", "body", "position", "site"]);
 const suffixes = ["", ".ts", ".tsx", "/index.ts", "/index.tsx"];
 const isFile = (url: string) => statSync(fileURLToPath(url), { throwIfNoEntry: false })?.isFile();
 const ours = (url?: string) => !!url?.startsWith(root.href) && !url.includes("/node_modules/");
 
 registerHooks({
 	resolve(specifier, context, next) {
-		const base = aliases.has(specifier)
+		const alias = aliases.has(specifier.split("/")[0]);
+		const base = alias
 			? new URL(specifier, root).href
 			: specifier.startsWith(".") && ours(context.parentURL)
 				? new URL(specifier, context.parentURL).href
@@ -74,9 +99,11 @@ registerHooks({
 	},
 	load(url, context, next) {
 		if (!ours(url)) return next(url, context);
-		const loader = url.endsWith(".tsx") ? "tsx" : url.endsWith(".ts") ? "ts" : null;
+		const svg = url.endsWith(".svg");
+		const loader = svg ? "jsx" : url.endsWith(".tsx") ? "tsx" : url.endsWith(".ts") ? "ts" : null;
 		if (!loader) return next(url, context);
-		const { code } = transformSync(readFileSync(fileURLToPath(url), "utf8"), {
+		const source = readFileSync(fileURLToPath(url), "utf8");
+		const { code } = transformSync(svg ? svgToJsx(source) : source, {
 			loader,
 			jsx: "automatic",
 			format: "esm",

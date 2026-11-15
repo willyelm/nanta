@@ -3,7 +3,7 @@
 // names become MANIFEST; dev keeps plain names so watch rebuilds don't change it.
 
 import { spawn } from "node:child_process";
-import { rm } from "node:fs/promises";
+import { rm, utimes } from "node:fs/promises";
 import { relative } from "node:path";
 import {
 	analyzeMetafile,
@@ -14,9 +14,11 @@ import {
 	type Plugin,
 } from "esbuild";
 import { splash } from "./splash.ts";
+import { svg } from "./svg.ts";
 import { tailwind } from "./tailwind.ts";
 
-const dist = "dist";
+// Dev builds apart from production, so `npm run build` never deletes what dev is serving.
+const dist = process.argv[2] === "dev" ? ".dev" : "dist";
 const statics = `${dist}/public/static`;
 
 // Imports that resolve to the runtime: by import map in the browser (main.tsx), by path in main.js.
@@ -46,7 +48,7 @@ const interfaceBuild: BuildOptions = {
 	entryPoints: { interface: "interface/index.tsx", style: "interface/style.css" },
 	outdir: statics,
 	external: runtime,
-	plugins: [tailwind()],
+	plugins: [tailwind(), svg()],
 };
 
 // The output file built from `entry`, as found in a metafile.
@@ -82,7 +84,7 @@ const require = (id) => {
 	throw new Error("main.js cannot require " + id);
 };`,
 		},
-		plugins: [toRuntime(system)],
+		plugins: [toRuntime(system), svg()],
 	};
 }
 
@@ -97,6 +99,21 @@ function toRuntime(path: string): Plugin {
 					? { path: args.path, external: true }
 					: { path, external: true },
 			);
+		},
+	};
+}
+
+// A client-only change (style.css) doesn't touch main.js, so Wrangler wouldn't reload. Touching
+// it after each interface rebuild restarts the Worker, which triggers live reload.
+function reloadWorker(): Plugin {
+	return {
+		name: "reload-worker",
+		setup(b) {
+			b.onEnd(async (result) => {
+				if (result.errors.length > 0) return;
+				const now = new Date();
+				await utimes(`${dist}/main.js`, now, now).catch(() => {});
+			});
 		},
 	};
 }
@@ -128,7 +145,12 @@ async function production() {
 async function dev() {
 	const define = defines("development");
 	const runtimeCtx = await context({ ...runtimeBuild, define });
-	const interfaceCtx = await context({ ...interfaceBuild, define, sourcemap: "inline" });
+	const interfaceCtx = await context({
+		...interfaceBuild,
+		define,
+		sourcemap: "inline",
+		plugins: [...(interfaceBuild.plugins ?? []), reloadWorker()],
+	});
 	// Plain names in dev: the first build's manifest stays valid while watching.
 	const runtimeOut = await runtimeCtx.rebuild();
 	const interfaceOut = await interfaceCtx.rebuild();
@@ -140,7 +162,8 @@ async function dev() {
 	await Promise.all([runtimeCtx.watch(), interfaceCtx.watch(), serverCtx.watch()]);
 
 	// Own process group, so stopping dev also stops workerd and esbuild services.
-	const wrangler = spawn("npx", ["wrangler", "dev", "--port", "3000", "--live-reload"], {
+	const args = ["dev", `${dist}/main.js`, "--assets", `${dist}/public`, "--port", "3000"];
+	const wrangler = spawn("npx", ["wrangler", ...args, "--live-reload"], {
 		stdio: "inherit",
 		detached: true,
 	});
