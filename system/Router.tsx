@@ -37,11 +37,16 @@ const partsOf = (path: string): Part[] =>
 	path
 		.split("/")
 		.filter(Boolean)
-		.map((segment) => (/^\{(.+)\}$/.exec(segment) ? { param: segment.slice(1, -1) } : { text: segment }));
+		.map((segment) =>
+			/^\{(.+)\}$/.exec(segment) ? { param: segment.slice(1, -1) } : { text: segment },
+		);
 
 // `/{code}/sites` is `2|1=sites`. A URL probes the same shape, static bits first.
 const key = (parts: Part[]) =>
-	parts.reduce((id, part, i) => (part.text !== undefined ? `${id}|${i}=${part.text}` : id), String(parts.length));
+	parts.reduce(
+		(id, part, i) => (part.text !== undefined ? `${id}|${i}=${part.text}` : id),
+		String(parts.length),
+	);
 
 // Flatten once, at startup. More static keys are longer, so they win a shared slot.
 export function define(nodes: RouteNode[]): Routes {
@@ -65,14 +70,20 @@ export function match(routes: Routes, pathname: string) {
 	const segments = pathname.split("/").filter(Boolean);
 	for (let mask = (1 << segments.length) - 1; mask >= 0; mask--) {
 		const leaf = routes.table.get(
-			segments.reduce((id, segment, i) => (mask & (1 << i) ? `${id}|${i}=${segment}` : id), String(segments.length)),
+			segments.reduce(
+				(id, segment, i) => (mask & (1 << i) ? `${id}|${i}=${segment}` : id),
+				String(segments.length),
+			),
 		);
 		if (!leaf) continue;
 		const params: Params = {};
-		for (const [i, part] of leaf.parts.entries()) if (part.param) params[part.param] = decodeURIComponent(segments[i]);
+		for (const [i, part] of leaf.parts.entries())
+			if (part.param) params[part.param] = decodeURIComponent(segments[i]);
 		return { params, chain: leaf.chain, notFound: false as const };
 	}
-	return routes.notFound ? { params: {}, chain: routes.notFound.chain, notFound: true as const } : null;
+	return routes.notFound
+		? { params: {}, chain: routes.notFound.chain, notFound: true as const }
+		: null;
 }
 
 // Router

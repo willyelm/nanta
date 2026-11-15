@@ -189,9 +189,9 @@ includes terrain. Moon Trek images and LOLA heights are not used.
 There is no success percentage, no dust, no slope limit, and no hidden rank.
 
 [^wcag2]:
-    [Web Content Accessibility Guidelines (WCAG) 2.2](https://www.w3.org/TR/WCAG22/).
+[Web Content Accessibility Guidelines (WCAG) 2.2](https://www.w3.org/TR/WCAG22/).
 
 [^apg]: [ARIA Authoring Practices Guide](https://www.w3.org/WAI/ARIA/apg/).
 
 [^nasa3001]:
-    [NASA-STD-3001 Volume 2, Human Factors, Habitability, and Environmental Health](https://standards.nasa.gov/standard/NASA/NASA-STD-3001_VOL_2).
+[NASA-STD-3001 Volume 2, Human Factors, Habitability, and Environmental Health](https://standards.nasa.gov/standard/NASA/NASA-STD-3001_VOL_2).

@@ -1,4 +1,4 @@
-import { define, route, type Routes } from "system";
+import { define, type Routes, route } from "system";
 import { HomePage } from "./pages/HomePage";
 import { Layout } from "./pages/Layout";
 import { NotFoundPage } from "./pages/NotFoundPage";

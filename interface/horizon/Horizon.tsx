@@ -1,6 +1,14 @@
-import { useEffect, useRef } from "react";
-import { BufferAttribute, BufferGeometry, Line, LineBasicMaterial, OrthographicCamera, Scene, WebGLRenderer } from "three";
 import type { Position } from "position";
+import { useEffect, useRef } from "react";
+import {
+	BufferAttribute,
+	BufferGeometry,
+	Line,
+	LineBasicMaterial,
+	OrthographicCamera,
+	Scene,
+	WebGLRenderer,
+} from "three";
 import styles from "./Horizon.module.css";
 
 // Elevation over the window. 0 is the horizon. Sun and Earth are separate lines.
@@ -15,8 +23,18 @@ export function Horizon({ sun, earth }: { sun: Position[]; earth: Position[] }) 
 		const renderer = new WebGLRenderer({ canvas: el, antialias: true, alpha: true });
 		const scene = new Scene();
 		const camera = new OrthographicCamera(-1.05, 1.05, 1.05, -1.05, 0, 1);
-		scene.add(track(sun.map((p) => p.elevation), color));
-		scene.add(track(earth.map((p) => p.elevation), muted));
+		scene.add(
+			track(
+				sun.map((p) => p.elevation),
+				color,
+			),
+		);
+		scene.add(
+			track(
+				earth.map((p) => p.elevation),
+				muted,
+			),
+		);
 		scene.add(track([0, 0], muted, true));
 		const draw = () => {
 			const width = el.clientWidth || 640;
@@ -36,7 +54,10 @@ export function Horizon({ sun, earth }: { sun: Position[]; earth: Position[] }) 
 	return (
 		<figure className={styles.Horizon}>
 			<canvas ref={canvas} />
-			<figcaption>Elevation in degrees. The flat line is the horizon. Bright line is the Sun, dim line is the Earth.</figcaption>
+			<figcaption>
+				Elevation in degrees. The flat line is the horizon. Bright line is the Sun, dim line is the
+				Earth.
+			</figcaption>
 			<table>
 				<thead>
 					<tr>

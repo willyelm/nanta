@@ -1,5 +1,5 @@
-import { Suspense } from "react";
 import type { Positions } from "position";
+import { Suspense } from "react";
 import type { Site, SitePage } from "site";
 import { type Api, Catch, json, resumable, useParams, useSearchParams } from "system";
 import { Horizon } from "../horizon/Horizon";
@@ -22,7 +22,9 @@ export function SitesPage() {
 			<p>
 				<a href="/">← Spheres</a>
 			</p>
-			<h2>{{ "301": "Moon", "399": "Earth", "499": "Mars" }[code] ?? code} · {code}</h2>
+			<h2>
+				{{ "301": "Moon", "399": "Earth", "499": "Mars" }[code] ?? code} · {code}
+			</h2>
 			<Catch fallback={<p role="alert">Couldn't load sites.</p>}>
 				<Suspense fallback={<p aria-busy="true">Loading sites…</p>}>
 					<List code={code} site={site} from={from} to={to} />
@@ -38,7 +40,9 @@ const [, useSites] = resumable(async (api: Api) => {
 
 function List({ code, site, from, to }: { code: string; site: string; from: string; to: string }) {
 	const result = useSites();
-	const items = [...result.items].sort((a, b) => Number(b.id === "south-pole") - Number(a.id === "south-pole"));
+	const items = [...result.items].sort(
+		(a, b) => Number(b.id === "south-pole") - Number(a.id === "south-pole"),
+	);
 	const selected = items.find((item) => item.id === site) ?? items[0];
 	const href = (next: { site?: string; from?: string; to?: string }) => {
 		const query = new URLSearchParams({ site: next.site ?? selected?.id ?? site });
@@ -56,7 +60,10 @@ function List({ code, site, from, to }: { code: string; site: string; from: stri
 			<ul className={styles.sites}>
 				{items.map((item) => (
 					<li key={item.id}>
-						<a href={href({ site: item.id })} aria-current={item.id === selected?.id ? "true" : undefined}>
+						<a
+							href={href({ site: item.id })}
+							aria-current={item.id === selected?.id ? "true" : undefined}
+						>
 							{item.name}
 						</a>
 					</li>
@@ -111,14 +118,16 @@ function Place({
 	);
 }
 
-const [, useHorizon] = resumable(async (api: Api, code: string, site: string, from: string, to: string) => {
-	const query = new URLSearchParams({ site, from, to, step: "6h", center: code });
-	const [sun, earth] = await Promise.all([
-		json<Positions>(api(`/api/positions/sun?${query}`)),
-		json<Positions>(api(`/api/positions/earth?${query}`)),
-	]);
-	return { sun, earth };
-});
+const [, useHorizon] = resumable(
+	async (api: Api, code: string, site: string, from: string, to: string) => {
+		const query = new URLSearchParams({ site, from, to, step: "6h", center: code });
+		const [sun, earth] = await Promise.all([
+			json<Positions>(api(`/api/positions/sun?${query}`)),
+			json<Positions>(api(`/api/positions/earth?${query}`)),
+		]);
+		return { sun, earth };
+	},
+);
 
 function Sky({ code, site, from, to }: { code: string; site: string; from: string; to: string }) {
 	const { sun, earth } = useHorizon(code, site, from, to);

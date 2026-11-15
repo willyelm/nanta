@@ -2,12 +2,12 @@
 // import map, style, and the script that hydrates <body> once the page's data has streamed in.
 // Static files in dist/public are served before this runs (wrangler.toml [assets]).
 
-import { schemeBoot } from "./interface/scheme";
 import { routes } from "interface";
 import position from "position";
 import { renderToReadableStream } from "react-dom/server.browser";
 import site from "site";
 import { get, match, Router, router } from "system";
+import { schemeBoot } from "./interface/scheme";
 
 const importMap = JSON.stringify({
 	imports: {

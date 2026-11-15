@@ -3,22 +3,22 @@
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
 }
 
 body {
-  background: var(--bgColor-canvas);
-  color: var(--fgColor-body);
-  font: var(--font);
+	background: var(--bgColor-canvas);
+	color: var(--fgColor-body);
+	font: var(--font);
 }
 
 p {
-  color: var(--fgColor-secondary);
+	color: var(--fgColor-secondary);
 }
 
 /* Results dim while the next page loads (useNavigating in system/Router.tsx). */
 [aria-busy="true"] {
-  opacity: 0.6;
+	opacity: 0.6;
 }

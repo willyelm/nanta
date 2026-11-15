@@ -63,7 +63,8 @@ export default [
 			const to = q.get("to") ?? "";
 			const step = q.get("step") ?? "1h";
 			const center = q.get("center") ?? "301";
-			if (center !== "301" && center !== "399" && center !== "499") return fail(400, "center must be 301, 399, or 499");
+			if (center !== "301" && center !== "399" && center !== "499")
+				return fail(400, "center must be 301, 399, or 499");
 			if (!DATE.test(from) || !DATE.test(to)) {
 				return fail(400, "from and to must be YYYY-MM-DD");
 			}

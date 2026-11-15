@@ -5,7 +5,10 @@ type Part = "year" | "month" | "day";
 
 const order: Part[] = ["year", "month", "day"];
 
-const limits: Record<Part, { min: number; max: number; size: number; label: string; placeholder: string }> = {
+const limits: Record<
+	Part,
+	{ min: number; max: number; size: number; label: string; placeholder: string }
+> = {
 	year: { min: 1969, max: 2100, size: 4, label: "Year", placeholder: "YYYY" },
 	month: { min: 1, max: 12, size: 2, label: "Month", placeholder: "MM" },
 	day: { min: 1, max: 31, size: 2, label: "Day", placeholder: "DD" },
@@ -32,7 +35,8 @@ export function writeDate(parts: Parts): string {
 }
 
 function maxFor(part: Part, parts: Parts) {
-	if (part === "day" && parts.year != null && parts.month != null) return daysInMonth(parts.year, parts.month);
+	if (part === "day" && parts.year != null && parts.month != null)
+		return daysInMonth(parts.year, parts.month);
 	return limits[part].max;
 }
 

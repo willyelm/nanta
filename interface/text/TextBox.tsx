@@ -7,7 +7,13 @@ type TextBoxProps<T extends ElementType> = {
 } & Omit<ComponentPropsWithoutRef<T>, "as" | "className">;
 
 // Shared field styling. `as` is the element: span for a group, input, or textarea.
-export function TextBox<T extends ElementType = "span">({ as, className, ...props }: TextBoxProps<T>) {
+export function TextBox<T extends ElementType = "span">({
+	as,
+	className,
+	...props
+}: TextBoxProps<T>) {
 	const Tag = (as ?? "span") as ElementType;
-	return <Tag className={className ? `${styles.TextBox} ${className}` : styles.TextBox} {...props} />;
+	return (
+		<Tag className={className ? `${styles.TextBox} ${className}` : styles.TextBox} {...props} />
+	);
 }

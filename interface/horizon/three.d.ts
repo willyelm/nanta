@@ -15,7 +15,14 @@ declare module "three" {
 		add(object: Line): void;
 	}
 	export class OrthographicCamera {
-		constructor(left: number, right: number, top: number, bottom: number, near: number, far: number);
+		constructor(
+			left: number,
+			right: number,
+			top: number,
+			bottom: number,
+			near: number,
+			far: number,
+		);
 	}
 	export class WebGLRenderer {
 		constructor(params?: { canvas?: HTMLCanvasElement; antialias?: boolean; alpha?: boolean });
