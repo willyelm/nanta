@@ -2,43 +2,84 @@
    https://github.com/eigilnikolajsen/commit-mono */
 @font-face {
 	font-family: "Nanta Mono";
-	src: url("./nanta-mono.woff2") format("woff2");
+	src:
+		url("./nanta-mono.woff2") format("woff2"),
+		url("./nanta-mono.ttf") format("truetype");
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
 }
 
 :root {
-	--space-1: 0.25rem;
-	--space-2: 0.5rem;
-	--space-3: 1rem;
-	--space-4: 1.5rem;
-	--space-5: 2rem;
-	--control: 2.75rem;
-	--font: 16px / 1.5 "Nanta Mono", ui-monospace, monospace;
-	--focus: 2px solid var(--fgColor-body);
+	/* One grid unit. Rem scales with the reader's font size; px is for fixed details. */
+	--unit-px: 4px;
+	--unit-rem: 0.25rem;
+	--space-xs: calc(var(--unit-rem) * 1);
+	--space-sm: calc(var(--unit-rem) * 2);
+	--space-md: calc(var(--unit-rem) * 4);
+	--space-lg: calc(var(--unit-rem) * 6);
+
+	/* Sizes: utility is WCAG 2.5.8's 24px minimum, control the 44px target, row a list line. */
+	--size-utility: calc(var(--unit-rem) * 6);
+	--size-control: calc(var(--unit-rem) * 11);
+	--size-row: calc(var(--unit-rem) * 10);
+
+	/* Corners are fixed details, so px. */
+	--radius-sm: calc(var(--unit-px) / 2);
+	--radius-md: var(--unit-px);
+	--radius-lg: calc(var(--unit-px) * 2);
+	--radius-full: 9999px;
+
+	/* Type: one family, seven sizes from caption to display, body at 16px. */
+	--fontFamily: "Nanta Mono", ui-monospace, monospace;
+	--fontSize-caption: 0.75rem;
+	--fontSize-label: 0.875rem;
+	--fontSize-body: 1rem;
+	--fontSize-subheading: 1.125rem;
+	--fontSize-heading: 1.25rem;
+	--fontSize-title: 1.5rem;
+	--fontSize-display: 2rem;
+	--leading-standard: 1.5;
+	--leading-relaxed: 1.75;
+
+	/* Accent: cobalt blue, the same in both schemes. Each step is darker; white text holds 6:1. */
+	--bgColor-accent: oklch(50% 0.21 262);
+	--bgColor-accentHover: oklch(45% 0.2 262);
+	--bgColor-accentActive: oklch(40% 0.18 262);
+	--fgColor-onAccent: oklch(100% 0 0);
+	--focus: 2px solid var(--fgColor-default);
 }
 
 :root[data-scheme="light"] {
 	color-scheme: light;
-	--bgColor-canvas: #ffffff;
-	--bgColor-panel: #f4f4f4;
-	--fgColor-body: #111111;
-	--fgColor-secondary: #444444;
-	--bgColor-control: #ffffff;
-	--bgColor-interactive: #ececec;
-	--bdColor-line: #c4c4c4;
-	--bdColor-interactive: #111111;
+
+	/* Steps away from neutral: hover, then active. */
+	--bgColor-neutral: oklch(100% 0 0);
+	--bgColor-neutralHover: oklch(96% 0 0);
+	--bgColor-neutralActive: oklch(92% 0 0);
+
+	--fgColor-default: oklch(17.8% 0 0);
+	--fgColor-secondary: oklch(38.7% 0 0);
+
+	/* Buttons and inputs sit on neutral: their border is the cue. Dividers are decorative. */
+	--bdColor-control: oklch(52% 0 0);
+	--bdColor-input: oklch(58% 0 0);
+	--bdColor-divider: oklch(88% 0 0);
 }
 
 :root[data-scheme="dark"] {
 	color-scheme: dark;
-	--bgColor-canvas: #0b0b0c;
-	--bgColor-panel: #161618;
-	--fgColor-body: #ededed;
-	--fgColor-secondary: #b5b5b5;
-	--bgColor-control: #161618;
-	--bgColor-interactive: #2a2a2e;
-	--bdColor-line: #5a5a5a;
-	--bdColor-interactive: #ededed;
+
+	/* Steps away from neutral: hover, then active. */
+	--bgColor-neutral: oklch(15% 0.002 286);
+	--bgColor-neutralHover: oklch(21% 0.004 286);
+	--bgColor-neutralActive: oklch(27% 0.006 286);
+
+	--fgColor-default: oklch(94.6% 0 0);
+	--fgColor-secondary: oklch(77.3% 0 0);
+
+	/* Buttons and inputs sit on neutral: their border is the cue. Dividers are decorative. */
+	--bdColor-control: oklch(64% 0 0);
+	--bdColor-input: oklch(58% 0 0);
+	--bdColor-divider: oklch(30% 0.004 286);
 }

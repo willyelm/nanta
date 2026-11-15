@@ -56,28 +56,29 @@ path favorable and another poor.
 
 ### 1.2 Colors and schemes
 
-The scheme is `light` or `dark`, stored as `scheme` and set on
-`<html data-scheme>` before the first paint. With nothing stored, the first
-visit follows the system once.
+The scheme choice is `auto`, `light`, or `dark`, stored as `scheme`; `auto` is
+the default, stored as no value, and follows the system live. The resolved
+`light` or `dark` is set on `<html data-scheme>` before the first paint.
 
-| Token                   | Use                                  |
-| ----------------------- | ------------------------------------ |
-| `--bgColor-canvas`      | Page                                 |
-| `--bgColor-panel`       | Cards, chart field                   |
-| `--fgColor-body`        | Text                                 |
-| `--fgColor-secondary`   | Secondary text, Earth line           |
-| `--bgColor-control`     | Fields and buttons                   |
-| `--bgColor-interactive` | Hover and the current choice         |
-| `--bdColor-line`        | Structural lines                     |
-| `--bdColor-interactive` | The current choice and button border |
+| Token                     | Use                                      |
+| ------------------------- | ---------------------------------------- |
+| `--bgColor-neutral`       | Page, and buttons and inputs at rest     |
+| `--bgColor-neutralHover`  | Hover on a neutral item                  |
+| `--bgColor-neutralActive` | Pressed or current neutral item          |
+| `--bgColor-accent`        | Accent buttons, the same in both schemes |
+| `--bgColor-accentHover`   | Hover on an accent button                |
+| `--bgColor-accentActive`  | Pressed accent button                    |
+| `--fgColor-default`       | Text                                     |
+| `--fgColor-secondary`     | Secondary text, Earth line               |
+| `--fgColor-onAccent`      | Text on the accent                       |
+| `--bdColor-control`       | Buttons and links that act as controls   |
+| `--bdColor-input`         | Text inputs                              |
+| `--bdColor-divider`       | Panels and page dividers                 |
 
 Operational text on its background is 6:1, the NASA-STD-3001[^nasa3001] contrast
-for text that an operator reads. Borders, the focus outline, and other non-text
-cues are 3:1 against the surface they sit on.
-
-Color repeats a selection. It does not carry the reading. The table does. Focus
-is a 2px outline in the text color. Controls are at least 44px (`--control`),
-with space between them.
+for text that an operator reads. Control and input borders, the focus outline,
+and other non-text cues are 3:1 against the surface they sit on. Dividers are
+decorative.
 
 ### 1.3 Typography
 
@@ -94,8 +95,8 @@ cm console. Confirmation is on the real display.
 ### 2.1 Application shell
 
 A header and a main region. The header carries the name, one line of purpose,
-and the scheme switch (Light, Dark). The matched page renders in `main`. The
-page may scroll. There is no second frame.
+and the scheme switch (Auto, Light, Dark). The matched page renders in `main`.
+The page may scroll. There is no second frame.
 
 The header, the body cards, and the place list come from the server. The horizon
 chart is drawn in the browser after the samples arrive.
@@ -189,9 +190,11 @@ includes terrain. Moon Trek images and LOLA heights are not used.
 There is no success percentage, no dust, no slope limit, and no hidden rank.
 
 [^wcag2]:
+
 [Web Content Accessibility Guidelines (WCAG) 2.2](https://www.w3.org/TR/WCAG22/).
 
 [^apg]: [ARIA Authoring Practices Guide](https://www.w3.org/WAI/ARIA/apg/).
 
 [^nasa3001]:
+
 [NASA-STD-3001 Volume 2, Human Factors, Habitability, and Environmental Health](https://standards.nasa.gov/standard/NASA/NASA-STD-3001_VOL_2).
