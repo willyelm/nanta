@@ -1,4 +1,4 @@
-import { TextBox } from "../text/TextBox";
+import { TextBox } from "interface/text";
 import { DateSegments } from "./segments";
 
 // A UTC window: start date, then end date.

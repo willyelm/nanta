@@ -1,4 +1,4 @@
-import { TextBox } from "../text/TextBox";
+import { TextBox } from "interface/text";
 import { DateSegments } from "./segments";
 
 // One UTC date. APG spin buttons: year, month, day.

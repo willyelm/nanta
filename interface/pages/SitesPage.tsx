@@ -1,8 +1,10 @@
+import type { Body } from "body";
+import { Horizon } from "interface/horizon/Horizon";
+import { Skeleton } from "interface/skeleton";
 import type { Positions } from "position";
 import { Suspense } from "react";
 import type { Site, SitePage } from "site";
 import { type Api, Catch, json, resumable, useParams, useSearchParams } from "system";
-import { Horizon } from "../horizon/Horizon";
 
 const windows = [
 	{ label: "2027 Mar 1–3", from: "2027-03-01", to: "2027-03-03" },
@@ -21,15 +23,39 @@ export function SitesPage() {
 			<p>
 				<a href="/">← Spheres</a>
 			</p>
-			<h2>
-				{{ "301": "Moon", "399": "Earth", "499": "Mars" }[code] ?? code} · {code}
-			</h2>
+			<Catch fallback={<h2>{code}</h2>}>
+				<Suspense fallback={<h2>{code}</h2>}>
+					<Heading code={code} />
+				</Suspense>
+			</Catch>
 			<Catch fallback={<p role="alert">Couldn't load sites.</p>}>
-				<Suspense fallback={<p aria-busy="true">Loading sites…</p>}>
+				<Suspense
+					fallback={
+						<div role="status" aria-busy="true" className="flex flex-wrap gap-sm">
+							<span className="sr-only">Loading sites…</span>
+							{[1, 2, 3, 4].map((key) => (
+								<Skeleton key={key} width="8rem" height="var(--spacing-control)" />
+							))}
+						</div>
+					}
+				>
 					<List code={code} site={site} from={from} to={to} />
 				</Suspense>
 			</Catch>
 		</div>
+	);
+}
+
+const [, useBody] = resumable(async (api: Api, code: string) =>
+	json<Body>(api(`/api/bodies/${encodeURIComponent(code)}`)),
+);
+
+function Heading({ code }: { code: string }) {
+	const body = useBody(code);
+	return (
+		<h2>
+			{body.name} · {body.code}
+		</h2>
 	);
 }
 
@@ -108,7 +134,14 @@ function Place({
 			</ul>
 			{from && to ? (
 				<Catch fallback={<p role="alert">Couldn't load the horizon.</p>}>
-					<Suspense fallback={<p aria-busy="true">Loading horizon…</p>}>
+					<Suspense
+						fallback={
+							<div role="status" aria-busy="true">
+								<span className="sr-only">Loading horizon…</span>
+								<Skeleton height="16rem" />
+							</div>
+						}
+					>
 						<Sky code={code} site={site.id} from={from} to={to} />
 					</Suspense>
 				</Catch>

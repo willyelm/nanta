@@ -1,8 +1,8 @@
+import { HomePage } from "interface/pages/HomePage";
+import { Layout } from "interface/pages/Layout";
+import { NotFoundPage } from "interface/pages/NotFoundPage";
+import { SitesPage } from "interface/pages/SitesPage";
 import { define, type Routes, route } from "system";
-import { HomePage } from "./pages/HomePage";
-import { Layout } from "./pages/Layout";
-import { NotFoundPage } from "./pages/NotFoundPage";
-import { SitesPage } from "./pages/SitesPage";
 
 export const routes: Routes = define([
 	route("/", {
