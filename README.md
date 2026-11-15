@@ -27,9 +27,9 @@ for the right moment.
 
 In development during the hackathon, November 14 to 15, 2026.
 
-## Product design
+## Specification
 
-[Product Design Language](docs/README.md)
+[Specification](docs/README.md)
 
 ## Logs
 
