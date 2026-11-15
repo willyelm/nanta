@@ -6,8 +6,12 @@ import { routes } from "interface";
 import position from "position";
 import { renderToReadableStream } from "react-dom/server.browser";
 import site from "site";
-import { get, match, Router, router } from "system";
+import { get, log, match, Router, router, since } from "system";
 import { schemeBoot } from "./interface/scheme";
+import { splash } from "./scripts/splash.ts";
+
+// Runs when the Worker loads: at dev startup and reloads, and once per production instance.
+splash("server", process.env.NODE_ENV === "production" ? "prod" : "dev");
 
 const importMap = JSON.stringify({
 	imports: {
@@ -21,6 +25,8 @@ const importMap = JSON.stringify({
 });
 
 const page = get("*", async (request) => {
+	const start = performance.now();
+	const { pathname } = new URL(request.url);
 	const stream = await renderToReadableStream(
 		<html lang="en" data-scheme="light">
 			<head>
@@ -44,9 +50,16 @@ const page = get("*", async (request) => {
 		</html>,
 	);
 
-	const found = match(routes, new URL(request.url).pathname);
+	const found = match(routes, pathname);
+	const status = found?.notFound ? 404 : 200;
+	// The shell is the first paint; all ready is once every streamed data load has finished.
+	log("render", pathname, status, "shell", since(start));
+	stream.allReady.then(
+		() => log("render", pathname, status, "all ready", since(start)),
+		(error: unknown) => log.error("render", pathname, "failed", since(start), error),
+	);
 	return new Response(stream, {
-		status: found?.notFound ? 404 : 200,
+		status,
 		headers: { "content-type": "text/html; charset=utf-8" },
 	});
 });
