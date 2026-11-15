@@ -11,21 +11,30 @@
 		"typecheck": "tsc",
 		"lint": "biome lint",
 		"fix": "biome check --write",
-		"deploy": "wrangler deploy"
+		"deploy": "wrangler deploy",
+		"test": "node --enable-source-maps --import ./scripts/test.ts --test --test-isolation=none ${npm_config_coverage:+--experimental-test-coverage --test-coverage-exclude=\"**/*.test.*\" --test-coverage-exclude=\"**/*.css\" --test-coverage-exclude=\"scripts/**\"} \"{interface,system,position,site}/**/*.test.{ts,tsx}\""
 	},
 	"dependencies": {
-		"lucide-react": "^1.73.0",
+		"iconoir-react": "^7.12.2",
 		"react": "^19.3.1",
 		"react-dom": "^19.3.1",
 		"three": "^0.187.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.6.7",
+		"@types/jsdom": "^30.0.0",
 		"@types/node": "^24.19.2",
 		"@types/react": "^19.3.0",
 		"@types/react-dom": "^19.3.0",
 		"esbuild": "^0.28.2",
+		"jsdom": "^31.0.1",
 		"typescript": "^7.0.2",
 		"wrangler": "^4.162.0"
-	}
+	},
+	"allowScripts": {
+		"esbuild@0.28.2": true,
+		"fsevents@2.3.3": true,
+		"workerd@1.20261113.1": true
+	},
+	"version": "0.1.0"
 }
