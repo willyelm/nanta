@@ -1,84 +1,59 @@
-import type { Positions } from "position";
-import { Suspense } from "react";
-import { type Api, Catch, json, resumable } from "system";
-import { Layout } from "./Layout";
+import styles from "./HomePage.module.css";
 
-// Sample fetches to test the API after deploying.
-const QUERY = "site=south-pole&from=2027-03-01&to=2027-03-03&step=6h";
-const SUN = `/api/positions/sun?${QUERY}`;
-const EARTH = `/api/positions/earth?${QUERY}`;
+const bodies = [
+	{
+		code: "301",
+		name: "Moon",
+		latin: "Luna",
+		air: "None. The horizon is airless.",
+		day: "29.5 Earth days",
+		radius: "1,737 km",
+	},
+	{
+		code: "499",
+		name: "Mars",
+		latin: "",
+		air: "Thin. The horizon uses refraction.",
+		day: "24 h 40 min",
+		radius: "3,390 km",
+	},
+	{
+		code: "399",
+		name: "Earth",
+		latin: "Terra",
+		air: "Yes. The horizon uses refraction.",
+		day: "24 h",
+		radius: "6,371 km",
+	},
+];
 
 export function HomePage() {
 	return (
-		<Layout>
-			<h2>Sample: south pole, March 1 to 3, 2027</h2>
-			<table>
-				<thead>
-					<tr>
-						<th>Time (UTC)</th>
-						<th>Sun elevation</th>
-						<th>Earth elevation</th>
-					</tr>
-				</thead>
-				<Catch fallback={<Failed />}>
-					<Suspense fallback={<Skeleton />}>
-						<Rows />
-					</Suspense>
-				</Catch>
-			</table>
-			<p>
-				<a href="/sites">Browse sites</a>
-			</p>
-			<p>
-				API: <a href="/api/sites">Sites</a> · <a href={SUN}>Sun</a> · <a href={EARTH}>Earth</a>
-			</p>
-		</Layout>
-	);
-}
-
-const [, usePositions] = resumable(async (api: Api) => {
-	const [sun, earth] = await Promise.all([json<Positions>(api(SUN)), json<Positions>(api(EARTH))]);
-	return { sun, earth };
-});
-
-function Rows() {
-	const { sun, earth } = usePositions();
-	return (
-		<tbody>
-			{sun.positions.map((s, i) => (
-				<tr key={s.time}>
-					<td>{s.time.slice(0, 16).replace("T", " ")}</td>
-					<td>{s.elevation.toFixed(2)}°</td>
-					<td>{earth.positions[i]?.elevation.toFixed(2)}°</td>
-				</tr>
-			))}
-		</tbody>
-	);
-}
-
-// Placeholder rows while positions load.
-function Skeleton() {
-	return (
-		<tbody aria-busy="true">
-			{[0, 1, 2, 3].map((i) => (
-				<tr key={i}>
-					<td>Loading…</td>
-					<td>—</td>
-					<td>—</td>
-				</tr>
-			))}
-		</tbody>
-	);
-}
-
-function Failed() {
-	return (
-		<tbody>
-			<tr>
-				<td colSpan={3} role="alert">
-					Couldn't load positions.
-				</td>
-			</tr>
-		</tbody>
+		<div className={styles.page}>
+			<h2>Body</h2>
+			<nav className={styles.choices} aria-label="Body">
+				{bodies.map((body) => (
+					<a key={body.code} className={styles.choice} href={`/${body.code}/sites`}>
+						<span className={styles.name}>{body.name}</span>
+						<dl>
+							{body.latin ? (
+								<>
+									<dt>Latin</dt>
+									<dd>{body.latin}</dd>
+								</>
+							) : null}
+							<dt>Horizons</dt>
+							<dd>{body.code}</dd>
+							<dt>Air</dt>
+							<dd>{body.air}</dd>
+							<dt>Solar day</dt>
+							<dd>{body.day}</dd>
+							<dt>Radius</dt>
+							<dd>{body.radius}</dd>
+						</dl>
+					</a>
+				))}
+			</nav>
+		</div>
 	);
 }

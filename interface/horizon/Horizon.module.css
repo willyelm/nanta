@@ -1,0 +1,24 @@
+.Horizon {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	color: var(--fgColor-body);
+	border-top-color: var(--fgColor-secondary);
+}
+
+.Horizon canvas {
+	inline-size: 100%;
+	block-size: 16rem;
+	background: var(--bgColor-panel);
+}
+
+.Horizon table {
+	border-collapse: collapse;
+}
+
+.Horizon th,
+.Horizon td {
+	padding: var(--space-1) var(--space-2);
+	text-align: start;
+	font-variant-numeric: tabular-nums;
+}
