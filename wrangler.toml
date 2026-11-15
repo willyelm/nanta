@@ -1,9 +1,14 @@
-name = "vantage"
+name = "nanta"
 main = "dist/main.js"
 compatibility_date = "2026-03-01"
 
-# No routes: deploys to the default vantage.<account>.workers.dev URL.
+[[routes]]
+pattern = "nanta.us"
+custom_domain = true
 
-# Files here are served before the Worker runs; everything else goes to main.tsx.
+[[routes]]
+pattern = "www.nanta.us"
+custom_domain = true
+
 [assets]
 directory = "./dist/public"
