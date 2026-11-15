@@ -16,10 +16,9 @@ test("lists the bodies", async () => {
 	const response = await fetchJson("/api/bodies");
 	assert.equal(response.status, 200);
 	const list = (await response.json()) as { code: string }[];
-	assert.deepEqual(
-		list.map((b) => b.code),
-		["301", "499", "399"],
-	);
+	const codes = list.map((b) => b.code);
+	for (const code of ["10", "301", "399", "499", "HIP 32349", "HIP 11767"])
+		assert.ok(codes.includes(code));
 });
 
 test("finds one body by code, or 404", async () => {
