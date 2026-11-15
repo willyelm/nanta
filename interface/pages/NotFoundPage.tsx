@@ -1,3 +1,11 @@
+import { Panel, Panels } from "interface/panel";
+
 export function NotFoundPage() {
-	return <p>Page not found.</p>;
+	return (
+		<Panels>
+			<Panel as="p" className="w-panel">
+				Page not found.
+			</Panel>
+		</Panels>
+	);
 }

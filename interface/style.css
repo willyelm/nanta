@@ -25,9 +25,11 @@
 	--background-color-neutralHover: oklch(96% 0 0);
 	--background-color-neutralActive: oklch(92% 0 0);
 	/* Accent: cobalt blue, the same in both schemes. Each step is darker; white text holds 6:1. */
-	--background-color-accent: oklch(50% 0.21 262);
-	--background-color-accentHover: oklch(45% 0.2 262);
-	--background-color-accentActive: oklch(40% 0.18 262);
+	/* accent: cochineal, the Andean dye behind the crimson and magenta of Paracas and Inca
+	   textiles and quipu cords. Fixed in both schemes; white text on every step. */
+	--background-color-accent: oklch(52% 0.215 352);
+	--background-color-accentHover: oklch(47% 0.195 352);
+	--background-color-accentActive: oklch(42% 0.175 352);
 
 	--text-color-default: oklch(17.8% 0 0);
 	--text-color-secondary: oklch(38.7% 0 0);
@@ -38,6 +40,15 @@
 	--chart-color-sun: #d75905;
 	--chart-color-earth: #057ff3;
 	--chart-color-horizon: #797979;
+	/* select: the accent's hue, light enough for 3:1 on every neutral, both schemes. */
+	--chart-color-select: #f4029b;
+
+	/* body: each sphere's own color in the model, a picture rather than a cue, so not held to
+	   3:1. The Sun's lines and curves keep the chart color above. Hex, for WebGL. */
+	--body-color-sun: #ffb000;
+	--body-color-mars: #b3261e;
+	--body-color-earth: #057ff3;
+	--body-color-moon: #797979;
 
 	/* Buttons and inputs sit on neutral: their border is the cue. Dividers are decorative. */
 	--border-color-control: oklch(52% 0 0);
@@ -48,6 +59,11 @@
 	--outline-color-focus: var(--text-color-default);
 
 	/* A 4px grid. Sizes: utility is WCAG 2.5.8's 24px minimum, control the 44px target. */
+	/* 0 for offsets: inset-0, top-0, left-0. */
+	/* breakpoint: wide screens, where the panels sit beside the model instead of below. */
+	--breakpoint-md: 48rem;
+
+	--spacing-0: 0;
 	--spacing-xs: 0.25rem;
 	--spacing-sm: 0.5rem;
 	--spacing-md: 1rem;
@@ -55,8 +71,16 @@
 	--spacing-utility: 1.5rem;
 	--spacing-control: 2.75rem;
 	--spacing-row: 2.5rem;
+	--spacing-scene: 31.25rem;
+	--spacing-chart: 5rem;
+
+	/* container: the side panel over the scene. */
+	--container-panel: 24rem;
 
 	/* Corners are fixed details, so px. */
+	/* blur: what a panel does to the scene behind it. */
+	--blur-panel: 4px;
+
 	--radius-sm: 2px;
 	--radius-md: 4px;
 	--radius-lg: 8px;
@@ -106,6 +130,11 @@
 	--border-color-control: oklch(64% 0 0);
 	--border-color-input: oklch(58% 0 0);
 	--border-color-divider: oklch(30% 0.004 286);
+
+	/* Lighter bodies on the dark page: the Moon near white, Earth and Mars brighter. */
+	--body-color-moon: #e6e6e6;
+	--body-color-earth: #4da3ff;
+	--body-color-mars: #e0483c;
 }
 
 /* dark: for the rare one-off; the colors above already switch. */

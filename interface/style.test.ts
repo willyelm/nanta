@@ -10,7 +10,7 @@ const css = readFileSync(new URL("./style.css", import.meta.url), "utf8");
 const bg = ["neutral", "neutralHover", "neutralActive"];
 const text = ["default", "secondary"];
 const cue = ["control", "input"];
-const chart = ["sun", "earth", "horizon"];
+const chart = ["sun", "earth", "horizon", "select"];
 
 // The theme's tokens for a scheme, without the dashes: `@theme static { ... }` holds the light
 // values, and `[data-scheme="dark"] { ... }` overrides the colors that change.
