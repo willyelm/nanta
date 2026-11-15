@@ -1,6 +1,6 @@
 // Contrast of the theme colors in style.css, both schemes, against every neutral step, as tables.
 // Text: 6:1, NASA-STD-3001 Vol. 2 for text an operator reads (also WCAG 2.2 1.4.3, 4.5:1).
-// Control and input borders: 3:1, WCAG 2.2 1.4.11. Dividers are decorative, so unchecked.
+// Control and input borders, and chart lines: 3:1, WCAG 2.2 1.4.11. Dividers are decorative, so unchecked.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
@@ -10,6 +10,7 @@ const css = readFileSync(new URL("./style.css", import.meta.url), "utf8");
 const bg = ["neutral", "neutralHover", "neutralActive"];
 const text = ["default", "secondary"];
 const cue = ["control", "input"];
+const chart = ["sun", "earth", "horizon"];
 
 // The theme's tokens for a scheme, without the dashes: `@theme static { ... }` holds the light
 // values, and `[data-scheme="dark"] { ... }` overrides the colors that change.
@@ -28,8 +29,16 @@ function scheme(name: string): Map<string, string> {
 	return new Map([...tokens].map(([k, v]) => [k, resolve(v)]));
 }
 
+// #rrggbb to linear sRGB (the sRGB transfer function, inverted).
+function hex(color: string): number[] {
+	return [1, 3, 5]
+		.map((i) => Number.parseInt(color.slice(i, i + 2), 16) / 255)
+		.map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+}
+
 // oklch(L% C H) to linear sRGB, clamped to the gamut (Björn Ottosson's OKLab matrices).
 function linear(color: string): number[] {
+	if (/^#[\da-f]{6}$/i.test(color)) return hex(color);
 	const match = color.match(/^oklch\(\s*([\d.]+)%\s+([\d.]+)\s+([\d.]+)\s*\)$/);
 	assert.ok(match, `${color} is not oklch(L% C H)`);
 	const [l, c, h] = [Number(match[1]) / 100, Number(match[2]), (Number(match[3]) * Math.PI) / 180];
@@ -108,6 +117,9 @@ for (const name of ["light", "dark"]) {
 	});
 	test(`${name}: cues on bg are at least 3:1`, () => {
 		check(`${name}: cues on bg`, combinations(tokens, "border-color", "cue", cue, "names"), 3);
+	});
+	test(`${name}: chart lines on bg are at least 3:1`, () => {
+		check(`${name}: chart on bg`, combinations(tokens, "chart-color", "chart", chart, "names"), 3);
 	});
 	// The accent is fixed: white text on every accent step at 6:1, and the fill at 3:1 on the page.
 	test(`${name}: accent`, () => {

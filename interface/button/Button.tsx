@@ -12,7 +12,8 @@ export function Button({
 			type={type}
 			className={classNames(
 				"font-mono text-body leading-standard text-default",
-				"bg-neutral border border-control rounded-full",
+				"inline-flex items-center justify-center gap-xs",
+				"bg-neutral border border-control",
 				"min-h-control min-w-control py-sm px-md cursor-pointer",
 				"enabled:hover:bg-neutralHover pressed:bg-neutralActive",
 				"disabled:opacity-50 disabled:cursor-not-allowed",

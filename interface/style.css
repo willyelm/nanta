@@ -33,6 +33,12 @@
 	--text-color-secondary: oklch(38.7% 0 0);
 	--text-color-onAccent: oklch(100% 0 0);
 
+	/* chart: hex for WebGL (three.js reads hex and rgb only). Fixed in both schemes: each sits at
+	   mid luminance, 3:1 on every neutral step, light and dark, so nothing redraws on a switch. */
+	--chart-color-sun: #d75905;
+	--chart-color-earth: #057ff3;
+	--chart-color-horizon: #797979;
+
 	/* Buttons and inputs sit on neutral: their border is the cue. Dividers are decorative. */
 	--border-color-control: oklch(52% 0 0);
 	--border-color-input: oklch(58% 0 0);
@@ -69,6 +75,17 @@
 	--text-display: 2rem;
 	--leading-standard: 1.5;
 	--leading-relaxed: 1.75;
+
+	/* Loading placeholders: a band sweeping across, once every 1.5s. */
+	--animate-shimmer: shimmer 1.5s linear infinite;
+	@keyframes shimmer {
+		from {
+			background-position: 100% 0;
+		}
+		to {
+			background-position: -100% 0;
+		}
+	}
 }
 
 /* The scheme switch sets data-scheme on <html>. Dark overrides the colors that change. */
@@ -100,6 +117,25 @@
 	&[aria-pressed="true"],
 	&[aria-current]:not([aria-current="false"])
 );
+
+/* shimmer: a loading placeholder in the neutral steps, so it follows the scheme. */
+@utility shimmer {
+	background: linear-gradient(
+		90deg,
+		var(--background-color-neutralHover) 25%,
+		var(--background-color-neutralActive) 50%,
+		var(--background-color-neutralHover) 75%
+	);
+	background-size: 200% 100%;
+	animation: var(--animate-shimmer);
+}
+
+/* icon: an svg sized to the text around it, which doesn't shrink in a row. */
+@utility icon {
+	inline-size: 1em;
+	block-size: 1em;
+	flex: none;
+}
 
 @layer base {
 	body {
