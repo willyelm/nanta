@@ -3,7 +3,8 @@ import { get } from "system";
 // A body in the model, by its JPL Horizons code (stars by Hipparcos number). Planets and
 // satellites can hold sites; stars are reference only, the Sun among them as the light.
 //   orbits: the code of the body it goes around
-//   air, day (solar day), radius: facts for the body list
+//   air: has an atmosphere; refraction: Horizons bends the horizon for it (Earth sites only)
+//   day: mean solar day, in seconds; radius: mean radius, in km (IAU)
 //   ra, dec: a fixed star's J2000 right ascension and declination, in degrees
 //   magnitude: visual brightness, lower is brighter; distance: in light years
 export type Body = {
@@ -11,9 +12,10 @@ export type Body = {
 	name: string;
 	type: "star" | "planet" | "satellite";
 	orbits?: string;
-	air?: string;
-	day?: string;
-	radius?: string;
+	air?: boolean;
+	refraction?: boolean;
+	day?: number;
+	radius?: number;
 	ra?: number;
 	dec?: number;
 	magnitude?: number;
@@ -27,9 +29,10 @@ export const bodies: Body[] = [
 		name: "Moon",
 		type: "satellite",
 		orbits: "399",
-		air: "None. The horizon is airless.",
-		day: "29.5 Earth days",
-		radius: "1,737 km",
+		air: false,
+		refraction: false,
+		day: 2_551_443, // 29.530589 days, the synodic month
+		radius: 1_737.4,
 	},
 
 	{
@@ -37,18 +40,20 @@ export const bodies: Body[] = [
 		name: "Earth",
 		type: "planet",
 		orbits: "10",
-		air: "Yes. The horizon uses refraction.",
-		day: "24 h",
-		radius: "6,371 km",
+		air: true,
+		refraction: true,
+		day: 86_400,
+		radius: 6_371.0,
 	},
 	{
 		code: "499",
 		name: "Mars",
 		type: "planet",
 		orbits: "10",
-		air: "Thin. The horizon uses refraction.",
-		day: "24 h 40 min",
-		radius: "3,390 km",
+		air: true,
+		refraction: false,
+		day: 88_775, // the sol
+		radius: 3_389.5,
 	},
 
 	// Reference: the Sun, the brightest stars, the four on the ecliptic that mark where the
@@ -58,9 +63,7 @@ export const bodies: Body[] = [
 		code: "10",
 		name: "Sun",
 		type: "star",
-		air: "Plasma. No surface or horizon.",
-		day: "25 to 35 Earth days",
-		radius: "695,700 km",
+		radius: 695_700,
 	},
 	{
 		code: "HIP 32349",
