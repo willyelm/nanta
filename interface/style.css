@@ -25,22 +25,19 @@
 	--background-color-neutralHover: oklch(96% 0 0);
 	--background-color-neutralActive: oklch(92% 0 0);
 	/* Accent: cobalt blue, the same in both schemes. Each step is darker; white text holds 6:1. */
-	/* accent: cochineal, the Andean dye behind the crimson and magenta of Paracas and Inca
-	   textiles and quipu cords. Fixed in both schemes; white text on every step. */
-	--background-color-accent: oklch(52% 0.215 352);
-	--background-color-accentHover: oklch(47% 0.195 352);
-	--background-color-accentActive: oklch(42% 0.175 352);
 
 	--text-color-default: oklch(17.8% 0 0);
 	--text-color-secondary: oklch(38.7% 0 0);
-	--text-color-onAccent: oklch(100% 0 0);
 
 	/* chart: hex for WebGL (three.js reads hex and rgb only). Fixed in both schemes: each sits at
 	   mid luminance, 3:1 on every neutral step, light and dark, so nothing redraws on a switch. */
 	--chart-color-sun: #d75905;
 	--chart-color-earth: #057ff3;
 	--chart-color-horizon: #797979;
-	/* select: the accent's hue, light enough for 3:1 on every neutral, both schemes. */
+	/* select, the accent: cochineal, the Andean dye behind the crimson and magenta of Paracas and
+	   Inca textiles and quipu cords. Light enough for 3:1 on every neutral, both schemes. It is
+	   only ever a line (outlines, rings, focus), never a solid fill, so an inside focus outline
+	   always shows, and nothing is lost to a scroll or overflow edge. */
 	--chart-color-select: #f4029b;
 
 	/* body: each sphere's own color in the model, a picture rather than a cue, so not held to
@@ -56,7 +53,8 @@
 	--border-color-divider: oklch(88% 0 0);
 
 	/* The focus outline: the text color, 3:1 or more on every bg. */
-	--outline-color-focus: var(--text-color-default);
+	/* focus: the accent. */
+	--outline-color-focus: var(--chart-color-select);
 
 	/* A 4px grid. Sizes: utility is WCAG 2.5.8's 24px minimum, control the 44px target. */
 	/* 0 for offsets: inset-0, top-0, left-0. */
@@ -180,6 +178,7 @@
 	/* Every focusable element: the text color, 2px, clear of the element. 3:1 or more on every bg. */
 	:focus-visible {
 		outline: 2px solid var(--outline-color-focus);
+		/* Inside the edge, so a scroll or overflow edge never clips it. */
 		outline-offset: -2px;
 	}
 

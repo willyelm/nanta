@@ -118,36 +118,14 @@ for (const name of ["light", "dark"]) {
 	test(`${name}: cues on bg are at least 3:1`, () => {
 		check(`${name}: cues on bg`, combinations(tokens, "border-color", "cue", cue, "names"), 3);
 	});
-	test(`${name}: chart lines on bg are at least 3:1`, () => {
-		check(`${name}: chart on bg`, combinations(tokens, "chart-color", "chart", chart, "names"), 3);
-	});
-	// The accent is fixed: white text on every accent step at 6:1, and the fill at 3:1 on the page.
-	test(`${name}: accent`, () => {
-		const color = (token: string) => {
-			const value = tokens.get(token);
-			assert.ok(value, `${name} is missing ${token}`);
-			return value;
-		};
-		const onAccent = color("text-color-onAccent");
+	test(`${name}: focus outline on bg is at least 3:1`, () => {
 		check(
-			`${name}: onAccent on accent`,
-			["accent", "accentHover", "accentActive"].map((step) => ({
-				bg: step,
-				text: "onAccent",
-				ratio: contrast(onAccent, color(`background-color-${step}`)),
-			})),
-			6,
-		);
-		check(
-			`${name}: accent on neutral`,
-			[
-				{
-					fill: "accent",
-					bg: "neutral",
-					ratio: contrast(color("background-color-accent"), color("background-color-neutral")),
-				},
-			],
+			`${name}: focus on bg`,
+			combinations(tokens, "outline-color", "focus", ["focus"], "names"),
 			3,
 		);
+	});
+	test(`${name}: chart lines on bg are at least 3:1`, () => {
+		check(`${name}: chart on bg`, combinations(tokens, "chart-color", "chart", chart, "names"), 3);
 	});
 }
