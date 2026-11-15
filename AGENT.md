@@ -30,7 +30,10 @@ Build components to the ARIA Authoring Practices Guide. Use the native element
 when one exists. Keep the markup and the CSS minimal: one element for the
 control, only the styles it needs.
 
-Name the component class after the component: `.Button` and `styles.Button`.
+Style with Tailwind utilities in the markup. The theme in `interface/style.css`
+is the whole design language: `bg-neutral`, `text-default`, `border-control`,
+`p-md`, `min-h-control`. Tailwind's own colors and scales don't exist here. Add
+a token to the theme before reaching for an arbitrary value.
 
 ## Testing
 

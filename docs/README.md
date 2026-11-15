@@ -60,20 +60,21 @@ The scheme choice is `auto`, `light`, or `dark`, stored as `scheme`; `auto` is
 the default, stored as no value, and follows the system live. The resolved
 `light` or `dark` is set on `<html data-scheme>` before the first paint.
 
-| Token                     | Use                                      |
-| ------------------------- | ---------------------------------------- |
-| `--bgColor-neutral`       | Page, and buttons and inputs at rest     |
-| `--bgColor-neutralHover`  | Hover on a neutral item                  |
-| `--bgColor-neutralActive` | Pressed or current neutral item          |
-| `--bgColor-accent`        | Accent buttons, the same in both schemes |
-| `--bgColor-accentHover`   | Hover on an accent button                |
-| `--bgColor-accentActive`  | Pressed accent button                    |
-| `--fgColor-default`       | Text                                     |
-| `--fgColor-secondary`     | Secondary text, Earth line               |
-| `--fgColor-onAccent`      | Text on the accent                       |
-| `--bdColor-control`       | Buttons and links that act as controls   |
-| `--bdColor-input`         | Text inputs                              |
-| `--bdColor-divider`       | Panels and page dividers                 |
+| Token                              | Use                                      |
+| ---------------------------------- | ---------------------------------------- |
+| `--background-color-neutral`       | Page, and buttons and inputs at rest     |
+| `--background-color-neutralHover`  | Hover on a neutral item                  |
+| `--background-color-neutralActive` | Pressed or current neutral item          |
+| `--background-color-accent`        | Accent buttons, the same in both schemes |
+| `--background-color-accentHover`   | Hover on an accent button                |
+| `--background-color-accentActive`  | Pressed accent button                    |
+| `--text-color-default`             | Text                                     |
+| `--text-color-secondary`           | Secondary text, Earth line               |
+| `--text-color-onAccent`            | Text on the accent                       |
+| `--border-color-control`           | Buttons and links that act as controls   |
+| `--border-color-input`             | Text inputs                              |
+| `--border-color-divider`           | Panels and page dividers                 |
+| `--outline-color-focus`            | The focus outline, the text color        |
 
 Operational text on its background is 6:1, the NASA-STD-3001[^nasa3001] contrast
 for text that an operator reads. Control and input borders, the focus outline,
