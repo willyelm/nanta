@@ -1,5 +1,6 @@
+import ArrowLeft from "interface/icon/arrow-left.svg";
 import { Skeleton } from "interface/skeleton";
-import { type HTMLAttributes, type ReactNode, Suspense } from "react";
+import { type AnchorHTMLAttributes, type HTMLAttributes, type ReactNode, Suspense } from "react";
 import { Catch, classNames } from "system";
 
 // A panel over the model: translucent, with the scene blurred behind it, so every panel reads
@@ -65,5 +66,58 @@ export function Loader({
 				{children}
 			</Suspense>
 		</Catch>
+	);
+}
+
+// A panel's top bar: a way back, the title, and an action at the end, divided like the panel.
+export function PanelBar({
+	back,
+	title,
+	action,
+}: {
+	back?: string;
+	title: ReactNode;
+	action?: ReactNode;
+}) {
+	return (
+		<div className="flex flex-row divide-x divide-divider">
+			{back ? (
+				<a href={back} className="flex items-center p-md" aria-label="Back">
+					<ArrowLeft icon />
+				</a>
+			) : null}
+			<h2 className="p-md uppercase flex-1">{title}</h2>
+			{action}
+		</div>
+	);
+}
+
+// A list of places to go, divided like the panel.
+export function List({ children, ...props }: HTMLAttributes<HTMLUListElement>) {
+	return (
+		<ul {...props} className={classNames("flex flex-col divide-y divide-divider", props.className)}>
+			{children}
+		</ul>
+	);
+}
+
+// One row of a List: the whole row is the link. `current` marks the one you're on.
+export function ListItem({
+	current = false,
+	className,
+	...props
+}: { current?: boolean } & AnchorHTMLAttributes<HTMLAnchorElement>) {
+	return (
+		<li>
+			<a
+				{...props}
+				aria-current={current ? "true" : undefined}
+				className={classNames(
+					"flex flex-col gap-xs min-h-control p-md text-default no-underline",
+					"hover:bg-neutralHover pressed:bg-neutralActive",
+					className,
+				)}
+			/>
+		</li>
 	);
 }
