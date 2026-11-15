@@ -1,6 +1,8 @@
 // Positions of the Sun and Earth seen from a point on the Moon.
 // Source: JPL Horizons observer tables, centered on the Moon (body 301).
 
+import { log, since } from "system";
+
 const SOURCE = "https://ssd.jpl.nasa.gov/api/horizons.api";
 
 export type Body = "sun" | "earth";
@@ -48,14 +50,30 @@ export async function ephemeris(
 		// The Moon has no air. Earth and Mars use refraction.
 		APPARENT: center === "301" ? "'AIRLESS'" : "'REFRACTED'",
 	});
-	const response = await fetch(`${SOURCE}?${params}`);
+	const query = `${body} from ${center} at ${lat},${lon} ${from}..${to} every ${step}`;
+	const started = performance.now();
+	try {
+		const positions = parse(await request(`${SOURCE}?${params}`));
+		log("horizons", query, `${positions.length} rows`, since(started));
+		return positions;
+	} catch (error) {
+		log.error("horizons", query, "failed", since(started), String(error));
+		throw error;
+	}
+}
+
+async function request(url: string): Promise<string> {
+	const response = await fetch(url);
 	if (!response.ok) throw new Error(`source returned ${response.status}`);
 	const { result = "", error } = (await response.json()) as {
 		result?: string;
 		error?: string;
 	};
 	if (error) throw new Error(error);
+	return result;
+}
 
+function parse(result: string): Position[] {
 	const start = result.indexOf("$$SOE");
 	const end = result.indexOf("$$EOE");
 	if (start < 0 || end < 0) throw new Error("source returned no positions");

@@ -1,5 +1,5 @@
 import { sites } from "site";
-import { get, type Handler } from "system";
+import { get, type Handler, log } from "system";
 import { type Body, ephemeris, type Position } from "./ephemeris";
 
 export type { Position };
@@ -32,6 +32,8 @@ const cached =
 	async (request, params) => {
 		const cache = (globalThis as unknown as { caches: { default: Cache } }).caches.default;
 		const hit = await cache.match(request);
+		const { pathname, search } = new URL(request.url);
+		log("cache", hit ? "hit" : "miss", pathname + search);
 		if (hit) return hit;
 		const response = await handler(request, params);
 		if (response.ok) await cache.put(request, response.clone());
