@@ -51,8 +51,8 @@ export async function ephemeris(
 		STEP_SIZE: `'${step}'`,
 		// 4: apparent azimuth and elevation. 20: range from the site, in AU.
 		QUANTITIES: "'4,20'",
-		// The Moon has no air. Earth and Mars use refraction.
-		APPARENT: center === "301" ? "'AIRLESS'" : "'REFRACTED'",
+		// Horizons refracts only for sites on Earth; the Moon and Mars horizons are geometric.
+		APPARENT: center === "399" ? "'REFRACTED'" : "'AIRLESS'",
 	});
 	const query = `${body} from ${center} at ${lat},${lon} ${from}..${to} every ${step}`;
 	const started = performance.now();
