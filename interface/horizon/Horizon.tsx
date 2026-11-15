@@ -5,6 +5,7 @@ import {
 	BufferGeometry,
 	Line,
 	LineBasicMaterial,
+	LineDashedMaterial,
 	OrthographicCamera,
 	Scene,
 	WebGLRenderer,
@@ -17,26 +18,27 @@ export function Horizon({ sun, earth }: { sun: Position[]; earth: Position[] }) 
 	useEffect(() => {
 		const el = canvas.current;
 		if (!el) return;
-		// The Sun takes the text color, the Earth and the horizon the secondary text color.
+		// Fixed chart colors (style.css), the same in both schemes. The Earth line is dashed, so the
+		// two lines differ by more than hue.
 		const style = getComputedStyle(el);
-		const color = style.color;
-		const muted = style.getPropertyValue("--text-color-secondary").trim();
-		const renderer = new WebGLRenderer({ canvas: el, antialias: true, alpha: true });
+		const color = (name: string) => style.getPropertyValue(`--chart-color-${name}`).trim();
 		const scene = new Scene();
-		const camera = new OrthographicCamera(-1.05, 1.05, 1.05, -1.05, 0, 1);
 		scene.add(
 			track(
 				sun.map((p) => p.elevation),
-				color,
+				color("sun"),
 			),
 		);
 		scene.add(
 			track(
 				earth.map((p) => p.elevation),
-				muted,
+				color("earth"),
+				{ dashed: true },
 			),
 		);
-		scene.add(track([0, 0], muted, true));
+		scene.add(track([0, 0], color("horizon"), { flat: true }));
+		const renderer = new WebGLRenderer({ canvas: el, antialias: true, alpha: true });
+		const camera = new OrthographicCamera(-1.05, 1.05, 1.05, -1.05, 0, 1);
 		const draw = () => {
 			const width = el.clientWidth || 640;
 			const height = el.clientHeight || 240;
@@ -56,8 +58,8 @@ export function Horizon({ sun, earth }: { sun: Position[]; earth: Position[] }) 
 		<figure className="flex flex-col gap-md text-default">
 			<canvas ref={canvas} className="w-full h-[16rem] border border-divider" />
 			<figcaption>
-				Elevation in degrees. The flat line is the horizon. Bright line is the Sun, dim line is the
-				Earth.
+				Elevation in degrees. The flat gray line is the horizon, the solid line is the Sun, and the
+				dashed line is the Earth.
 			</figcaption>
 			<table className="border-collapse">
 				<thead>
@@ -85,7 +87,7 @@ export function Horizon({ sun, earth }: { sun: Position[]; earth: Position[] }) 
 	);
 }
 
-function track(values: number[], color: string, flat = false) {
+function track(values: number[], color: string, { flat = false, dashed = false } = {}) {
 	const n = Math.max(values.length, 2);
 	const position = new Float32Array(n * 3);
 	for (let i = 0; i < n; i++) {
@@ -95,5 +97,10 @@ function track(values: number[], color: string, flat = false) {
 	}
 	const geometry = new BufferGeometry();
 	geometry.setAttribute("position", new BufferAttribute(position, 3));
-	return new Line(geometry, new LineBasicMaterial({ color }));
+	if (!dashed) return new Line(geometry, new LineBasicMaterial({ color }));
+	// Dash lengths are in the chart's units, where the width spans 2.
+	return new Line(
+		geometry,
+		new LineDashedMaterial({ color, dashSize: 0.04, gapSize: 0.03 }),
+	).computeLineDistances();
 }
