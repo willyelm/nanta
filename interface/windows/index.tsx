@@ -1,17 +1,27 @@
 import { Button } from "interface/button";
-import { DateRangeInput } from "interface/date";
+import { DateRangeInput, MAX_DAYS } from "interface/date";
 import EditPencil from "interface/icon/edit-pencil.svg";
 import Plus from "interface/icon/plus.svg";
 import Trash from "interface/icon/trash.svg";
 import Xmark from "interface/icon/xmark.svg";
 import { List, ListItem, Panel, PanelBar } from "interface/panel";
+import { ExpandReading, ReadingContext } from "interface/sites/Reading";
 import { removeWindow, savedWindows, saveWindow } from "interface/sites/store";
-import { hourOf, useKeep } from "interface/sites/url";
+import { hourOf, useKeep, useTimeScrub } from "interface/sites/url";
+import { Slider } from "interface/slider";
 import { useView } from "interface/space";
 import { Tooltip } from "interface/tooltip";
-import { type FormEvent, useState } from "react";
-import { type Api, json, navigate, replace, resumable, useHydrated, useSearchParams } from "system";
-import type { Window } from "windows";
+import { useState } from "react";
+import {
+	type Api,
+	json,
+	navigate,
+	resumable,
+	useHydrated,
+	useLocation,
+	useSearchParams,
+} from "system";
+import type { Window } from "window";
 
 const field = "flex flex-col gap-xs";
 const input = "min-h-control px-sm border border-input bg-neutral text-default";
@@ -30,27 +40,26 @@ export function useWindows(): Window[] {
 const DAY = 86_400_000;
 const date = /^\d{4}-\d{2}-\d{2}$/;
 
-// A window's form, empty to add one or filled to edit one of yours: a code and two dates, up to
-// 31 days apart (Horizons' limit). An edited window keeps its code. Saved in this browser.
+// Empty to add, or filled to edit one of yours: a code and two dates, up to 31 days (Horizons'
+// limit). An edit keeps its code. Saved in this browser.
 function WindowForm({
 	current,
-	onSaved,
+	onDone,
 	onRemoved,
 }: {
 	current?: Window;
-	onSaved: (code: string) => void;
+	onDone: (code: string) => void;
 	onRemoved?: (code: string) => void;
 }) {
-	// A new window starts today and ends tomorrow, in UTC.
 	const [form, setForm] = useState(() => {
 		const day = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+		const from = current?.from ?? day(Date.now());
 		return {
 			code: current?.code ?? "",
-			from: current?.from ?? day(Date.now()),
-			to: current?.to ?? day(Date.now() + DAY),
+			from,
+			to: current?.to ?? day(Date.parse(`${from}T00:00:00Z`) + MAX_DAYS * DAY),
 		};
 	});
-	// Predefined windows are read-only, so a new window can't take one of their codes.
 	const catalog = useWindowCatalog();
 	const taken = !current && catalog.some((w) => w.code === form.code);
 	const days = (Date.parse(form.to) - Date.parse(form.from)) / DAY;
@@ -60,15 +69,16 @@ function WindowForm({
 		date.test(form.from) &&
 		date.test(form.to) &&
 		days >= 1 &&
-		days <= 31;
-	const submit = (event: FormEvent) => {
-		event.preventDefault();
-		if (!valid) return;
-		saveWindow({ ...form, label: `${form.from} – ${form.to}` });
-		onSaved(form.code);
-	};
+		days <= MAX_DAYS;
 	return (
-		<form className="flex flex-col gap-md p-md" onSubmit={submit}>
+		<form
+			className="flex flex-col gap-md p-md"
+			action={() => {
+				if (!valid) return;
+				saveWindow({ ...form, label: `${form.from} – ${form.to}` });
+				onDone(form.code);
+			}}
+		>
 			<label className={field}>
 				<span className="text-label text-secondary">Code name</span>
 				<input
@@ -92,22 +102,27 @@ function WindowForm({
 				/>
 			</div>
 			<p className="text-caption">
-				{taken ? `${form.code} is a predefined window.` : "From 1 to 31 days, Horizons' limit."}
+				{taken
+					? `${form.code} is a predefined window.`
+					: `End is at most ${MAX_DAYS} days after start (Horizons).`}
 			</p>
 			<div className="flex gap-sm">
 				<Button type="submit" variant="accent" disabled={!valid} className="flex-1">
 					{current ? "Save changes" : "Add window"}
 				</Button>
 				{current ? (
-					<Button
-						onClick={() => {
-							removeWindow(current.code);
-							onRemoved?.(current.code);
-						}}
-					>
-						<Trash icon />
-						Delete window
-					</Button>
+					<Tooltip label={`Delete ${current.code}`}>
+						<Button
+							aria-label={`Delete ${current.code}`}
+							className="px-0 aspect-square"
+							onClick={() => {
+								removeWindow(current.code);
+								onRemoved?.(current.code);
+							}}
+						>
+							<Trash icon />
+						</Button>
+					</Tooltip>
 				) : null}
 			</div>
 		</form>
@@ -124,17 +139,17 @@ export function WindowsPanel({ here, window }: { here: string; window: string })
 	const keep = useKeep();
 	const href = (next: string) =>
 		keep(here, { window: next, time: next === window ? undefined : null });
-	const saved = (next: string) => {
+	const catalog = useWindowCatalog();
+	const adding = open === "new";
+	const done = (next: string) => {
 		setOpen(null);
 		navigate(href(next));
 	};
 	// After a delete the site stays, and the window too unless it was the one deleted.
-	const catalog = useWindowCatalog();
 	const removed = (gone: string) => {
 		setOpen(null);
 		navigate(gone !== window ? keep(here) : keep(here, { window: null, time: null }));
 	};
-	const adding = open === "new";
 
 	return (
 		<Panel as="section" aria-label="Windows" className="divide-y divide-divider">
@@ -154,19 +169,16 @@ export function WindowsPanel({ here, window }: { here: string; window: string })
 					</Tooltip>
 				}
 			/>
-			{adding ? <WindowForm onSaved={saved} /> : null}
+			{adding ? <WindowForm onDone={done} /> : null}
 			<List>
 				{items.map((w) =>
 					open === w.code ? (
-						<li key={w.code} className="flex flex-col">
-							<div className="flex items-stretch divide-x divide-divider">
-								<span className="flex-1 flex items-center px-md text-heading uppercase">
-									{w.code}
-								</span>
-								<Tooltip label="Close">
+						<li key={w.code} className="flex flex-col divide-y divide-divider">
+							<div className="flex justify-end">
+								<Tooltip label="Cancel">
 									<button
 										type="button"
-										aria-label={`Close editing ${w.code}`}
+										aria-label="Cancel"
 										className="flex items-center justify-center aspect-square min-h-control hover:bg-neutralHover"
 										onClick={() => setOpen(null)}
 									>
@@ -174,7 +186,7 @@ export function WindowsPanel({ here, window }: { here: string; window: string })
 									</button>
 								</Tooltip>
 							</div>
-							<WindowForm current={w} onSaved={saved} onRemoved={removed} />
+							<WindowForm current={w} onDone={done} onRemoved={removed} />
 						</li>
 					) : (
 						<ListItem
@@ -196,8 +208,9 @@ export function WindowsPanel({ here, window }: { here: string; window: string })
 									</Tooltip>
 								)
 							}
+							className="justify-between"
 						>
-							<span className="text-heading uppercase">{w.code}</span>
+							<span className="text-label uppercase">{w.code}</span>
 							<span className="text-caption text-secondary tabular-nums">
 								{w.from} – {w.to}
 							</span>
@@ -212,44 +225,73 @@ export function WindowsPanel({ here, window }: { here: string; window: string })
 
 const HOUR = 3_600_000;
 
-// A window's time without a site: hour by hour from the first to the last. There is no place to
-// read conditions for, so the slider moves the bodies in space and nothing else.
-export function TimePanel({ window }: { window: string }) {
+// The reading without a site: hour by hour across the window. Expand fills the screen; while
+// expanded, a strip keeps the window in view.
+export function TimePanel({
+	window,
+	expanded = false,
+	onExpand,
+}: {
+	window: string;
+	expanded?: boolean;
+	onExpand?: () => void;
+}) {
 	const span = useWindows().find((w) => w.code === window);
 	const keep = useKeep();
 	const params = useSearchParams();
+	const { pathname } = useLocation();
 	const start = span ? Date.parse(`${span.from}T00:00:00Z`) : 0;
 	const end = span ? Date.parse(`${span.to}T00:00:00Z`) : 0;
 	const hours = Math.max(Math.round((end - start) / HOUR), 0);
-	// The hour comes from the URL (?time=); without one, the current hour if it's in the window
-	// (as in NOW), else the window's first.
 	const chosen = Date.parse(`${params.get("time") ?? ""}:00Z`);
 	const from = Number.isFinite(chosen) ? chosen : Date.now();
-	const at = Math.min(Math.max(Math.floor((from - start) / HOUR), 0), hours);
+	const fromUrl = Math.min(Math.max(Math.floor((from - start) / HOUR), 0), hours);
+	const { at, setTime, onDragStart, onDragEnd } = useTimeScrub(fromUrl, (index) =>
+		keep(pathname, { time: hourOf(start + index * HOUR) }),
+	);
 	const time = start + at * HOUR;
 	useView({ time: span ? time : undefined });
 	if (!span) return null;
 	const hour = (ms: number) => stamp({ time: new Date(ms).toISOString() });
+	const current = hour(time);
 	return (
-		<Panel as="section" aria-label="Time" className="max-w-none">
-			<label className="flex items-center gap-sm px-md min-h-control text-caption tabular-nums">
-				<span className="sr-only">Time</span>
-				<span className="text-secondary">{hour(start)}</span>
-				<input
-					type="range"
-					className="flex-1"
+		<Panel
+			as="section"
+			aria-label="Reading"
+			className={
+				expanded
+					? "max-w-none flex-1 min-h-0 divide-y divide-divider"
+					: "max-w-none divide-y divide-divider"
+			}
+		>
+			<div className="flex items-center divide-x divide-divider">
+				{expanded ? (
+					<div className="flex-1 min-w-0">
+						<ReadingContext window={window} />
+					</div>
+				) : (
+					<div className="flex-1" />
+				)}
+				{onExpand ? <ExpandReading expanded={expanded} onToggle={onExpand} /> : null}
+			</div>
+			<div className="flex flex-col gap-xs p-md min-w-0">
+				<div className="flex items-baseline justify-between gap-sm text-caption tabular-nums">
+					<span className="text-secondary">{hour(start)}</span>
+					<output className="text-default">{current} UTC</output>
+					<span className="text-secondary">{hour(end)}</span>
+				</div>
+				<Slider
+					id="window-time"
+					label="Time"
 					min={0}
 					max={hours}
 					value={at}
-					onChange={(event) =>
-						replace(
-							keep(location.pathname, { time: hourOf(start + Number(event.target.value) * HOUR) }),
-						)
-					}
+					valueText={`${current} UTC`}
+					onChange={setTime}
+					onChangeStart={onDragStart}
+					onChangeEnd={onDragEnd}
 				/>
-				<span className="text-secondary">{hour(end)}</span>
-				<output className="text-default">{hour(time)} UTC</output>
-			</label>
+			</div>
 		</Panel>
 	);
 }

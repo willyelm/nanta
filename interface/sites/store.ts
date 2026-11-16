@@ -1,5 +1,5 @@
 import type { Site } from "site";
-import type { Window } from "windows";
+import type { Window } from "window";
 
 // Things you add, kept in this browser by key. A code is the id; saving one with a code that
 // exists replaces it. Storage can be blocked; then nothing is kept beyond the visit.
@@ -34,6 +34,7 @@ function collection<T extends { code: string }>(key: string) {
 const sites = collection<Site>("nanta.sites");
 export const saved = (body: string) => sites.all().filter((site) => site.body === body);
 export const save = sites.save;
+export const removeSite = sites.remove;
 
 const windows = collection<Window>("nanta.windows");
 export const savedWindows = windows.all;

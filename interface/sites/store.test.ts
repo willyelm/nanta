@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
 	candidateCode,
 	removeCandidate,
+	removeSite,
 	removeWindow,
 	save,
 	saveCandidate,
@@ -58,6 +59,15 @@ test("removes a window you added", () => {
 	removeWindow("W2");
 	assert.equal(
 		savedWindows().some((w) => w.code === "W2"),
+		false,
+	);
+});
+
+test("removes a site you added", () => {
+	save(site("PT3"));
+	removeSite("PT3");
+	assert.equal(
+		saved("301").some((s) => s.code === "PT3"),
 		false,
 	);
 });
