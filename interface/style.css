@@ -52,7 +52,10 @@
 	/* body: each sphere's own color in the model, a picture rather than a cue, so not held to
 	   3:1. The Sun's lines and curves keep the chart color above. Hex, for WebGL. */
 	--body-color-sun: #ffb000;
-	--body-color-sunlight: #ffe9a8; /* the core of the sunlight beam */
+	/* The Sun's disc and the sunlight beam's core: on light space they take the deep orange so they
+	   hold 3:1; on dark, white and pale gold. The glow around the disc is decoration. */
+	--body-color-suncore: #ffb000;
+	--body-color-sunlight: #d75905;
 	--body-color-mars: #b3261e;
 	--body-color-mercury: #8c7b6b;
 	--body-color-earth: #057ff3;
@@ -155,6 +158,8 @@
 	/* Lighter bodies on the dark page: the Moon near white, Earth, Mars, and Mercury brighter. */
 	--body-color-moon: #e6e6e6;
 	--body-color-earth: #4da3ff;
+	--body-color-suncore: #ffffff;
+	--body-color-sunlight: #ffe9a8;
 	--body-color-mars: #e0483c;
 	--body-color-mercury: #c2b2a3;
 }

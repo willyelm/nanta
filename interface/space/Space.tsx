@@ -76,12 +76,12 @@ const OVERVIEW = 40;
 const overview = () => vec(0, 1, 0.35).normalize().multiplyScalar(OVERVIEW);
 
 // The Sun's radiance, from its body: how many of its radii its light spreads.
-const WHITE = "#ffffff";
 const SUN_RADIANCE = bodies.find((b) => b.code === "10")?.radiance ?? 5;
 
 // Paints a star's light: solid to its limb, then its color falling off smoothly to nothing.
 // `reach` is the star's radiance: the texture is that many radii out, so the limb is at 1/reach.
-function radiance(texture: CanvasTexture, core: string, sun: string, reach: number) {
+// `rim`, when given, rings the limb so the disc holds contrast on a light background.
+function radiance(texture: CanvasTexture, core: string, sun: string, reach: number, rim?: string) {
 	const canvas = texture.image as HTMLCanvasElement;
 	const ctx = canvas.getContext("2d");
 	if (!ctx) return;
@@ -109,6 +109,13 @@ function radiance(texture: CanvasTexture, core: string, sun: string, reach: numb
 	}
 	ctx.fillStyle = glow;
 	ctx.fillRect(0, 0, n, n);
+	if (rim) {
+		ctx.strokeStyle = rim;
+		ctx.lineWidth = c * limb * 0.12;
+		ctx.beginPath();
+		ctx.arc(c, c, c * limb - ctx.lineWidth / 2, 0, Math.PI * 2);
+		ctx.stroke();
+	}
 
 	texture.needsUpdate = true;
 }
@@ -157,7 +164,19 @@ export function Space() {
 		const shine = new CanvasTexture(
 			Object.assign(document.createElement("canvas"), { width: 512, height: 512 }),
 		);
-		radiance(shine, WHITE, paint("sun"), SUN_RADIANCE);
+		// The Sun from the scheme: its core, its glow, and on light space a ring at the limb.
+		const sunShine = (now: CSSStyleDeclaration) => {
+			const token = (name: string) => now.getPropertyValue(`--${name}`).trim();
+			const light = document.documentElement.dataset.scheme !== "dark";
+			radiance(
+				shine,
+				token("body-color-suncore"),
+				token("body-color-sun"),
+				SUN_RADIANCE,
+				light ? token("chart-color-sun") : undefined,
+			);
+		};
+		sunShine(style);
 		const corona = new Sprite(
 			new SpriteMaterial({ map: shine, transparent: true, depthWrite: false }),
 		);
@@ -727,7 +746,8 @@ export function Space() {
 			}
 			faint.color.set(starColor());
 			for (const glow of glows) radiance(glow.texture, starColor(), starColor(), glow.reach);
-			radiance(shine, WHITE, now.getPropertyValue("--body-color-sun").trim(), SUN_RADIANCE);
+			sunShine(now);
+			core.material.color.set(now.getPropertyValue("--body-color-sunlight").trim());
 			draw();
 		});
 		scheme.observe(document.documentElement, { attributeFilter: ["data-scheme"] });
