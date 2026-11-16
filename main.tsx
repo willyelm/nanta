@@ -45,7 +45,8 @@ const page = get("*", async (request) => {
 				<meta property="og:site_name" content="Nanta" />
 				<meta property="og:title" content="Nanta: Choose the path under the Sun and the Earth" />
 				<meta property="og:description" content="Plan locations against changing conditions." />
-				<meta property="og:image" content="/favicon.png" />
+				<meta property="og:url" content="https://nanta.us/" />
+				<meta property="og:image" content="https://nanta.us/favicon.png" />
 				<meta name="twitter:card" content="summary" />
 				<link rel="icon" href="/favicon.png" type="image/png" />
 				<script type="importmap">{importMap}</script>

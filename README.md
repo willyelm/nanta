@@ -2,6 +2,8 @@
 
 **Choose the path under the Sun and the Earth.**
 
+Live at [nanta.us](https://nanta.us/).
+
 Nanta compares candidate locations and times against the conditions a mission
 needs, and shows when each one works, for how long, and what changes if the plan
 moves. Conditions are layers over time at a location. The first case is landing
