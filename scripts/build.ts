@@ -84,7 +84,19 @@ const require = (id) => {
 	throw new Error("main.js cannot require " + id);
 };`,
 		},
-		plugins: [toRuntime(system), svg()],
+		plugins: [toRuntime(system), svg(), browserOnly("three")],
+	};
+}
+
+// The server renders the shell but never draws: three.js only runs in the browser's effects, so
+// the Worker gets an empty stand-in instead of the whole library.
+function browserOnly(name: string): Plugin {
+	return {
+		name: "browser-only",
+		setup(b) {
+			b.onResolve({ filter: new RegExp(`^${name}$`) }, () => ({ path: name, namespace: "empty" }));
+			b.onLoad({ filter: /.*/, namespace: "empty" }, () => ({ contents: "module.exports = {}" }));
+		},
 	};
 }
 
