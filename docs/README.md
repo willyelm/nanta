@@ -127,9 +127,12 @@ shape that does not change between pages:
 
 - The header: the name, the camera readout at the center, the UTC clock, and the
   scheme switch (Auto, Light, Dark).
-- A row of side panels: navigation on the left, the context of the selection on
-  the right. Each panel is as tall as its content, up to the row, then scrolls.
-- A panel across the bottom: data over time.
+- A row of side panels: the Site Navigator (or bodies) on the left, Window
+  Selection on the right. Each panel is as tall as its content, up to the row,
+  then scrolls.
+- The Reading across the bottom: time, and with a site the horizon and numbers.
+  It expands to fill the screen; while expanded, a strip keeps the site and
+  window in view.
 
 Pages only fill the panels. Empty space passes the pointer to the model, so it
 can be turned anywhere it shows. On narrow screens the panels stack below the
@@ -240,7 +243,9 @@ time and says so in a status line.
 
 - `/{body}/sites`: the body's sites.
 - `/{body}/sites/{site}?window={window}`: a site, read in a window.
-- `/{body}/sites/new` and `/{body}/sites/{site}/edit`: the site form.
+
+Sites and windows you add are edited inline in their panels, so the other
+panels stay up; only the place or the window in the URL changes.
 
 Back, refresh, and a shared link restore the reading, the camera angle
 included. A site or window added in another browser is not there yet.
