@@ -105,6 +105,10 @@
 	--leading-relaxed: 1.75;
 
 	/* Loading placeholders: a band sweeping across, once every 1.5s. */
+	/* Motion: colors change quickly on hover and press; overlays fade in and out. */
+	--duration-color: 120ms;
+	--duration-fade: 160ms;
+
 	--animate-shimmer: shimmer 1.5s linear infinite;
 	@keyframes shimmer {
 		from {
@@ -223,6 +227,39 @@
 	}
 	::-webkit-scrollbar-thumb:hover {
 		background-color: var(--text-color-secondary);
+	}
+
+	/* Controls ease their colors on hover, press, and selection. */
+	a,
+	button,
+	input,
+	[role^="menuitem"] {
+		transition-property: background-color, border-color, color;
+		transition-duration: var(--duration-color);
+		transition-timing-function: ease-out;
+	}
+
+	/* Overlays (menus, tooltips, the Compare card) fade in and out. display and overlay are
+	   discrete, so the overlay stays in the top layer until the fade ends. */
+	[popover] {
+		opacity: 0;
+		transition:
+			opacity var(--duration-fade) ease-out,
+			display var(--duration-fade) allow-discrete,
+			overlay var(--duration-fade) allow-discrete;
+	}
+	[popover]:popover-open {
+		opacity: 1;
+		@starting-style {
+			opacity: 0;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		[popover] {
+			transition: none;
+		}
 	}
 
 	/* Results dim while the next page loads (useNavigating in system/Router.tsx). */
