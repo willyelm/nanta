@@ -14,8 +14,10 @@ const track = (elevations: number[]) =>
 	}));
 
 test("duration counts the hours above the horizon", () => {
-	assert.equal(duration(track([1, 2, -1, 0, 3])), 3);
+	assert.equal(duration(track([1, 2, -1, 0, 3])), 2);
 	assert.equal(duration(track([1])), 0);
+	// Up the whole window: 49 hourly samples are 48 hours, never 49.
+	assert.equal(duration(track(Array(49).fill(1))), 48);
 });
 
 test("until finds the next rise or set", () => {

@@ -19,10 +19,11 @@ export function summarize(list: Condition[], sky: Sky, at: number) {
 		.join(" ");
 }
 
-// How long a body is above the horizon in the window, in hours, from the sample spacing.
+// How long a body is above the horizon in the window, in hours: each step between samples counts
+// when its first sample is up. A window of n samples has n - 1 steps, so it never runs over.
 export function duration(positions: Position[]): number {
 	const step = positions.length > 1 ? hours(positions[0], positions[1]) : 0;
-	return positions.filter((p) => p.elevation > 0).length * step;
+	return positions.slice(0, -1).filter((p) => p.elevation > 0).length * step;
 }
 
 // Up or down at sample `at`, and hours until that changes, or null when it doesn't in the window.
