@@ -60,28 +60,30 @@ The scheme choice is `auto`, `light`, or `dark`, stored as `scheme`; `auto` is
 the default, stored as no value, and follows the system live. The resolved
 `light` or `dark` is set on `<html data-scheme>` before the first paint.
 
-| Token                              | Use                                      |
-| ---------------------------------- | ---------------------------------------- |
-| `--background-color-neutral`       | Page, and buttons and inputs at rest     |
-| `--background-color-neutralHover`  | Hover on a neutral item                  |
-| `--background-color-neutralActive` | Pressed or current neutral item          |
-| `--text-color-default`             | Text                                     |
-| `--text-color-secondary`           | Secondary text                           |
-| `--border-color-control`           | Buttons and links that act as controls   |
-| `--border-color-input`             | Text inputs                              |
-| `--border-color-divider`           | Panels and page dividers                 |
-| `--outline-color-focus`            | The focus outline, the accent, inside    |
-| `--chart-color-sun`, `-earth`      | Sun and Earth lines and curves, fixed    |
-| `--chart-color-horizon`            | Horizon, orbits, and the ground, fixed   |
-| `--chart-color-select`             | The accent: selection and focus outlines |
-| `--body-color-*`                   | Each body's sphere in the model          |
+| Token                              | Use                                       |
+| ---------------------------------- | ----------------------------------------- |
+| `--background-color-neutral`       | Page, and buttons and inputs at rest      |
+| `--background-color-neutralHover`  | Hover on a neutral item                   |
+| `--background-color-neutralActive` | Pressed or current neutral item           |
+| `--background-color-accent`        | The accent button: the text color, filled |
+| `--text-color-default`             | Text                                      |
+| `--text-color-secondary`           | Secondary text                            |
+| `--text-color-onAccent`            | Text on the accent: the page color        |
+| `--border-color-control`           | Buttons and links that act as controls    |
+| `--border-color-input`             | Text inputs                               |
+| `--border-color-divider`           | Panels and page dividers                  |
+| `--outline-color-focus`            | The focus ring, cochineal, inside         |
+| `--chart-color-sun`, `-earth`      | Sun and Earth lines and curves, fixed     |
+| `--chart-color-horizon`            | Horizon, orbits, and the ground, fixed    |
+| `--chart-color-select`             | Cochineal: selection and focus rings      |
+| `--body-color-*`                   | Each body's sphere in the model           |
 
-The accent is cochineal, the Andean dye behind the crimson and magenta of
-Paracas and Inca textiles and quipu cords. It is only ever a line: the selection
-outline in the model and the focus outline, drawn inside the edge. Nothing is
-filled with it, so the focus outline always shows. Blue only means the Earth.
-Panels sit over the model as `bg-neutral/75` with a blur, so the scene shows
-through.
+Cochineal, the Andean dye behind the crimson and magenta of Paracas and Inca
+textiles and quipu cords, is the ring color: the selection rings in the model and
+the focus ring, drawn inside the edge. It is never a fill, so the focus ring
+always shows. The accent button is the text color filled, lettered in the page
+color. Blue only means the Earth. Panels sit over the model as `bg-neutral/75`
+with a blur, so the scene shows through.
 
 The chart colors are hex, because WebGL reads hex and rgb only, and are the same
 in both schemes: each sits at mid luminance, 3:1 on every neutral step, light
@@ -102,6 +104,19 @@ CSS only names the family. The file holds the rest.
 `1`/`l`/`I` stay distinct. Digits are equal width. Word spacing is a required
 feature (`rclt`) in the file. 16px sits above the about-14px body size for a 60
 cm console. Confirmation is on the real display.
+
+### 1.4 Model
+
+Three ideas, kept apart so they mix and match:
+
+- A site is a place: a body, a point on it (latitude, longitude), and the
+  conditions it is judged on.
+- A window is a time: a range of UTC dates with its own code, not tied to a
+  site. At most 31 days, Horizons' limit.
+- A candidate is a plan: one site and one window, saved by name.
+
+The same site in another window is a launch slip. The same window at another
+site is a moved landing. Candidates are what get compared, up to three at a time.
 
 ## 2. Workspace, layout, and elements
 
@@ -153,20 +168,25 @@ The whole card is the link. The air line is why elevation `0°` is not the same
 fact on every body. The Sun and the reference stars are in the model, never in
 the list: they are references, not places.
 
-### 3.2 Sites
+### 3.2 Sites and windows
 
-Each body has its own sites. No site is chosen until one is picked; until then
-the model shows the body in space. A site names what it is judged on:
+Each body has its own sites, predefined and your own. A site has a short code
+name (`APL11`, `CY3`, `SCR`), a description, its coordinates, and two flags:
 
 - `sunlight`: the Sun above the horizon, which is power.
 - `earth_visibility`: the Earth above the horizon, a direct link home.
 
-Moon sites have both. Earth and Mars sites have sunlight only. The conditions
-decide which bodies Horizons is asked about and what is drawn.
+Moon sites have both; Earth and Mars sites have sunlight only. The flags decide
+which bodies Horizons is asked about and what is drawn. A site is a point: the
+outline in the model is a fixed marker, since Horizons answers for a point.
 
-The windows in this version are 2027 Mar 1–3 and 2027 Jun 1–3. A window is what
-starts the fetch. The site stays when the window changes. `aria-current` marks
-the site and the window.
+Windows are their own list, predefined (`MAR27`, `JUN27`) and your own, picked
+by code. Changing the site keeps the window, and changing the window keeps the
+site. Your sites and windows are kept in this browser; the server holds only
+the predefined ones.
+
+Saving a site and a window as a candidate, and comparing up to three, come
+next.
 
 ### 3.3 The model
 
@@ -218,9 +238,12 @@ time and says so in a status line.
 
 ### 4.2 URL
 
-`/{code}/sites?site=&from=&to=` restores the body, the place, and the window.
-`code` is the Horizons center. Back, refresh, and a shared link show the same
-reading.
+- `/{body}/sites`: the body's sites.
+- `/{body}/sites/{site}?window={window}`: a site, read in a window.
+- `/{body}/sites/new` and `/{body}/sites/{site}/edit`: the site form.
+
+Back, refresh, and a shared link restore the reading, the camera angle
+included. A site or window added in another browser is not there yet.
 
 ### 4.3 Data and limits
 
