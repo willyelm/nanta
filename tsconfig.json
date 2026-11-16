@@ -21,7 +21,9 @@
 			"position": ["./position"],
 			"position/*": ["./position/*"],
 			"site": ["./site"],
-			"site/*": ["./site/*"]
+			"site/*": ["./site/*"],
+			"windows": ["./windows"],
+			"windows/*": ["./windows/*"]
 		}
 	},
 	"include": ["**/*.ts", "**/*.tsx"],

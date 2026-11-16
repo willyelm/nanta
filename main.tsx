@@ -9,6 +9,7 @@ import position from "position";
 import { renderToReadableStream } from "react-dom/server.browser";
 import site from "site";
 import { get, log, match, Router, router, since } from "system";
+import windows from "windows";
 import { splash } from "./scripts/splash.ts";
 
 // Runs when the Worker loads: at dev startup and reloads, and once per production instance.
@@ -64,4 +65,4 @@ const page = get("*", async (request) => {
 	});
 });
 
-export default router(body, position, site, [page]);
+export default router(body, position, site, windows, [page]);

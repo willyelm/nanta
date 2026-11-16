@@ -81,7 +81,7 @@ afterEach(() => {
 after(() => window.close());
 
 const root = new URL("../", import.meta.url);
-const aliases = new Set(["system", "interface", "body", "position", "site"]);
+const aliases = new Set(["system", "interface", "body", "position", "site", "windows"]);
 const suffixes = ["", ".ts", ".tsx", "/index.ts", "/index.tsx"];
 const isFile = (url: string) => statSync(fileURLToPath(url), { throwIfNoEntry: false })?.isFile();
 const ours = (url?: string) => !!url?.startsWith(root.href) && !url.includes("/node_modules/");
