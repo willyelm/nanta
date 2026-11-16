@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <mask id="nan" maskUnits="userSpaceOnUse" x="0" y="0" width="120" height="120">
+      <path d="M32 84H44V100H20V20H36V40H52V60H68V80H84V100H100V20H76V36H88" fill="none" stroke="#fff" stroke-width="10"/>
+      <path d="M32 84H44V100H20V20H36V40H52V60H68V80H84V100H100V20H76V36H88" fill="none" stroke="#000" stroke-width="4.4"/>
+    </mask>
+  </defs>
+  <rect width="120" height="120" fill="#ededed" mask="url(#nan)"/>
+</svg>

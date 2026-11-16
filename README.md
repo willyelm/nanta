@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/nanta-logo-white.svg">
+  <img src="public/nanta-logo.svg" alt="Nanta logo, a woven N" width="96">
+</picture>
+
 # Nanta
 
 **Choose the path under the Sun and the Earth.**
@@ -34,6 +39,23 @@ Built for the
 [Lunar Landing Site Navigator](https://www.spaceappschallenge.org/2026/challenges/lunar-landing-site-navigator/).
 Project page: [Nanta on Space Apps](https://www.spaceappschallenge.org/) (TODO:
 the team's project URL).
+
+## Demo
+
+<video src="docs/media/navigating.mp4" controls muted playsinline width="100%"></video>
+
+[Navigating](docs/media/navigating.mp4): pick a site and fly down to its
+horizon.
+
+<video src="docs/media/create-site-window.mp4" controls muted playsinline width="100%"></video>
+
+[Creating a site and a window](docs/media/create-site-window.mp4): add your own
+coordinates and dates.
+
+<video src="docs/media/comparing.mp4" controls muted playsinline width="100%"></video>
+
+[Comparing](docs/media/comparing.mp4): pin candidates and read the change as a
+diff.
 
 ## Name
 
