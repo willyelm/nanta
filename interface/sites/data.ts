@@ -45,11 +45,14 @@ export const [, useHorizon] = resumable(
 			center: code,
 		});
 		const sky: Sky = {};
+		let fetched = "";
 		for (const condition of needs) {
 			const body = conditions[condition].body;
-			sky[body] = (await json<Positions>(api(`/api/positions/${body}?${query}`))).positions;
+			const answer = await json<Positions>(api(`/api/positions/${body}?${query}`));
+			sky[body] = answer.positions;
+			if (answer.fetched > fetched) fetched = answer.fetched;
 		}
-		return sky;
+		return { sky, fetched };
 	},
 );
 
@@ -65,7 +68,14 @@ export function useShown({ code, site, window }: Shown) {
 	const sunlight = chosen?.sunlight ?? true;
 	const earth = chosen?.earth_visibility ?? true;
 	const list = useMemo(() => flagged({ sunlight, earth_visibility: earth }), [sunlight, earth]);
-	const sky = useHorizon(code, chosen?.lat ?? 0, chosen?.lon ?? 0, from, to, span ? list : []);
+	const { sky, fetched } = useHorizon(
+		code,
+		chosen?.lat ?? 0,
+		chosen?.lon ?? 0,
+		from,
+		to,
+		span ? list : [],
+	);
 	const first = list.length ? samples(sky, list[0]) : [];
-	return { list, sky, first, sunlight, earth_visibility: earth };
+	return { list, sky, first, fetched, chosen, sunlight, earth_visibility: earth };
 }

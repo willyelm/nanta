@@ -13,6 +13,7 @@ import {
 	useCandidates,
 } from "interface/sites/CandidatesBar";
 import { type Shown, useShown } from "interface/sites/data";
+import { Imagery } from "interface/sites/Imagery";
 import {
 	candidateCode,
 	removeCandidate,
@@ -34,14 +35,15 @@ function indexOf(first: { time: string }[], wanted: string) {
 	return wanted && found >= 0 ? found : Math.max(current, 0);
 }
 
-// The reading across the bottom: horizon, conditions with the time scrub, and the table. Expand
+// The reading across the bottom: horizon over the table, conditions with the time scrub, and
+// imagery of the site. Expand
 // fills the screen; while expanded, a strip keeps the site and window in view.
 export function ConditionsPanel({
 	expanded = false,
 	onExpand,
 	...shown
 }: Shown & { expanded?: boolean; onExpand?: () => void }) {
-	const { list, sky, first } = useShown(shown);
+	const { list, sky, first, fetched, chosen } = useShown(shown);
 	const keep = useKeep();
 	const params = useSearchParams();
 	const { pathname } = useLocation();
@@ -74,12 +76,8 @@ export function ConditionsPanel({
 				{onExpand ? <ExpandReading expanded={expanded} onToggle={onExpand} /> : null}
 			</div>
 			<div className="grid flex-1 min-h-0 gap-md p-md md:grid-cols-4">
-				<div
-					className="flex h-full min-h-0 min-w-0 w-full items-center justify-center"
-					style={{ containerType: "size" }}
-				>
-					{/* Square: as wide as the column, or as tall as the cell, whichever is smaller. */}
-					<div className="aspect-square w-[min(100%,100cqh)] max-w-full">
+				<div className="flex flex-col gap-md min-h-0 min-w-0 overflow-auto">
+					<div className="aspect-square w-full shrink-0">
 						<HorizonChart
 							list={list}
 							sky={sky}
@@ -89,6 +87,12 @@ export function ConditionsPanel({
 							onFlush={onDragEnd}
 						/>
 					</div>
+					{fetched ? (
+						<p className="text-caption text-secondary tabular-nums">
+							Last updated {fetched.slice(0, 16).replace("T", " ")} UTC, JPL Horizons
+						</p>
+					) : null}
+					<Reading list={list} sky={sky} at={at} />
 				</div>
 				<div className="md:col-span-2 flex flex-col gap-md min-h-0 overflow-auto">
 					<div className="flex flex-col gap-xs shrink-0 min-w-0">
@@ -112,7 +116,14 @@ export function ConditionsPanel({
 					<Conditions list={list} sky={sky} at={at} />
 				</div>
 				<div className="min-h-0 overflow-auto">
-					<Reading list={list} sky={sky} at={at} />
+					{chosen ? (
+						<Imagery
+							code={shown.code}
+							lat={chosen.lat}
+							lon={chosen.lon}
+							date={first[at]?.time.slice(0, 10) ?? ""}
+						/>
+					) : null}
 				</div>
 			</div>
 		</Panel>

@@ -3,6 +3,7 @@
 // Static files in dist/public are served before this runs (wrangler.toml [assets]).
 
 import body from "body";
+import imagery from "imagery";
 import { routes } from "interface";
 import { schemeBoot } from "interface/scheme";
 import { densityBoot } from "interface/scheme/density";
@@ -67,4 +68,4 @@ const page = get("*", async (request) => {
 	});
 });
 
-export default router(body, position, site, window, [page]);
+export default router(body, imagery, position, site, window, [page]);

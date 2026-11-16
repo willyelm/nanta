@@ -18,6 +18,8 @@
 			"interface/*": ["./interface/*"],
 			"body": ["./body"],
 			"body/*": ["./body/*"],
+			"imagery": ["./imagery"],
+			"imagery/*": ["./imagery/*"],
 			"position": ["./position"],
 			"position/*": ["./position/*"],
 			"site": ["./site"],
