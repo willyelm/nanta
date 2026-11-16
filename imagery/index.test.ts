@@ -12,10 +12,10 @@ test("Moon imagery centers a 3×3 Trek mosaic on the site", () => {
 	assert.ok(wac.x > 1 / 3 && wac.x < 2 / 3 && wac.y > 1 / 3 && wac.y < 2 / 3);
 });
 
-test("a polar site keeps the mosaic inside the grid and the ring on the site", () => {
-	const [wac] = imagery("301", -89.45, 222.69) ?? [];
-	assert.match(wac.tiles[2][1], /\/8\/255\//);
-	assert.ok(wac.y > 2 / 3 && wac.y <= 1);
+test("past 80° there's no Trek imagery, since the grid would stretch it", () => {
+	assert.deepEqual(imagery("301", -89.45, 222.69), []);
+	const [wac] = imagery("301", -69.373, 32.319) ?? [];
+	assert.ok(wac.y > 1 / 3 && wac.y < 2 / 3);
 });
 
 test("Earth imagery is Blue Marble and a GIBS picture of a past day, centered on the site", () => {

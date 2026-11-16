@@ -85,10 +85,10 @@ export function trek(
 ): Image {
 	const z = layer.zoom;
 	const [cols, rows] = [2 ** (z + 1), 2 ** z];
-	const east = ((lon + 180) % 360) - 180; // 0..360 east to -180..180
-	const fx = ((east + 180) / 360) * cols;
+	// The grid starts at 180° W (east 180) and 90° N. Below POLAR a site never sits in an edge row.
+	const fx = (((lon + 180) % 360) / 360) * cols;
 	const fy = ((90 - lat) / 180) * rows;
-	const [col, row] = [Math.floor(fx), Math.min(Math.max(Math.floor(fy), 1), rows - 2)];
+	const [col, row] = [Math.floor(fx), Math.floor(fy)];
 	const tiles = [-1, 0, 1].map((dy) =>
 		[-1, 0, 1].map((dx) => {
 			const c = (col + dx + cols) % cols;
@@ -142,10 +142,16 @@ export function gibs(lat: number, lon: number, date: string): Image[] {
 	];
 }
 
+// Past 80° the lat/lon grid stretches a tile to about 100 times wider than the ground it covers,
+// so Trek pictures there would be streaks: none, until the polar layers are in.
+export const POLAR = 80;
+
 export function imagery(body: string, lat: number, lon: number, date = ""): Image[] | null {
 	if (body === "399") return gibs(lat, lon, date);
 	const set = layers[body];
-	return set ? set.layers.map((layer) => trek(layer, set.source, lat, lon, RADIUS[body])) : null;
+	if (!set) return null;
+	if (Math.abs(lat) > POLAR) return [];
+	return set.layers.map((layer) => trek(layer, set.source, lat, lon, RADIUS[body]));
 }
 
 const fail = (status: number, error: string) => Response.json({ error }, { status });

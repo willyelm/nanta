@@ -54,6 +54,12 @@ function Pictures({
 	date: string;
 }) {
 	const images = useImagery(code, lat, lon, date);
+	if (!images.length)
+		return (
+			<p className="text-caption text-secondary">
+				No imagery this close to the pole yet: the map grid stretches it into streaks.
+			</p>
+		);
 	return (
 		<ul aria-label="Imagery" className="flex flex-col gap-md">
 			{images.map((image) => (
