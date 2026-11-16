@@ -42,7 +42,7 @@ the team's project URL).
 
 ## Demo
 
-<video src="docs/media/navigating.mp4" controls muted playsinline width="100%"></video>
+![Navigating from the bodies to a site](docs/media/navigating.gif)
 
 [Navigating](docs/media/navigating.mp4): pick a site and fly down to its
 horizon.
