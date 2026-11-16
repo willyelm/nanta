@@ -55,6 +55,7 @@ function SiteForm({
 	useView({
 		lat,
 		lon,
+		site: form.code,
 		sunlight: form.sunlight,
 		earth_visibility: form.earth_visibility,
 		// Keep the camera still on pick (scene holds while onPick is set); store full precision.

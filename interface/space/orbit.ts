@@ -1,4 +1,5 @@
 import type { Body, State } from "position";
+import { ids } from "./geometry";
 
 type Vec = [number, number, number];
 
@@ -26,16 +27,17 @@ export function advance(state: State, ms: number): Vec {
 	return [0, 1, 2].map((i) => r[i] * c + kr[i] * s + k[i] * along) as Vec;
 }
 
-// Heliocentric km at `time` from a set of Horizons states (Mercury, Earth, Moon, Mars).
-export function helio(states: State[], body: Body, time: number): number[] | null {
+// Heliocentric km at `time` from one day's Horizons states, by body code.
+export function helio(states: Record<string, State>, body: Body, time: number): number[] | null {
 	if (body === "sun") return [0, 0, 0];
-	const ahead = (code: string) => {
-		const s = states.find((row) => row.code === code);
+	const ahead = (of: Body) => {
+		const s = states[ids[of]];
 		return s ? advance(s, time - Date.parse(s.time)) : null;
 	};
+	// The Moon's state is around the Earth, the others around the Sun.
 	if (body === "moon") {
-		const [earth, moon] = [ahead("399"), ahead("301")];
+		const [earth, moon] = [ahead("earth"), ahead("moon")];
 		return earth && moon ? earth.map((v, i) => v + moon[i]) : null;
 	}
-	return ahead({ mercury: "199", earth: "399", mars: "499" }[body] ?? "");
+	return ahead(body);
 }

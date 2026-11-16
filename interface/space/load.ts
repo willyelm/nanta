@@ -1,6 +1,6 @@
 import type { Body as Entry } from "body";
 import type { State } from "position";
-import { byCode, names } from "./geometry";
+import { codes, names } from "./geometry";
 
 export type Star = { name: string; ra: number; dec: number; magnitude: number };
 
@@ -19,41 +19,43 @@ export async function fetchStars(): Promise<Star[]> {
 
 const CODES = ["399", "301", "499", "199"];
 
-// Queued Horizons fetches for Earth, Moon, Mars, Mercury at a day. Calls `on` after each body loads.
+// One day's Horizons states, by body code.
+export type States = Record<string, State>;
+
+// Queued Horizons fetches for Earth, Moon, Mars, Mercury at a day. Calls `on` once all have loaded.
 export function horizons(say: (text: string) => void, on: () => void) {
-	const loaded = new Map<string, State[]>();
+	const days = new Map<string, States>();
+	const ready = new Set<string>();
 	let queue = Promise.resolve();
 	let stopped = false;
-	const load = (hour: string) => {
-		if (loaded.has(hour)) return;
-		loaded.set(hour, []);
+	const load = (day: string) => {
+		if (days.has(day)) return;
+		const states: States = {};
+		days.set(day, states);
 		queue = queue.then(async () => {
 			for (const code of CODES) {
-				const name = names[byCode[code]];
-				say(`Loading Horizons state for ${hour.replace("T", " ")}: ${name} (${code})…`);
-				const response = await fetch(`/api/space?time=${hour}&body=${code}`).catch(() => null);
+				const name = names[codes[code]];
+				say(`Loading Horizons state for ${day.replace("T", " ")}: ${name} (${code})…`);
+				const response = await fetch(`/api/space?time=${day}&body=${code}`).catch(() => null);
 				if (stopped) return;
-				if (!response?.ok) {
-					say(`Couldn't load ${name}.`);
-					return;
-				}
-				loaded.set(hour, [...(loaded.get(hour) ?? []), (await response.json()) as State]);
-				say(`Rendering ${name}…`);
-				on();
+				if (!response?.ok) return say(`Couldn't load ${name}.`);
+				states[code] = (await response.json()) as State;
 			}
+			// Ready only now, so the redraw places every body at once.
+			ready.add(day);
 			say("");
+			on();
 		});
 	};
 	return {
 		stop() {
 			stopped = true;
 		},
+		// The day's states once every body has loaded.
 		statesFor(time?: number) {
 			const day = `${new Date(time ?? Date.now()).toISOString().slice(0, 10)}T00:00`;
 			load(day);
-			const exact = loaded.get(day) ?? [];
-			// Ready once every body has loaded (was 3, before Mercury made it 4).
-			return exact.length === CODES.length ? exact : undefined;
+			return ready.has(day) ? days.get(day) : undefined;
 		},
 	};
 }

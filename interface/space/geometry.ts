@@ -32,6 +32,10 @@ export const codes: Record<string, Body> = {
 	"499": "mars",
 	"199": "mercury",
 };
+// And back: each body's Horizons code.
+export const ids = Object.fromEntries(
+	Object.entries(codes).map(([code, body]) => [body, code]),
+) as Record<Body, string>;
 export const all = Object.keys(radius) as Body[];
 
 // Space, before a site: the Sun at the center and each body where it is now, from one Horizons
@@ -50,12 +54,6 @@ export const spaceSize: Record<Body, number> = {
 	mercury: EARTH * (radius.mercury / radius.earth),
 };
 export const MOON = 2;
-export const byCode: Record<string, Body> = {
-	"199": "mercury",
-	"399": "earth",
-	"301": "moon",
-	"499": "mars",
-};
 export const ecliptic = ([x, y, z]: number[], k = 1) => vec(x * k, z * k, -y * k);
 
 // The scene is the site's body frame, the body's radius 1. Directions come from Horizons and are

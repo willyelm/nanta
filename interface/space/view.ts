@@ -7,6 +7,8 @@ export type View = {
 	body?: string;
 	lat?: number;
 	lon?: number;
+	// The site's code, shown on its marker.
+	site?: string;
 	sky?: Sky;
 	at?: number;
 	// A sentence about what the model shows, written over it: "Sun 0.8° below the horizon, …".
@@ -30,6 +32,7 @@ export function useView({
 	body,
 	lat,
 	lon,
+	site,
 	sky,
 	at,
 	time,
@@ -49,6 +52,7 @@ export function useView({
 		if (body !== undefined) next.body = body;
 		if (lat !== undefined) next.lat = lat;
 		if (lon !== undefined) next.lon = lon;
+		if (site !== undefined) next.site = site;
 		if (sky !== undefined) next.sky = sky;
 		if (at !== undefined) next.at = at;
 		if (time !== undefined) next.time = time;
@@ -65,7 +69,7 @@ export function useView({
 		owned.current = Object.keys(next) as (keyof View)[];
 		store.view = view;
 		store.apply?.(view);
-	}, [body, lat, lon, sky, at, time, caption, sunlight, earth_visibility, picking]);
+	}, [body, lat, lon, site, sky, at, time, caption, sunlight, earth_visibility, picking]);
 
 	useEffect(() => {
 		return () => {

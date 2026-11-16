@@ -32,7 +32,11 @@ const row = (code: string, position: [number, number, number]): State => ({
 
 test("helio is the origin for the Sun and sums Earth with the Moon", () => {
 	const t = Date.parse("2026-01-01T00:00:00Z");
-	const states = [row("399", [10, 0, 0]), row("301", [1, 0, 0]), row("499", [20, 0, 0])];
+	const states = {
+		"399": row("399", [10, 0, 0]),
+		"301": row("301", [1, 0, 0]),
+		"499": row("499", [20, 0, 0]),
+	};
 	assert.deepEqual(helio(states, "sun", t), [0, 0, 0]);
 	assert.deepEqual(helio(states, "moon", t), [11, 0, 0]);
 	assert.deepEqual(helio(states, "earth", t), [10, 0, 0]);

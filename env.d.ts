@@ -24,6 +24,7 @@ declare module "three" {
 		project(camera: PerspectiveCamera): this;
 		unproject(camera: PerspectiveCamera): this;
 		normalize(): this;
+		setLength(length: number): this;
 		add(vector: Vector3): this;
 		sub(vector: Vector3): this;
 		crossVectors(a: Vector3, b: Vector3): this;

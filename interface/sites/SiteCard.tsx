@@ -35,6 +35,7 @@ export function SiteView({ site }: { site: Site }) {
 	useView({
 		lat: site.lat,
 		lon: site.lon,
+		site: site.code,
 		sunlight: site.sunlight,
 		earth_visibility: site.earth_visibility,
 	});
