@@ -196,10 +196,22 @@ reading. An unknown path is "Page not found." The server answers 404.
 
 Each view is one step. The URL changes. The reading updates in place.
 
+The three recordings follow the flow in order, from space down to a decision.
+
 <video src="media/nanta-body-navigator.mp4" controls muted playsinline width="100%"></video>
 
-> [Body navigator](media/nanta-body-navigator.mp4). Recording, 10 seconds: space
-> as it is now, a body picked, and the camera traveling to its globe.
+> [1. Bodies](media/nanta-body-navigator.mp4). Start in space and travel to a
+> body.
+
+<video src="media/nanta-site-navigator.mp4" controls muted playsinline width="100%"></video>
+
+> [2. Sites](media/nanta-site-navigator.mp4). Pick a site and land on its
+> horizon.
+
+<video src="media/nanta-candidate-compare.mp4" controls muted playsinline width="100%"></video>
+
+> [3. Compare](media/nanta-candidate-compare.mp4). Compare candidates against
+> the reading in view.
 
 ### 3.1 Body selector
 
@@ -277,11 +289,6 @@ browser; the server holds only the predefined ones.
 > limit. Both forms share the same fields, labels, and spacing. The focus ring
 > is cochineal, drawn inside the edge.
 
-<video src="media/nanta-site-navigator.mp4" controls muted playsinline width="100%"></video>
-
-> [Site navigator](media/nanta-site-navigator.mp4). Recording, 20 seconds: sites
-> on a body, a site picked, and the camera landing on its horizon.
-
 A site and a window are pinned as a candidate with the Pin button in the
 Reading's bar. Candidates sit as boxes in the Candidates bar, body and site over
 window (`301/SCR` over `JUN27`), on every page, even before a site is open. A
@@ -319,12 +326,6 @@ better or worse.
 > column is the reading in view and the second the hovered candidate, its change
 > in parentheses: red for less of the condition, green for more, and "same" in
 > gray.
-
-<video src="media/nanta-candidate-compare.mp4" controls muted playsinline width="100%"></video>
-
-> [Candidate compare](media/nanta-candidate-compare.mp4). Recording, 14 seconds:
-> candidates in the Candidates bar, each compared against the reading in view in
-> the Compare card.
 
 ### 3.3 The model
 
