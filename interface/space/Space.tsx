@@ -1,4 +1,5 @@
 import { bodies } from "body";
+import { readSetting, subscribeSettings } from "interface/scheme/model";
 import type { Body, Position, State } from "position";
 import { useEffect, useRef } from "react";
 import { classNames } from "system";
@@ -141,7 +142,26 @@ export function Space() {
 		const sunpoint = new PointLight("#ffffff", 3.5, 0, 0);
 		scene.add(new AmbientLight("#ffffff", 0.04), sunlight, sunpoint);
 
+		// Guides (orbits, grids, star names) and motion, from the menu (scheme/model.ts).
+		let guides = readSetting("guides");
+		let motion = readSetting("motion");
 		const grids = {} as Record<Body, BufferGeometry>;
+		const gridLines: Object3D[] = [];
+		const axisLines: Object3D[] = [];
+		const poles: { mesh: Object3D; label: HTMLSpanElement }[] = [];
+		// A small label over the canvas, pinned to a point each frame.
+		const tag = (text: string) => {
+			const label = Object.assign(document.createElement("span"), {
+				textContent: text,
+				hidden: true,
+				className: "absolute top-0 left-0 pointer-events-none font-mono text-caption text-default",
+			});
+			label.setAttribute("aria-hidden", "true");
+			el.parentElement?.append(label);
+			return label;
+		};
+		// North, east, south, and west on the ground around a site.
+		const cardinals = ["N", "E", "S", "W"].map((text) => ({ label: tag(text), at: vec() }));
 		const ball = new SphereGeometry(0.995, 64, 32);
 		// Planets and moons are lit spheres; the Sun is only its light (the corona below).
 		const meshes = {} as Record<Body, Object3D>;
@@ -155,7 +175,16 @@ export function Space() {
 			const lines = new LineBasicMaterial({ color: c, vertexColors: true });
 			grids[body] = graticule();
 			meshes[body] = new Mesh(ball, surface);
-			meshes[body].add(new LineSegments(grids[body], lines));
+			const gridLine = new LineSegments(grids[body], lines);
+			gridLine.visible = guides;
+			gridLines.push(gridLine);
+			meshes[body].add(gridLine);
+			// The spin axis through the poles, a little past the surface, with N at the north end.
+			const axis = line(c, false, [vec(0, -1.35, 0), vec(0, 1.35, 0)]);
+			axis.visible = guides;
+			axisLines.push(axis);
+			meshes[body].add(axis);
+			poles.push({ mesh: meshes[body], label: tag("N") });
 			paints.push([body, surface, lines]);
 			scene.add(meshes[body]);
 		}
@@ -186,8 +215,25 @@ export function Space() {
 		const goals = {} as Record<Body, Vector3>;
 		for (const body of all) goals[body] = meshes[body].position.clone();
 		let sliding = false;
-		const EASE = 0.12;
+		// Each frame closes this share of the gap; with motion off, all of it.
+		const ease = () => (motion ? 0.12 : 1);
 		let siteSight: (() => void) | null = null;
+		// Where the site's marks stand: the site itself, or the point under the camera while it
+		// travels between sites, so the marker, compass, and sight lines ride along.
+		const here = vec(0, 1, 0);
+		const placeSite = () => {
+			const ground = plus(vec(), here, 1.002);
+			for (const mesh of [horizon, outline]) {
+				mesh.position.copy(ground);
+				mesh.lookAt(plus(vec(), here, 2));
+			}
+			[axes.north, axes.east, plus(vec(), axes.north, -1), plus(vec(), axes.east, -1)].forEach(
+				(way, i) => {
+					cardinals[i].at.copy(plus(ground, way, 0.22));
+				},
+			);
+			siteSight?.();
+		};
 
 		const basic = (c: string, opacity?: number) =>
 			new MeshBasicMaterial(
@@ -236,6 +282,7 @@ export function Space() {
 		let dragging: { x: number; y: number } | null = null;
 		const goal = { position: camera.position.clone(), target: target.clone(), up: vec(0, 1, 0) };
 		const point = vec();
+		const north = vec();
 		let easing = false;
 		let frameId = 0;
 		let held = false;
@@ -254,8 +301,37 @@ export function Space() {
 			);
 			return plus(flat, axes.up, Math.sin(e));
 		};
-		// Set while the camera moves between sites: the angle it keeps on the way.
-		let travel: [number, number, number] | null = null;
+		// Set while the camera moves between sites: the angle it keeps on the way, and the trip
+		// over the surface, timed so it starts and ends gently.
+		let travel: {
+			angle: [number, number, number];
+			from: Vector3;
+			axis: Vector3;
+			arc: number;
+			elapsed: number;
+			at: number;
+			ms: number;
+		} | null = null;
+		// The one move on opening a site from the URL: from where the camera was to the saved
+		// view, timed like travel.
+		let fly: {
+			position: Vector3;
+			target: Vector3;
+			up: Vector3;
+			elapsed: number;
+			at: number;
+			ms: number;
+		} | null = null;
+		// Time into a move, at most 25 ms per frame, so a stalled frame (loading, a busy page)
+		// slows the move instead of skipping it.
+		const tick = (move: { elapsed: number; at: number }) => {
+			const now = performance.now();
+			move.elapsed += move.at ? Math.min(now - move.at, 25) : 0;
+			move.at = now;
+			return move.elapsed;
+		};
+		const partial = new Quaternion();
+		const smooth = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
 		const draw = () => {
 			frameId ||= requestAnimationFrame(render);
@@ -265,22 +341,39 @@ export function Space() {
 			if (travel) {
 				// Between sites: the target slides over the surface, the frame follows it, and the
 				// camera keeps its angle, so the readout holds still and the path is an arc.
-				const height = goal.target.length();
-				target.lerp(goal.target, 0.12).setLength(height);
+				const t = travel.ms ? Math.min(1, tick(travel) / travel.ms) : 1;
+				partial.setFromAxisAngle(travel.axis, travel.arc * smooth(t));
+				target.copy(travel.from).applyQuaternion(partial).setLength(goal.target.length());
 				const { lat, lon } = latLon(point.copy(target).normalize());
 				Object.assign(axes, frame(lat, lon));
-				camera.position.copy(plus(target, toward(travel[0], travel[1]), travel[2]));
+				const [az, elv, dist] = travel.angle;
+				camera.position.copy(plus(target, toward(az, elv), dist));
 				camera.up.copy(axes.up);
-				if (target.distanceTo(goal.target) < 0.001) travel = null;
+				here.copy(point);
+				if (t >= 1) {
+					target.copy(goal.target);
+					here.copy(goal.target).normalize();
+					travel = null;
+				}
+				placeSite();
 			}
 			easing &&=
 				camera.position.distanceTo(goal.position) > 0.001 ||
 				target.distanceTo(goal.target) > 0.001 ||
 				camera.up.distanceTo(goal.up) > 0.001;
-			if (easing && !travel) {
-				camera.position.lerp(goal.position, 0.12);
-				target.lerp(goal.target, 0.12);
-				camera.up.lerp(goal.up, 0.12).normalize();
+			if (fly) {
+				const t = fly.ms ? Math.min(1, tick(fly) / fly.ms) : 1;
+				const k = smooth(t);
+				camera.position.copy(fly.position).lerp(goal.position, k);
+				target.copy(fly.target).lerp(goal.target, k);
+				camera.up.copy(fly.up).lerp(goal.up, k).normalize();
+				if (t >= 1) fly = null;
+				easing = !!fly;
+			}
+			if (easing && !travel && !fly) {
+				camera.position.lerp(goal.position, ease());
+				target.lerp(goal.target, ease());
+				camera.up.lerp(goal.up, ease()).normalize();
 			}
 			const spinning = Math.abs(spin.x) + Math.abs(spin.y) + Math.abs(spin.zoom) > 1e-5;
 			if (spinning) {
@@ -293,9 +386,10 @@ export function Space() {
 				const length = Math.min(Math.max(offset.length() * Math.exp(spin.zoom), nearest), 80);
 				offset.normalize().multiplyScalar(length);
 				camera.position.copy(target).add(offset);
-				spin.x *= 0.88;
-				spin.y *= 0.88;
-				spin.zoom *= 0.8;
+				// Drifts to a stop; with motion off, stops at once.
+				spin.x *= motion ? 0.88 : 0;
+				spin.y *= motion ? 0.88 : 0;
+				spin.zoom *= motion ? 0.8 : 0;
 			}
 			camera.lookAt(target);
 			offset.copy(camera.position).sub(target);
@@ -304,7 +398,7 @@ export function Space() {
 			setReadout([
 				// What the camera looks at and turns around: the site, else the body, else space itself.
 				"Target",
-				(axes.site && store.view.site) || store.view.body || "Space",
+				(axes.site && store.view.site) || store.view.body || focused || "Space",
 				axes.site ? "Azimuth" : "Longitude",
 				deg((Math.atan2(b, a) + 2 * Math.PI) % (2 * Math.PI)),
 				axes.site ? "Elevation" : "Latitude",
@@ -334,6 +428,23 @@ export function Space() {
 					"translate(-50%, -100%)",
 				);
 			for (const star of named) pin(star.mesh, star.label, 0, "translate(-50%, -150%)");
+			// A point in space to a label; hidden when off, behind the camera, or facing away.
+			const pinAt = (at: Vector3, label: HTMLElement, shown: boolean) => {
+				point.copy(at).project(camera);
+				label.hidden = !shown || point.z > 1;
+				label.style.transform = `translate(${((point.x + 1) / 2) * width}px, ${((1 - point.y) / 2) * height}px) translate(-50%, -50%)`;
+			};
+			for (const { mesh, label } of poles)
+				pinAt(
+					north
+						.set(0, 1.5, 0)
+						.applyQuaternion(mesh.quaternion)
+						.multiplyScalar(mesh.scale.y)
+						.add(mesh.position),
+					label,
+					guides && mesh.visible && !axes.site,
+				);
+			for (const { label, at } of cardinals) pinAt(at, label, guides && axes.site);
 			// The site's marker: its tip on the site, hidden when the site faces away.
 			pin(horizon, marker.current, 0, "translate(-50%, -100%)");
 			if (marker.current && offset.copy(camera.position).sub(horizon.position).dot(axes.up) < 0)
@@ -344,12 +455,13 @@ export function Space() {
 					const mesh = meshes[body];
 					if (!mesh.visible) continue;
 					if (mesh.position.distanceTo(goals[body]) > 0.001) {
-						mesh.position.lerp(goals[body], EASE);
+						mesh.position.lerp(goals[body], ease());
 						sliding = true;
 					}
 				}
 				siteSight?.();
-				const selected = store.view.body ? codes[store.view.body] : undefined;
+				const following = store.view.body ?? focused;
+				const selected = following ? codes[following] : undefined;
 				if (selected && meshes[selected].visible && !axes.site) {
 					const step = plus(meshes[selected].position, followed, -1);
 					if (step.length() > 1e-9) {
@@ -362,7 +474,7 @@ export function Space() {
 					ring.position.copy(meshes[selected].position);
 				}
 			}
-			if (travel || easing || spinning || sliding) draw();
+			if (travel || fly || easing || spinning || sliding) draw();
 			else if (touched && !dragging) {
 				touched = false;
 				save();
@@ -410,7 +522,35 @@ export function Space() {
 		};
 
 		let last: View = {};
+		// The first view since the page loaded: with a camera in the URL (a reload or a shared
+		// link), one move to it. A site's view needs only the site, so it starts at once.
+		let opened = false;
+		// The body the camera turns around in space, by Horizons code; none for the overview.
+		let focused: string | undefined;
+		// The view saved in the URL, on the first view since the page loaded: one move from where
+		// the camera is to it, around `at`.
+		const restore = (at: Vector3, [az, elv, dist]: [number, number, number], near: number) => {
+			opened = true;
+			held = true;
+			nearest = near;
+			goal.target.copy(at);
+			pose(az, elv, dist);
+			fly = {
+				position: camera.position.clone(),
+				target: target.clone(),
+				up: camera.up.clone(),
+				elapsed: 0,
+				at: 0,
+				ms: motion ? 1400 : 0,
+			};
+		};
+		// The page is space itself, not a body or site the view hasn't reached yet.
+		const home = () => location.pathname === "/";
 		const rings: Partial<Record<Body, Line>> = {};
+		let showRings = true;
+		// At a site, the ecliptic: where the Sun and planets travel across the sky, a circle far
+		// enough out that the site's offset from the center doesn't bend it.
+		let eclipticRing: Line | null = null;
 		const orbit = (r: number) =>
 			line(
 				gray,
@@ -444,6 +584,9 @@ export function Space() {
 			url.searchParams.set("d", dist.toFixed(3));
 			for (const key of ["camera", "azimuth", "elevation", "distance"])
 				url.searchParams.delete(key);
+			// On the home page the camera may turn around a pointed-at body; keep which one.
+			if (home() && focused) url.searchParams.set("at", focused);
+			else url.searchParams.delete("at");
 			history.replaceState(history.state, "", url);
 		};
 		// Spherical offset from goal.target in the current axes; eases unless snap is set.
@@ -499,8 +642,12 @@ export function Space() {
 			// site on the same body, a window, or a time glides with the camera.
 			const snap = atSite !== !!axes.site || next.body !== last.body;
 			placed.clear();
-			for (const item of Object.values(rings)) if (item) item.visible = !atSite;
+			showRings = !atSite;
+			for (const item of Object.values(rings)) if (item) item.visible = showRings && guides;
 			horizon.visible = outline.visible = atSite;
+			// From the ground, the axis would cut through the sky; there the compass points instead.
+			for (const axis of axisLines) axis.visible = guides && !atSite;
+			if (eclipticRing) eclipticRing.visible = guides && atSite;
 			sight.sun.visible = sight.earth.visible = false;
 			siteSight = null;
 
@@ -526,6 +673,7 @@ export function Space() {
 						const r = Math.hypot(...p) * (SCALE / AU);
 						if (!rings[body]) {
 							rings[body] = orbit(r);
+							rings[body].visible = guides;
 							scene.add(rings[body]);
 						}
 						go(body, ecliptic(p, SCALE / AU), spaceSize[body], snap);
@@ -539,6 +687,25 @@ export function Space() {
 				const home = codes[next.body ?? "301"] ?? "moon";
 				const sample = Object.values(next.sky ?? {})[0]?.[next.at ?? 0];
 				const when = sample ? Date.parse(sample.time) : (next.time ?? Date.now());
+				if (eclipticRing) {
+					scene.remove(eclipticRing);
+					eclipticRing.geometry.dispose();
+				}
+				eclipticRing =
+					home === "sun"
+						? null
+						: line(
+								gray,
+								false,
+								Array.from({ length: 181 }, (_, i) => {
+									const a = (i / 180) * Math.PI * 2;
+									return eclipticOver(home, [Math.cos(a), Math.sin(a), 0], when).setLength(40);
+								}),
+							);
+				if (eclipticRing) {
+					eclipticRing.visible = guides;
+					scene.add(eclipticRing);
+				}
 				if (home !== "sun") {
 					for (const star of named)
 						star.mesh.position.copy(starOver(home, star.ra, star.dec, when));
@@ -553,10 +720,8 @@ export function Space() {
 				const site = f.up;
 				go(home, vec(), 1, true);
 				// Marker sits on the sphere at the exact lat/lon (same conversion as picking).
-				for (const mesh of [horizon, outline]) {
-					mesh.position.copy(plus(vec(), site, 1.002));
-					mesh.lookAt(plus(vec(), site, 2));
-				}
+				here.copy(site);
+				placeSite();
 				sunlight.visible = true;
 				sunpoint.visible = false;
 				const placing = next.onPick != null;
@@ -595,12 +760,12 @@ export function Space() {
 						const shown = body !== home && meshes[body].visible && look[body];
 						sight[body].visible = shown;
 						if (!shown) continue;
-						const toward = plus(meshes[body].position, site, -1);
+						const toward = plus(meshes[body].position, here, -1);
 						const length = toward.length();
 						const dir = toward.clone().normalize();
-						const up = dir.dot(f.up) > 0;
+						const up = dir.dot(here) > 0;
 						if (body === "sun") {
-							beam.position.copy(plus(site, toward, 0.5));
+							beam.position.copy(plus(here, toward, 0.5));
 							beam.quaternion.setFromUnitVectors(along, dir.clone().multiplyScalar(-1));
 							beam.scale.set(1, length, 1);
 							core.material.opacity = up ? 1 : 0.15;
@@ -609,7 +774,7 @@ export function Space() {
 						} else {
 							const step = length / DASHES;
 							dashes.forEach((mesh, n) => {
-								mesh.position.copy(plus(site, dir, step * (n + 0.5)));
+								mesh.position.copy(plus(here, dir, step * (n + 0.5)));
 								mesh.quaternion.setFromUnitVectors(along, dir);
 								mesh.scale.set(1, step * 0.55, 1);
 							});
@@ -634,24 +799,43 @@ export function Space() {
 			// While placing a site, keep the camera still so the marker stays under the click.
 			if (picking) held = true;
 			else if (moved) held = false;
+			const restoring = atSite && !opened && readCamera() != null;
 			if (!atSite) {
-				const placed = !!selected && (selected === "sun" || meshes[selected].visible);
-				if (moved || (placed && aimed !== next.body)) {
+				// On the home page, a body the camera was turned around before a reload: `at` in the URL.
+				const pin = !next.body && home() ? new URLSearchParams(location.search).get("at") : null;
+				const focus = selected ?? (pin ? codes[pin] : undefined);
+				const placed = !!focus && (focus === "sun" || meshes[focus].visible);
+				const saved = !opened && readCamera();
+				if (moved || (placed && aimed !== (next.body ?? pin)) || (saved && home())) {
 					// The chosen body once Horizons has placed it; until then, or with none, the
 					// whole solar system from afar.
-					aimed = placed ? next.body : undefined;
-					if (placed && selected) {
-						const at = goals[selected];
-						const away = Math.max(spaceSize[selected] * 8, 2.5);
-						aim(
-							at,
-							plus(at, vec(0, 0.6, 1).normalize(), away),
-							vec(0, 1, 0),
-							spaceSize[selected] * 1.5,
-						);
-					} else aim(vec(), overview(), vec(0, 1, 0), 1.5);
+					aimed = placed ? (next.body ?? pin ?? undefined) : undefined;
+					if (placed && focus) {
+						const at = goals[focus];
+						const away = Math.max(spaceSize[focus] * 8, 2.5);
+						focused = next.body ?? pin ?? undefined;
+						if (saved) restore(at, saved, spaceSize[focus] * 1.5);
+						else if (next.body)
+							aim(
+								at,
+								plus(at, vec(0, 0.6, 1).normalize(), away),
+								vec(0, 1, 0),
+								spaceSize[focus] * 1.5,
+							);
+						else {
+							focused = undefined;
+							aim(vec(), overview(), vec(0, 1, 0), 1.5);
+						}
+					} else if (saved && home() && !pin) {
+						focused = undefined;
+						restore(vec(), saved, 1.5);
+					} else if (!(saved && pin)) {
+						focused = undefined;
+						aim(vec(), overview(), vec(0, 1, 0), 1.5);
+					}
 				}
 			} else if (
+				restoring ||
 				(!picking && (moved || (!held && next.sky && next.sky !== last.sky))) ||
 				(picking && moved && last.lat === undefined && last.lon === undefined)
 			) {
@@ -665,15 +849,32 @@ export function Space() {
 				const lookAt = plus(site, site, 0.08);
 				nearest = 0.05;
 				goal.target.copy(lookAt);
-				const saved = was ?? readCamera();
+				const saved = restoring ? readCamera() : (was ?? readCamera());
 				const az = saved
 					? saved[0]
 					: (Math.atan2(-look.dot(axes.east), -look.dot(axes.north)) / toRad + 360) % 360;
 				const elv = saved ? saved[1] : SITE_ELEVATION;
 				const dist = saved ? saved[2] : SITE_DISTANCE;
-				pose(az, elv, dist);
+				if (restoring && saved) restore(lookAt, saved, nearest);
+				else pose(az, elv, dist);
 				// From one site to another: travel over the surface at the same angle.
-				if (was && moved) travel = was;
+				if (was && moved && !restoring) {
+					const from = target.clone().normalize();
+					const to = goal.target.clone().normalize();
+					// About 0.6 s to a neighbor, up to 1.6 s across the globe; none with motion off.
+					const arc = Math.acos(Math.max(-1, Math.min(1, from.dot(to))));
+					const axis = vec().crossVectors(from, to);
+					travel = {
+						angle: was,
+						from,
+						// Turning about the axis between the two sites draws the arc over the surface.
+						axis: axis.length() > 1e-9 ? axis.normalize() : axes.north.clone(),
+						arc,
+						elapsed: 0,
+						at: 0,
+						ms: motion ? Math.min(1600, 600 + arc * 320) : 0,
+					};
+				}
 				if (!saved) writeCamera(az, elv, dist);
 				held = picking || Boolean(saved) || Boolean(body);
 			}
@@ -784,6 +985,7 @@ export function Space() {
 							"absolute top-0 left-0 pointer-events-none font-mono text-caption text-default",
 					});
 					label.setAttribute("aria-hidden", "true");
+					label.dataset.guide = "";
 					el.parentElement?.append(label);
 					named.push({ mesh, label, ra: star.ra, dec: star.dec });
 					scene.add(mesh);
@@ -799,6 +1001,15 @@ export function Space() {
 		statesFor = loader.statesFor;
 
 		store.apply?.(store.view);
+		const unsubscribe = subscribeSettings(() => {
+			guides = readSetting("guides");
+			motion = readSetting("motion");
+			for (const gridLine of gridLines) gridLine.visible = guides;
+			for (const axis of axisLines) axis.visible = guides && !axes.site;
+			if (eclipticRing) eclipticRing.visible = guides && axes.site;
+			for (const item of Object.values(rings)) if (item) item.visible = showRings && guides;
+			draw();
+		});
 		const clock = setInterval(() => store.apply?.(store.view), 60_000);
 
 		return () => {
@@ -807,7 +1018,9 @@ export function Space() {
 			statesFor = undefined;
 			slot.current = null;
 			for (const { label } of named) label.remove();
+			for (const { label } of [...poles, ...cardinals]) label.remove();
 			clearInterval(clock);
+			unsubscribe();
 			store.apply = undefined;
 			cancelAnimationFrame(frameId);
 			observer.disconnect();
