@@ -28,7 +28,14 @@ export function Imagery({
 }) {
 	return (
 		<Catch fallback={<p className="text-caption text-secondary">Couldn't load imagery.</p>}>
-			<Suspense fallback={<Skeleton height="var(--spacing-chart)" />}>
+			<Suspense
+				fallback={
+					<div aria-hidden="true" className="flex flex-col gap-xs">
+						<Skeleton className="aspect-square" height="auto" />
+						<Skeleton width="80%" height="0.75rem" />
+					</div>
+				}
+			>
 				<Pictures code={code} lat={lat} lon={lon} date={code === "399" ? date : ""} />
 			</Suspense>
 		</Catch>

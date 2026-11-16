@@ -106,37 +106,44 @@ export function trek(
 	};
 }
 
-// One GIBS picture, 2° across, for a day. Today and later have no picture yet: use yesterday.
-export function gibs(lat: number, lon: number, date: string): Image {
+// GIBS pictures, 2° across: Blue Marble, the ground without clouds, and VIIRS on NOAA-20 for a
+// day (its wide swath leaves no gaps near the equator, where MODIS does). Today and later have
+// no picture yet: use yesterday.
+export function gibs(lat: number, lon: number, date: string): Image[] {
 	const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
 	const day = date && date < yesterday ? date : yesterday;
 	const east = ((lon + 180) % 360) - 180;
-	const query = new URLSearchParams({
-		SERVICE: "WMS",
-		REQUEST: "GetMap",
-		VERSION: "1.3.0",
-		LAYERS: "MODIS_Terra_CorrectedReflectance_TrueColor",
-		CRS: "EPSG:4326",
-		BBOX: [lat - 1, east - 1, lat + 1, east + 1].join(","),
-		WIDTH: "768",
-		HEIGHT: "768",
-		FORMAT: "image/jpeg",
-		TIME: day,
-	});
-	return {
-		title: "MODIS Terra true color",
-		source: "NASA GIBS",
-		date: day,
-		latest: day !== date,
-		tiles: [[`https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?${query}`]],
-		x: 0.5,
-		y: 0.5,
-		km: Math.round(2 * (Math.PI / 180) * RADIUS["399"] * Math.cos(lat * (Math.PI / 180))),
+	const picture = (layer: string, time?: string) => {
+		const query = new URLSearchParams({
+			SERVICE: "WMS",
+			REQUEST: "GetMap",
+			VERSION: "1.3.0",
+			LAYERS: layer,
+			CRS: "EPSG:4326",
+			BBOX: [lat - 1, east - 1, lat + 1, east + 1].join(","),
+			WIDTH: "768",
+			HEIGHT: "768",
+			FORMAT: "image/jpeg",
+			...(time ? { TIME: time } : {}),
+		});
+		return [[`https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?${query}`]];
 	};
+	const km = Math.round(2 * (Math.PI / 180) * RADIUS["399"] * Math.cos(lat * (Math.PI / 180)));
+	const at = { source: "NASA GIBS", x: 0.5, y: 0.5, km };
+	return [
+		{ ...at, title: "Blue Marble relief", tiles: picture("BlueMarble_ShadedRelief_Bathymetry") },
+		{
+			...at,
+			title: "VIIRS NOAA-20 true color",
+			date: day,
+			latest: day !== date,
+			tiles: picture("VIIRS_NOAA20_CorrectedReflectance_TrueColor", day),
+		},
+	];
 }
 
 export function imagery(body: string, lat: number, lon: number, date = ""): Image[] | null {
-	if (body === "399") return [gibs(lat, lon, date)];
+	if (body === "399") return gibs(lat, lon, date);
 	const set = layers[body];
 	return set ? set.layers.map((layer) => trek(layer, set.source, lat, lon, RADIUS[body])) : null;
 }

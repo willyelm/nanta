@@ -18,13 +18,14 @@ test("a polar site keeps the mosaic inside the grid and the ring on the site", (
 	assert.ok(wac.y > 2 / 3 && wac.y <= 1);
 });
 
-test("Earth imagery is a GIBS picture of a past day, centered on the site", () => {
-	const [modis] = imagery("399", 28.573, 279.351, "2026-06-01") ?? [];
+test("Earth imagery is Blue Marble and a GIBS picture of a past day, centered on the site", () => {
+	const [marble, modis] = imagery("399", 28.573, 279.351, "2026-06-01") ?? [];
+	assert.doesNotMatch(marble.tiles[0][0], /TIME=/);
 	assert.equal(modis.date, "2026-06-01");
 	assert.equal(modis.latest, false);
 	assert.match(modis.tiles[0][0], /TIME=2026-06-01/);
 	assert.match(modis.tiles[0][0], /BBOX=27\.573%2C-81\.649/);
-	const [future] = imagery("399", 0, 0, "2999-01-01") ?? [];
+	const [, future] = imagery("399", 0, 0, "2999-01-01") ?? [];
 	assert.notEqual(future.date, "2999-01-01");
 	assert.equal(future.latest, true);
 });
