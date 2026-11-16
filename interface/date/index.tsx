@@ -1,2 +1,1 @@
-export { DateInput } from "./DateInput";
-export { DateRangeInput } from "./DateRangeInput";
+export { DateRangeInput, MAX_DAYS } from "./DateRangeInput";

@@ -54,3 +54,31 @@ test("keeps the day real for its month", async () => {
 	assert.equal(spins()[2].textContent, "28");
 	await act(async () => root.unmount());
 });
+
+test("a finished start sets the end to start plus 31 days", async () => {
+	const { root, spins, key } = await render(<Range from="2027-06-01" to="2027-06-03" />);
+	await key(spins()[2], "ArrowUp");
+	assert.equal(spins()[2].textContent, "02");
+	assert.equal(spins()[3].textContent, "2027");
+	assert.equal(spins()[4].textContent, "07");
+	assert.equal(spins()[5].textContent, "03");
+	await act(async () => root.unmount());
+});
+
+test("the end cannot step past start plus 31 days", async () => {
+	const { root, spins, key } = await render(<Range from="2027-06-01" to="2027-07-02" />);
+	await key(spins()[5], "ArrowUp");
+	assert.equal(spins()[3].textContent, "2027");
+	assert.equal(spins()[4].textContent, "07");
+	assert.equal(spins()[5].textContent, "02");
+	await act(async () => root.unmount());
+});
+
+test("the end cannot step before start plus 1 day", async () => {
+	const { root, spins, key } = await render(<Range from="2027-06-01" to="2027-06-02" />);
+	await key(spins()[5], "ArrowDown");
+	assert.equal(spins()[3].textContent, "2027");
+	assert.equal(spins()[4].textContent, "06");
+	assert.equal(spins()[5].textContent, "02");
+	await act(async () => root.unmount());
+});
