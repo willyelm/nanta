@@ -4,6 +4,7 @@ import { classNames } from "system";
 // accent: the action a panel leads to, filled with the text color and lettered in the page color,
 // so it holds the same contrast. Cochineal is only ever a ring, so the focus ring shows on it.
 // compact: 24px (utility), the WCAG 2.5.8 minimum; default control stays the 44px target.
+// neutral: the panel's see-through fill and blur, so a button over the scene reads like a panel.
 type Variant = { variant?: "neutral" | "accent"; size?: "compact" };
 type Props =
 	| ({ as?: "button" } & Variant & ButtonHTMLAttributes<HTMLButtonElement>)
@@ -21,7 +22,7 @@ const look = (
 		"border",
 		variant === "accent"
 			? "bg-accent text-onAccent border-transparent pressed:bg-accent/70"
-			: "bg-neutral text-default border-control pressed:bg-neutralActive",
+			: "bg-neutral/80 backdrop-blur-panel text-default border-control pressed:bg-neutralActive/80",
 		size === "compact"
 			? "min-h-utility min-w-utility p-0"
 			: "min-h-control min-w-control py-sm px-md",
@@ -35,7 +36,7 @@ const look = (
 export function Button(props: Props) {
 	if (props.as === "a") {
 		const { as: _, variant, size, className, ...rest } = props;
-		const hover = variant === "accent" ? "hover:bg-accent/85" : "hover:bg-neutralHover";
+		const hover = variant === "accent" ? "hover:bg-accent/85" : "hover:bg-neutralHover/80";
 		return <a {...rest} className={look(variant, size, className, hover)} />;
 	}
 	const { as: _, variant, size, className, type = "button", ...rest } = props;
@@ -48,7 +49,7 @@ export function Button(props: Props) {
 				size,
 				className,
 				classNames(
-					variant === "accent" ? "enabled:hover:bg-accent/85" : "enabled:hover:bg-neutralHover",
+					variant === "accent" ? "enabled:hover:bg-accent/85" : "enabled:hover:bg-neutralHover/80",
 					"disabled:opacity-50 disabled:cursor-not-allowed",
 				),
 			)}

@@ -1,6 +1,7 @@
 import { Button } from "interface/button";
 import NavArrowDown from "interface/icon/nav-arrow-down.svg";
 import { Menu, MenuItem, MenuTrigger } from "interface/menu";
+import { Tooltip } from "interface/tooltip";
 import { useSyncExternalStore } from "react";
 import { type Density, readDensity, setDensity, subscribeDensity } from "./density";
 import { readScheme, type Scheme, setScheme, subscribeScheme } from "./index";
@@ -73,11 +74,13 @@ export function SchemeSwitch() {
 	const code = `${schemeCode}/${densityCode}`;
 	return (
 		<MenuTrigger align="end">
-			<Button aria-label={`Appearance: ${code}`} className="gap-sm border-0">
-				<SchemeSwatch fill={fill} />
-				{code}
-				<NavArrowDown icon className="text-secondary" />
-			</Button>
+			<Tooltip label="Appearance">
+				<Button aria-label={`Appearance: ${code}`} className="gap-sm border-0">
+					<SchemeSwatch fill={fill} />
+					{code}
+					<NavArrowDown icon className="text-secondary" />
+				</Button>
+			</Tooltip>
 			<Menu label="Appearance">
 				<p className="px-md py-xs text-caption text-secondary">Schemes</p>
 				{schemes.map(({ value, label, fill }) => (

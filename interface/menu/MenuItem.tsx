@@ -36,8 +36,8 @@ export function MenuItem({
 			}}
 			className={classNames(
 				"flex items-center gap-sm min-h-control px-md cursor-pointer",
-				"hover:bg-neutralHover focus:bg-neutralHover pressed:bg-neutralActive",
-				"aria-checked:bg-neutralActive",
+				"hover:bg-neutralHover/80 focus:bg-neutralHover/80 pressed:bg-neutralActive/80",
+				"aria-checked:bg-neutralActive/80",
 				"aria-disabled:opacity-50 aria-disabled:cursor-not-allowed",
 				className,
 			)}

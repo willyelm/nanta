@@ -1,7 +1,10 @@
+import { Button } from "interface/button";
 import { Clock } from "interface/clock";
+import GitHub from "interface/icon/github.svg";
 import Nanta from "interface/icon/nanta.svg";
 import { SchemeSwitch } from "interface/scheme/switch";
 import { CameraReadout, Space } from "interface/space";
+import { Tooltip } from "interface/tooltip";
 import type { ReactNode } from "react";
 
 // The shared page frame. The matched child is `children`.
@@ -21,6 +24,18 @@ export function Layout({ children }: { children?: ReactNode }) {
 				</div>
 				<div className="flex items-center gap-md justify-self-end">
 					<Clock />
+					<Tooltip label="GitHub">
+						<Button
+							as="a"
+							href="https://github.com/willyelm/nanta"
+							target="_blank"
+							rel="noopener noreferrer"
+							aria-label="Nanta on GitHub"
+							className="border-0"
+						>
+							<GitHub icon />
+						</Button>
+					</Tooltip>
 					<SchemeSwitch />
 				</div>
 			</header>
