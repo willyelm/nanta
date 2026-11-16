@@ -1,25 +1,50 @@
 import type { Site } from "site";
+import type { Window } from "windows";
 
-// The sites you add, kept in this browser. A site's code is its id; adding one with a code
-// that exists replaces it.
-const KEY = "nanta.sites";
-
-export function saved(body: string): Site[] {
-	try {
-		const all = JSON.parse(localStorage.getItem(KEY) ?? "[]") as Site[];
-		return all.filter((site) => site.body === body);
-	} catch {
-		return [];
-	}
+// Things you add, kept in this browser by key. A code is the id; saving one with a code that
+// exists replaces it. Storage can be blocked; then nothing is kept beyond the visit.
+function collection<T extends { code: string }>(key: string) {
+	const read = (): T[] => {
+		try {
+			return JSON.parse(localStorage.getItem(key) ?? "[]") as T[];
+		} catch {
+			return [];
+		}
+	};
+	return {
+		all: read,
+		remove(code: string) {
+			try {
+				localStorage.setItem(key, JSON.stringify(read().filter((item) => item.code !== code)));
+			} catch {
+				// Storage blocked.
+			}
+		},
+		save(item: T) {
+			try {
+				const rest = read().filter((other) => other.code !== item.code);
+				localStorage.setItem(key, JSON.stringify([...rest, item]));
+			} catch {
+				// Storage blocked.
+			}
+		},
+	};
 }
 
-export function save(site: Site) {
-	try {
-		const all = (JSON.parse(localStorage.getItem(KEY) ?? "[]") as Site[]).filter(
-			(other) => other.code !== site.code,
-		);
-		localStorage.setItem(KEY, JSON.stringify([...all, site]));
-	} catch {
-		// Storage blocked: the site still opens from its URL for this visit.
-	}
-}
+const sites = collection<Site>("nanta.sites");
+export const saved = (body: string) => sites.all().filter((site) => site.body === body);
+export const save = sites.save;
+
+const windows = collection<Window>("nanta.windows");
+export const savedWindows = windows.all;
+export const saveWindow = windows.save;
+export const removeWindow = windows.remove;
+
+// A candidate is a plan: one site and one window on a body, by their codes. Its code joins them.
+export type Candidate = { code: string; body: string; site: string; window: string };
+export const candidateCode = (site: string, window: string) => `${site}·${window}`;
+
+const candidates = collection<Candidate>("nanta.candidates");
+export const savedCandidates = candidates.all;
+export const saveCandidate = candidates.save;
+export const removeCandidate = candidates.remove;
