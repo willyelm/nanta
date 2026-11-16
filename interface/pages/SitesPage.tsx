@@ -33,7 +33,7 @@ export function SitesPage() {
 						<SitesPanel {...shown} />
 					</Loader>
 					<Loader label="Loading windows…" error="Couldn't load the windows.">
-						<WindowsPanel here={here} window={window} />
+						<WindowsPanel here={here} window={window} model={!site} />
 					</Loader>
 				</Panels>
 			)}

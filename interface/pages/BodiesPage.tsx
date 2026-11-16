@@ -32,7 +32,7 @@ export function BodiesPage() {
 					<BodiesPanel />
 				</Loader>
 				<Loader label="Loading windows…" error="Couldn't load the windows.">
-					<WindowsPanel here="/" window={window} />
+					<WindowsPanel here="/" window={window} model />
 				</Loader>
 			</Panels>
 			<CandidatesBar />
@@ -62,9 +62,9 @@ function BodiesSkeleton() {
 function BodiesPanel() {
 	const bodies = useBodies();
 	const keep = useKeep();
-	// The first body from the API is selected on load; pointing at or focusing another selects it.
-	const first = bodies.find((body) => body.type !== "star")?.code;
-	const [selected, setSelected] = useState(first);
+	// Nothing is selected on load, so the model opens on the whole solar system; pointing at or
+	// focusing a body moves the camera to it.
+	const [selected, setSelected] = useState<string>();
 	useView({ body: selected });
 	return (
 		<Panel as="nav" aria-label="Body" className="divide-y divide-divider">

@@ -7,6 +7,7 @@ import Xmark from "interface/icon/xmark.svg";
 import { List, ListItem, Panel, PanelBar } from "interface/panel";
 import { removeWindow, savedWindows, saveWindow } from "interface/sites/store";
 import { useKeep } from "interface/sites/url";
+import { useView } from "interface/space";
 import { Tooltip } from "interface/tooltip";
 import { useState } from "react";
 import { type Api, json, navigate, resumable, useHydrated } from "system";
@@ -120,8 +121,23 @@ function WindowForm({
 
 // The windows to read the site in, the current one marked. The + adds one; each row's pencil
 // turns that row into its form. Changing the window keeps the site.
-export function WindowsPanel({ here, window }: { here: string; window: string }) {
+// `model`: with no site open, the model shows the bodies at the chosen window's start (TODAY is
+// now). With a site, the Reading sets the time instead.
+export function WindowsPanel({
+	here,
+	window,
+	model = false,
+}: {
+	here: string;
+	window: string;
+	model?: boolean;
+}) {
 	const items = useWindows();
+	const chosen = items.find((w) => w.code === window);
+	useView({
+		time:
+			model && chosen && chosen.code !== "TODAY" ? Date.parse(`${chosen.from}T00:00Z`) : undefined,
+	});
 	// The form open: "new", a window's code, or none.
 	const [open, setOpen] = useState<string | null>(null);
 	// A window keeps the place you're on; a new window drops the time, which may not be in it.
