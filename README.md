@@ -59,7 +59,7 @@ zero: no prior work, and no prior experience with the APIs or the domain. It was
 built the way it was learned, from space down to a site: globes first, then
 their shape and spin, then light, then the places on them and their horizons.
 
-- [Code as of challenge submission](https://github.com/willyelm/nanta/tree/challenge-submission):
+- [Code as of challenge submission](https://github.com/willyelm/nanta/tree/nasa-challenge-2026):
   the project exactly as submitted, kept for the record.
 - `main`: the current state, with the fixes and improvements made after the
   submission. See the [post challenge log](docs/2026-320.md).

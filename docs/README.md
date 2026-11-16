@@ -196,11 +196,10 @@ reading. An unknown path is "Page not found." The server answers 404.
 
 Each view is one step. The URL changes. The reading updates in place.
 
-<video src="media/navigating.mp4" controls muted playsinline width="100%"></video>
+<video src="media/nanta-body-navigator.mp4" controls muted playsinline width="100%"></video>
 
-> [Navigating](media/navigating.mp4). Recording, 7 seconds: the Moon's sites in
-> the Sites panel, a site picked, and the camera flying down to its horizon with
-> Mars and the Earth in the sky.
+> [Body navigator](media/nanta-body-navigator.mp4). Recording, 10 seconds: space
+> as it is now, a body picked, and the camera traveling to its globe.
 
 ### 3.1 Body selector
 
@@ -278,12 +277,10 @@ browser; the server holds only the predefined ones.
 > limit. Both forms share the same fields, labels, and spacing. The focus ring
 > is cochineal, drawn inside the edge.
 
-<video src="media/create-site-window.mp4" controls muted playsinline width="100%"></video>
+<video src="media/nanta-site-navigator.mp4" controls muted playsinline width="100%"></video>
 
-> [Creating a site and a window](media/create-site-window.mp4). Recording, 21
-> seconds: a site added inline with a code name, a description, coordinates, and
-> Sunlight and Earthview, the marker following on the Moon as the numbers
-> change, then a window added with two dates.
+> [Site navigator](media/nanta-site-navigator.mp4). Recording, 20 seconds: sites
+> on a body, a site picked, and the camera landing on its horizon.
 
 A site and a window are pinned as a candidate with the Pin button in the
 Reading's bar. Candidates sit as boxes in the Candidates bar, body and site over
@@ -323,11 +320,11 @@ better or worse.
 > in parentheses: red for less of the condition, green for more, and "same" in
 > gray.
 
-<video src="media/comparing.mp4" controls muted playsinline width="100%"></video>
+<video src="media/nanta-candidate-compare.mp4" controls muted playsinline width="100%"></video>
 
-> [Comparing](media/comparing.mp4). Recording, 18 seconds: sites pinned to the
-> Candidates bar, then each candidate opened against the reading in view with
-> its chevron, the Compare card showing the comparison.
+> [Candidate compare](media/nanta-candidate-compare.mp4). Recording, 14 seconds:
+> candidates in the Candidates bar, each compared against the reading in view in
+> the Compare card.
 
 ### 3.3 The model
 
