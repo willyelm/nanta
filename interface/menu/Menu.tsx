@@ -49,7 +49,7 @@ export function Menu({
 			onKeyDown={keyDown}
 			onToggle={toggle}
 			className={classNames(
-				"hidden open:flex flex-col min-w-[12rem] p-xs bg-neutral text-default border border-divider",
+				"hidden open:flex flex-col min-w-[12rem] p-xs bg-neutral/80 backdrop-blur-panel text-default border border-divider",
 				className,
 			)}
 		/>
