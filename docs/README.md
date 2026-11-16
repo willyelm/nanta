@@ -28,14 +28,14 @@ Browsing bodies, sites, and date windows to summarize conditions: the Sun above
 the horizon, which is power, and the Earth above the horizon, which is a direct
 radio link home.
 
-A review groups the sites for a date window by those conditions, so the useful
-ones and the poor ones are visible together.
+Candidates, a site and a window pinned together, are compared one against
+another, so a slipped launch or a moved landing is read as a change.
 
 The Moon is `301`, Earth is `399`, Mars is `499`, and Mercury is `199` in
 Horizons.
 
-It does not score a place, rank places, or show the ground. Hills, slopes, and
-dust are a separate study.
+It does not score a place or rank places. Imagery shows the ground, but not its
+heights: hills, slopes, and dust are a separate study.
 
 ## 1. Product foundations
 
@@ -60,9 +60,9 @@ path favorable and another poor.
 The scheme choice is System, Light, or Dark (`auto`, `light`, `dark`), stored as
 `scheme`; `auto` is the default, stored as no value, and follows the system
 live. Density is Regular or Compact, stored as `density`; Regular is the default
-and Compact tightens the spacing tokens. Both are set on `<html>` before the
-first paint. The resolved
-`light` or `dark` is set on `<html data-scheme>` before the first paint.
+and Compact tightens the spacing tokens. The resolved `light` or `dark` is set
+on `<html data-scheme>`, and the density on `<html data-density>`, both before
+the first paint.
 
 | Token                              | Use                                       |
 | ---------------------------------- | ----------------------------------------- |
@@ -73,6 +73,7 @@ first paint. The resolved
 | `--text-color-default`             | Text                                      |
 | `--text-color-secondary`           | Secondary text                            |
 | `--text-color-onAccent`            | Text on the accent: the page color        |
+| `--text-color-more`, `-less`       | Compare card: more or less of a condition |
 | `--border-color-control`           | Buttons and links that act as controls    |
 | `--border-color-input`             | Text inputs                               |
 | `--border-color-divider`           | Panels and page dividers                  |
@@ -83,11 +84,12 @@ first paint. The resolved
 | `--body-color-*`                   | Each body's sphere in the model           |
 
 Cochineal, the Andean dye behind the crimson and magenta of Paracas and Inca
-textiles and quipu cords, is the ring color: the selection rings in the model and
-the focus ring, drawn inside the edge. It is never a fill, so the focus ring
+textiles and quipu cords, is the ring color: the selection rings in the model
+and the focus ring, drawn inside the edge. It is never a fill, so the focus ring
 always shows. The accent button is the text color filled, lettered in the page
-color. Blue only means the Earth. Panels sit over the model as `bg-neutral/75`
-with a blur, so the scene shows through.
+color. Blue only means the Earth. Panels, the Compare card, and the Appearance
+menu sit over the model as `bg-neutral/80` with a blur, so the scene shows
+through.
 
 The chart colors are hex, because WebGL reads hex and rgb only, and are the same
 in both schemes: each sits at mid luminance, 3:1 on every neutral step, light
@@ -98,6 +100,12 @@ Operational text on its background is 6:1, the NASA-STD-3001[^nasa3001] contrast
 for text that an operator reads. Control and input borders, the focus outline,
 and other non-text cues are 3:1 against the surface they sit on. Dividers are
 decorative.
+
+![The Appearance menu, Light and Compact](media/appearance.png)
+
+> The Appearance menu open from the header, with Light and Compact checked. The
+> same Reading behind it, in light, with tighter spacing. The trigger reads
+> `L/C`. (Placeholder: capture pending.)
 
 ### 1.3 Typography
 
@@ -120,8 +128,8 @@ Three ideas, kept apart so they mix and match:
 - A candidate is a plan: one site and one window, saved by name.
 
 The same site in another window is a launch slip. The same window at another
-site is a moved landing. Candidates are what get compared, side by side in the
-bottom bar.
+site is a moved landing. Candidates are what get compared, one against the
+reading in view, from the Candidates bar.
 
 ## 2. Workspace, layout, and elements
 
@@ -130,24 +138,29 @@ bottom bar.
 The model fills the screen behind everything. Over it, a header and a stable
 shape that does not change between pages:
 
-- The header: the name, the camera readout at the center, the UTC clock, and the
-  appearance menu. The menu holds the scheme (System, Light, Dark) and the
+- The header: the name, the Camera readout at the center, the UTC clock, and the
+  Appearance menu. The menu holds the scheme (System, Light, Dark) and the
   density (Regular, Compact). Its trigger shows a short code, `S/R` or `D/C`,
   next to a swatch of the accent over the page color.
-- A row of side panels: the Site Navigator (or bodies) on the left, Window
-  Selection on the right. Each panel is as tall as its content, up to the row,
-  then scrolls.
-- The Reading across the bottom: time, and with a site the horizon and numbers.
-  It expands to fill the screen; while expanded, a strip keeps the site and
-  window in view.
+- A row of side panels: Bodies or Sites on the left, Windows on the right. Each
+  panel is as tall as its content, up to the row, then scrolls.
+- The Reading across the bottom, with a site: its bar holds the Candidates, the
+  Pin button, and Expand. Expanded, it fills the screen and the bar keeps the
+  site and window in view. Without a site, the Candidates bar stands alone.
 
 Pages only fill the panels. Empty space passes the pointer to the model, so it
 can be turned anywhere it shows. On narrow screens the panels stack below the
 model.
 
-The camera readout names the frame and the camera's angle around what it looks
+The Camera readout names the frame and the camera's angle around what it looks
 at: azimuth and elevation in the body's frame at a site, or longitude and
 latitude on the ecliptic in space, then the distance.
+
+![The Reading, expanded](media/expanded.png)
+
+> The Reading expanded over the whole screen at `?reading=full`. The side panels
+> step away; its bar keeps the Candidates, the Pin button, and Collapse, so the
+> site and window stay in view. (Placeholder: capture pending.)
 
 ### 2.2 Navigation
 
@@ -155,7 +168,8 @@ The URL is the state.
 
 - `/` is the body list.
 - `/{code}/sites` is that body's sites.
-- `/{code}/sites/{site}?window=` is one place on that body, in one window.
+- `/{code}/sites/{site}?window=` is one place on that body, in one window, and
+  `&reading=full` when the Reading fills the screen.
 
 A link moves among these. Back, refresh, and a shared link restore the same
 reading. An unknown path is "Page not found." The server answers 404.
@@ -163,6 +177,12 @@ reading. An unknown path is "Page not found." The server answers 404.
 ## 3. User flows
 
 Each view is one step. The URL changes. The reading updates in place.
+
+![Pick a body, then a site, then a window](media/pick.mp4)
+
+> Recording: from space to a reading. A body is picked and the camera flies to
+> it, a site and the camera lands on its skyline, a window and the Reading fills
+> in. (Placeholder: recording pending.)
 
 ### 3.1 Body selector
 
@@ -180,6 +200,12 @@ The whole card is the link. The air line is why elevation `0°` is not the same
 fact on every body. The Sun and the reference stars are in the model, never in
 the list: they are references, not places.
 
+![Space, the bodies](media/space.png)
+
+> The first page, `/`. The Sun at the center and the bodies where they are now,
+> from Horizons. Bodies on the left, Windows on the right, and the Candidates
+> bar along the bottom. (Placeholder: capture pending.)
+
 ### 3.2 Sites and windows
 
 Each body has its own sites, predefined and your own. A site has a short code
@@ -188,20 +214,55 @@ name (`APL11`, `CY3`, `SCR`), a description, its coordinates, and two flags:
 - `sunlight`: the Sun above the horizon, which is power.
 - `earth_visibility`: the Earth above the horizon, a direct link home.
 
-Moon sites have both; Mercury, Earth, and Mars sites have sunlight only. The
-flags decide which bodies Horizons is asked about and what is drawn. A site is a
-point: the outline in the model is a fixed marker, since Horizons answers for a
-point.
+Moon sites have both; Earth (`KSC`, `INTI`), Mars, and Mercury sites have
+sunlight only. The flags decide which bodies Horizons is asked about and what is
+drawn. A site is a point: the outline in the model is a fixed marker, since
+Horizons answers for a point.
 
 Windows are their own list, predefined (`MAR27`, `JUN27`) and your own, picked
 by code. Changing the site keeps the window, and changing the window keeps the
-site. Your sites and windows are kept in this browser; the server holds only
-the predefined ones.
+site. Your sites and windows are kept in this browser; the server holds only the
+predefined ones.
 
-A site and a window are paired into a candidate with Compare, the link button in
-the Reading. Candidates sit as boxes in the bottom bar, body and site over
-window (`301/SCR` over `JUN27`), on every page, even before a site is open. A box opens its pair and keeps the
-camera; the × on hover unlinks it. Candidates are kept in this browser.
+![A body and its sites](media/sites.png)
+
+> The Moon's sites at `/301/sites`. Sites on the left with their code names,
+> Windows on the right, and the Moon turned to face the camera, its sites
+> marked. (Placeholder: capture pending.)
+
+![Add your own site and window](media/add.mp4)
+
+> Recording: a site added with +, by typing coordinates or clicking the body,
+> then a window added with two dates. Both open inline, and the model follows as
+> you type. (Placeholder: recording pending.)
+
+A site and a window are pinned as a candidate with the Pin button in the
+Reading's bar. Candidates sit as boxes in the Candidates bar, body and site over
+window (`301/SCR` over `JUN27`), on every page, even before a site is open. A
+box opens its pair and keeps the camera; the × on hover unpins it. Candidates
+are kept in this browser.
+
+Each box has a chevron on its left that opens the Compare card. Hovering the box
+previews it; the chevron keeps it open, so its text can be selected and copied.
+It opens below, left-aligned, or above when there is no room, and the chevron
+points to it. It's a unified diff at the same hour into each window: `-` the
+candidate, `+` the reading, the change on the right. Equal facts are one line,
+and it copies as it reads. Like a game's item compare, a `+` line is green for
+more of the condition and red for less; the signs carry it without color. It
+says more or less, never better or worse.
+
+![The Compare card](media/candidates.png)
+
+> The Compare card open over the Candidates bar: `301/SCR MAR27` against
+> `301/SCR JUN27`, a launch slip. Minus lines in gray, plus lines green for more
+> Sun and red for less Earth time, the changes in a column on the right.
+> (Placeholder: capture pending.)
+
+![Compare a launch slip and a moved site](media/compare.mp4)
+
+> Recording: two candidates pinned, the same site in two windows and a nearby
+> site in the same window. Hovering each box previews its diff; the chevron pins
+> one open to copy. (Placeholder: recording pending.)
 
 ### 3.3 The model
 
@@ -210,7 +271,7 @@ One scene, built once, never swapped. A selection moves only the camera.
 - Space, before a site: the Sun at the center, and the bodies where they are
   now, from one Horizons state each, advanced by the clock. Directions and
   distances from the Sun are true; sizes are enlarged so each body can be seen,
-  with Earth, Moon, and Mars in their true ratio.
+  with Earth, Moon, Mars, and Mercury in their true ratio.
 - A site: the body at the center and the site on it, with its horizon and an
   outline. The camera stands on the skyline with the site's zenith as up,
   looking toward the Earth's bearing, or the Sun's. The other bodies sit along
@@ -220,28 +281,48 @@ One scene, built once, never swapped. A selection moves only the camera.
 - Each body turns as the IAU model says, its poles and grid true for the time.
   At a site the Sun and the Earth are Horizons' own azimuth and elevation; the
   stars and the other bodies come from the same turn, within about 0.3° of
-  Horizons, the Moon's wobble included. Sight lines run from the site to the Sun and the Earth.
+  Horizons, the Moon's wobble included. Sight lines run from the site to the Sun
+  and the Earth.
 - The brightest stars, and the four on the ecliptic, are placed in their true
   directions, over a faint filler.
 
 The chart and the model are pictures of the numbers. The panels hold the
 reading.
 
+![A site in the model](media/site.png)
+
+> The camera on SCR's skyline, the site's zenith up. The Sun just over the
+> horizon with its beam, the Earth low on the other side with its dashed link,
+> and the stars in their true places. (Placeholder: capture pending.)
+
 ### 3.4 Detail
 
 The Reading has three parts, left to right:
 
-- The horizon compass, and under it the table: time in UTC and each condition's
-  elevation. Above the table, when Horizons was asked: "Last updated
+- The Compass, and under it the Raw samples table: time in UTC and each
+  condition's elevation. Above the table, when Horizons was asked: "Last updated
   2026-11-15 21:40 UTC, JPL Horizons". Units sit on the number. A missing sample
   is a dash. This is the text a planner can quote.
-- The time slider, and each condition at the chosen time: hours above the
+- The time slider and the Conditions, each at the chosen time: hours above the
   horizon in the window, the next rise or set, and one curve, like a forecast.
 - Imagery of the site, ringed at its point: Moon Trek for the Moon, Mars Trek
-  for Mars, Mercury Trek for Mercury, and the day's satellite picture from GIBS
-  for Earth.
+  for Mars, Mercury Trek for Mercury, and for Earth Blue Marble and the day's
+  picture from GIBS. A day with no picture yet shows the latest, captioned so.
 
 The slider moves the model, the table row, and the curves together.
+
+![A site in a window](media/reading.png)
+
+> The Reading for `301/SCR` in `JUN27`. The Compass over the Raw samples and
+> when Horizons was asked, the slider and Conditions in the middle, and Moon
+> Trek imagery with the site ringed on the right. (Placeholder: capture
+> pending.)
+
+![Scrub time on the horizon](media/scrub.mp4)
+
+> Recording: dragging the slider across the window. The Sun moves along its path
+> on the Compass, the table row and the curves follow, and the model turns with
+> it. (Placeholder: recording pending.)
 
 ## 4. System
 
@@ -256,7 +337,7 @@ time and says so in a status line.
 | Space        | `/` loads                   | The bodies where they are now, and the body list.            |
 | No site      | `/{code}/sites` loads       | The body in space, its sites, and "Choose a site."           |
 | No window    | A site is chosen            | The site's skyline, the other bodies, and "Choose a window." |
-| Loading      | Horizons requests in flight | A panel of the same shape says what is loading.              |
+| Loading      | Horizons requests in flight | A skeleton of the same shape, and what is loading.           |
 | Ready        | Samples arrive              | Conditions, the table, the curves, and exact directions.     |
 | Error        | A request fails             | A panel says what failed. The other panels stay.             |
 | Unknown path | No route matches            | "Page not found." The server answers 404.                    |
@@ -265,14 +346,15 @@ time and says so in a status line.
 
 - `/{body}/sites`: the body's sites.
 - `/{body}/sites/{site}?window={window}`: a site, read in a window.
+  `&reading=full` keeps the Reading expanded.
 
-Sites and windows you add are edited inline in their panels, so the other
-panels stay up; only the place or the window in the URL changes.
+Sites and windows you add are edited inline in their panels, so the other panels
+stay up; only the place or the window in the URL changes.
 
-Back, refresh, and a shared link restore the reading, the camera angle
-included. The window defaults to `TODAY`. The tab title is `Nanta - ` and the
-place: the body (`Moon 301`), the site (`SCR`), or the site and window
-(`SCR/JUN27`). A site or window added in another browser is not there yet.
+Back, refresh, and a shared link restore the reading, the camera angle included.
+The window defaults to `TODAY`. The tab title is `Nanta - ` and the place: the
+body (`Moon 301`), the site (`SCR`), or the site and window (`SCR/JUN27`). A
+site or window added in another browser is not there yet.
 
 ### 4.3 Data and limits
 
@@ -282,48 +364,21 @@ state per body for the current hour. Repeat requests are cached; dev starts with
 an empty cache.
 
 Horizons refracts only for sites on Earth, so Earth is requested refracted, and
-the Moon and Mars airless: their horizons are geometric. No request
-includes terrain, so the horizon is the smooth sphere. Moon Trek and Mars Trek
-images are shown, but no heights. The camera angle is kept in the URL.
+the Moon, Mars, and Mercury airless: their horizons are geometric. Mars and
+Mercury longitudes run west in the IAU frame, so they go to Horizons as negative
+east longitudes. No request includes terrain, so the horizon is the smooth
+sphere. Trek images are shown, but no heights. The camera angle is kept in the
+URL.
 
 `/api/imagery/{body}?lat=&lon=&date=` picks the source for the body and returns
-the pictures around the site: three by three Trek tiles, or one GIBS picture 2°
-across for a past day. It builds the URLs only; the browser loads the images
-from NASA.
+the pictures around the site: three by three Trek tiles, or for Earth two GIBS
+pictures 2° across: Blue Marble without clouds, and VIIRS on NOAA-20 for a past
+day. It builds the URLs only; the browser loads the images from NASA.
 
 There is no success percentage, no dust, no slope limit, and no hidden rank.
 
-## 5. Screens and flows
-
-Screenshots and short recordings of each step. Placeholders until the final
-captures.
-
-### 5.1 Screenshots
-
-| Screen               | File                               |
-| -------------------- | ---------------------------------- |
-| Space, the bodies    | `docs/media/space.png` (TODO)      |
-| A body and its sites | `docs/media/sites.png` (TODO)      |
-| A site in a window   | `docs/media/reading.png` (TODO)    |
-| Reading, expanded    | `docs/media/expanded.png` (TODO)   |
-| Candidates compared  | `docs/media/candidates.png` (TODO) |
-| Light and Compact    | `docs/media/appearance.png` (TODO) |
-
-### 5.2 Flows
-
-| Flow                                    | File                            |
-| --------------------------------------- | ------------------------------- |
-| Pick a body, then a site, then a window | `docs/media/pick.mp4` (TODO)    |
-| Add your own site and window            | `docs/media/add.mp4` (TODO)     |
-| Scrub time on the horizon               | `docs/media/scrub.mp4` (TODO)   |
-| Compare a launch slip and a moved site  | `docs/media/compare.mp4` (TODO) |
-
-[^wcag2]:
-
-[Web Content Accessibility Guidelines (WCAG) 2.2](https://www.w3.org/TR/WCAG22/).
+[^wcag2]: [Web Content Accessibility Guidelines (WCAG) 2.2](https://www.w3.org/TR/WCAG22/).
 
 [^apg]: [ARIA Authoring Practices Guide](https://www.w3.org/WAI/ARIA/apg/).
 
-[^nasa3001]:
-
-[NASA-STD-3001 Volume 2, Human Factors, Habitability, and Environmental Health](https://standards.nasa.gov/standard/NASA/NASA-STD-3001_VOL_2).
+[^nasa3001]: [NASA-STD-3001 Volume 2, Human Factors, Habitability, and Environmental Health](https://standards.nasa.gov/standard/NASA/NASA-STD-3001_VOL_2).

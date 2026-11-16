@@ -6,7 +6,19 @@ Nanta compares candidate locations and times against the conditions a mission
 needs, and shows when each one works, for how long, and what changes if the plan
 moves. Conditions are layers over time at a location. The first case is landing
 sites at the lunar south pole, where sunlight decides power and Earth's position
-decides direct communication.
+decides direct communication. Earth, Mars, and Mercury sites work the same
+way.
+
+- **Sites and windows.** Pick a site, or add your own coordinates, and a window
+  of dates up to 31 days.
+- **Sun and Earth against the horizon.** A compass from the site, the elevation
+  now, hours above the horizon, and time to the next sunset or Earthset.
+- **Compare.** Pin a site and a window as a candidate, then compare any
+  candidate against the reading in view, as a diff: a launch slip or a moved
+  landing reads as a change.
+- **A true model.** Space as it is now, and the sky from the site, matched to
+  Horizons within a few tenths of a degree.
+- **Imagery.** NASA pictures of the site, ringed at its point.
 
 Built for the
 [NASA Space Apps Challenge 2026](https://www.spaceappschallenge.org/) challenge
@@ -25,7 +37,14 @@ for the right moment.
 
 ## Status
 
-In development during the hackathon, November 14 to 15, 2026.
+Built during the hackathon, November 14 to 15, 2026.
+
+## Run
+
+```sh
+npm install
+npm run dev
+```
 
 ## Specification
 
@@ -39,15 +58,22 @@ In development during the hackathon, November 14 to 15, 2026.
 ## Data
 
 - [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/), for Sun and Earth
-  positions from lunar coordinates.
+  positions from a site on any body, and each body's place in space.
 - [Moon Trek](https://trek.nasa.gov/moon/), NASA, for lunar imagery: the LRO
-  wide-angle camera mosaic as map tiles, including south pole projections.
-  Imagery: NASA/GSFC/Arizona State University (LROC).
+  wide-angle camera mosaic and LOLA color relief, as map tiles. Imagery:
+  NASA/GSFC/Arizona State University (LROC).
+- [Mars Trek](https://trek.nasa.gov/mars/) and
+  [Mercury Trek](https://trek.nasa.gov/mercury/), NASA, for Viking, MOLA, and
+  MESSENGER mosaics.
+- [NASA GIBS](https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api),
+  for Earth: Blue Marble, and the day's VIIRS picture from NOAA-20.
 
 ## Use of AI tools
 
-AI tools assist with this project. Where and how they were used is recorded here
-as the work progresses, as the Space Apps project guidelines require.
+AI tools assisted with this project, as the Space Apps project guidelines ask to
+record. Claude Code (Anthropic) helped write and review code, check the model
+against Horizons, and edit the specification and logs. The idea, the design,
+and every decision are mine.
 
 ## License
 
