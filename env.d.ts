@@ -34,6 +34,7 @@ declare module "three" {
 	}
 	export class Quaternion {
 		copy(quaternion: Quaternion): this;
+		setFromUnitVectors(from: Vector3, to: Vector3): this;
 		setFromAxisAngle(axis: Vector3, angle: number): this;
 	}
 	export class Object3D {
@@ -60,6 +61,16 @@ declare module "three" {
 	export class SphereGeometry extends BufferGeometry {
 		constructor(radius: number, widthSegments?: number, heightSegments?: number);
 	}
+	export class CylinderGeometry extends BufferGeometry {
+		constructor(
+			radiusTop?: number,
+			radiusBottom?: number,
+			height?: number,
+			radialSegments?: number,
+			heightSegments?: number,
+			openEnded?: boolean,
+		);
+	}
 	export class RingGeometry extends BufferGeometry {
 		constructor(innerRadius: number, outerRadius: number, segments?: number);
 	}
@@ -78,6 +89,7 @@ declare module "three" {
 	};
 	export class Material {
 		constructor(params?: MaterialParams);
+		opacity: number;
 		color: { set(color: string): void };
 		dispose(): void;
 	}
@@ -99,9 +111,9 @@ declare module "three" {
 	export class LineSegments extends Object3D {
 		constructor(geometry: BufferGeometry, material: Material);
 	}
-	export class Mesh extends Object3D {
-		constructor(geometry: BufferGeometry, material: Material);
-		material: Material;
+	export class Mesh<M extends Material = Material> extends Object3D {
+		constructor(geometry: BufferGeometry, material: M);
+		material: M;
 	}
 	export class DirectionalLight extends Object3D {
 		constructor(color?: string, intensity?: number);
