@@ -83,8 +83,9 @@ the first paint.
 | `--chart-color-select`             | Cochineal: selection and focus rings      |
 | `--body-color-*`                   | Each body's sphere in the model           |
 
-Cochineal, the Andean dye behind the crimson and magenta of Paracas and Inca
-textiles and quipu cords, is the ring color: the selection rings in the model
+[Cochineal](https://en.wikipedia.org/wiki/Cochineal), the Andean dye extracted from
+the cochineal insect and behind the crimson and magenta of Paracas and Inca textiles
+and quipu cords, is the ring color: the selection rings in the model
 and the focus ring, drawn inside the edge. It is never a fill, so the focus ring
 always shows. The accent button is the text color filled, lettered in the page
 color. Blue only means the Earth. Panels, the Compare card, and the Appearance
