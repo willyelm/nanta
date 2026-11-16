@@ -124,6 +124,11 @@ function SiteForm({
 					/>
 				</label>
 			</div>
+			<p className="text-caption">
+				{taken
+					? `${form.code} is already a site on this body.`
+					: "Or click the body in the model to pick the point."}
+			</p>
 			<ToggleGroup
 				multiple
 				label="Look for"
@@ -143,11 +148,7 @@ function SiteForm({
 					</Toggle>
 				))}
 			</ToggleGroup>
-			<p className="text-caption">
-				{taken
-					? `${form.code} is already a site on this body.`
-					: "Or click the body in the model to pick the point."}
-			</p>
+
 			<div className="flex gap-sm">
 				<Button type="submit" variant="accent" disabled={!valid} className="flex-1">
 					{current ? "Save changes" : "Add site"}
