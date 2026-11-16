@@ -7,6 +7,7 @@ import imagery from "imagery";
 import { routes } from "interface";
 import { schemeBoot } from "interface/scheme";
 import { densityBoot } from "interface/scheme/density";
+import { settingsBoot } from "interface/scheme/model";
 import position from "position";
 import { renderToReadableStream } from "react-dom/server.browser";
 import site from "site";
@@ -36,6 +37,7 @@ const page = get("*", async (request) => {
 			<head>
 				<script>{schemeBoot}</script>
 				<script>{densityBoot}</script>
+				<script>{settingsBoot}</script>
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<meta name="description" content="Plan locations against changing conditions." />

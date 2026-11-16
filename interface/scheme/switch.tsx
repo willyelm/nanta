@@ -1,13 +1,21 @@
 import { Button } from "interface/button";
+import Check from "interface/icon/check.svg";
 import NavArrowDown from "interface/icon/nav-arrow-down.svg";
 import { Menu, MenuItem, MenuTrigger } from "interface/menu";
 import { Tooltip } from "interface/tooltip";
 import { useSyncExternalStore } from "react";
 import { type Density, readDensity, setDensity, subscribeDensity } from "./density";
 import { readScheme, type Scheme, setScheme, subscribeScheme } from "./index";
+import { readSetting, type Setting, setSetting, subscribeSettings } from "./model";
 
 const serverScheme = () => "auto" as const;
 const serverDensity = () => "regular" as const;
+const serverOn = () => true;
+
+const settings: { name: Setting; label: string }[] = [
+	{ name: "guides", label: "Guides" },
+	{ name: "motion", label: "Motion" },
+];
 
 // Fixed swatch backgrounds so each choice reads the same in either scheme.
 const LIGHT_BG = "oklch(100% 0 0)";
@@ -64,11 +72,15 @@ function SchemeSwatch({ fill }: { fill: string }) {
 	);
 }
 
-// Appearance menu: scheme and density, same pattern as OX but only what Nanta needs.
+// Appearance menu: scheme and density, same pattern as OX but only what Nanta needs, then the
+// 3D model's guides and motion, each a checkbox that flips.
 // Trigger shows a short code: S/L/D for scheme, R/C for density (e.g. S/R, D/C).
 export function SchemeSwitch() {
 	const scheme = useSyncExternalStore(subscribeScheme, readScheme, serverScheme);
 	const density = useSyncExternalStore(subscribeDensity, readDensity, serverDensity);
+	const guides = useSyncExternalStore(subscribeSettings, () => readSetting("guides"), serverOn);
+	const motion = useSyncExternalStore(subscribeSettings, () => readSetting("motion"), serverOn);
+	const on = { guides, motion };
 	const { code: schemeCode, fill } = schemeByValue[scheme];
 	const { code: densityCode } = densityByValue[density];
 	const code = `${schemeCode}/${densityCode}`;
@@ -92,6 +104,18 @@ export function SchemeSwitch() {
 				<p className="px-md py-xs text-caption text-secondary">Density</p>
 				{densities.map(({ value, label }) => (
 					<MenuItem key={value} checked={density === value} onAction={() => setDensity(value)}>
+						{label}
+					</MenuItem>
+				))}
+				<p className="px-md py-xs text-caption text-secondary">3D Model</p>
+				{settings.map(({ name, label }) => (
+					<MenuItem
+						key={name}
+						toggle
+						checked={on[name]}
+						onAction={() => setSetting(name, !on[name])}
+					>
+						<Check icon className={on[name] ? undefined : "invisible"} />
 						{label}
 					</MenuItem>
 				))}

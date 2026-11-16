@@ -280,11 +280,21 @@
 		}
 	}
 
+	/* Motion off in the menu, or the system's reduced motion before a choice (scheme/model.ts). */
 	@media (prefers-reduced-motion: reduce) {
 		*,
 		[popover] {
 			transition: none;
 		}
+	}
+	:root[data-motion="off"] :is(*, [popover]) {
+		transition: none;
+		animation: none;
+	}
+
+	/* Guides off: the star names go with the orbits and grids. */
+	:root[data-guides="off"] [data-guide] {
+		display: none;
 	}
 
 	/* Results dim while the next page loads (useNavigating in system/Router.tsx). */

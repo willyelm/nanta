@@ -4,18 +4,21 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { setDensity } from "./density.ts";
 import { setScheme } from "./index.ts";
+import { setSetting } from "./model.ts";
 import { SchemeSwitch } from "./switch.tsx";
 
 test("checks the current scheme and switches from the menu", async () => {
 	setScheme("auto");
 	setDensity("regular");
+	setSetting("guides", true);
+	setSetting("motion", true);
 	const container = document.body.appendChild(document.createElement("div"));
 	const root = createRoot(container);
 	await act(async () => root.render(<SchemeSwitch />));
 	const trigger = () => container.querySelector("[aria-haspopup=menu]");
 	const checked = () =>
 		[...container.querySelectorAll("[aria-checked=true]")].map((node) => node.textContent);
-	assert.deepEqual(checked(), ["System", "Regular"]);
+	assert.deepEqual(checked(), ["System", "Regular", "Guides", "Motion"]);
 	assert.equal(trigger()?.textContent, "S/R");
 	assert.match(container.querySelector("[role=menu]")?.textContent ?? "", /Schemes/);
 	assert.match(container.querySelector("[role=menu]")?.textContent ?? "", /Density/);
@@ -38,6 +41,13 @@ test("checks the current scheme and switches from the menu", async () => {
 	assert.equal(document.documentElement.dataset.density, "compact");
 	assert.equal(trigger()?.textContent, "D/C");
 	assert.equal(trigger()?.getAttribute("aria-label"), "Appearance: D/C");
+	assert.match(container.querySelector("[role=menu]")?.textContent ?? "", /3D Model/);
+	const guides = container.querySelector<HTMLElement>("[role=menuitemcheckbox]");
+	assert.equal(guides?.textContent, "Guides");
+	await act(async () => guides?.click());
+	assert.ok(!checked().includes("Guides"));
+	assert.equal(document.documentElement.dataset.guides, "off");
+	assert.equal(trigger()?.textContent, "D/C");
 	await act(async () => root.unmount());
 	container.remove();
 });
