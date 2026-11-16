@@ -360,7 +360,9 @@ The Reading has three parts, left to right:
   Past 80° the Trek grid stretches pictures into streaks, so polar sites say so
   instead, until the polar layers are in.
 
-The slider moves the model, the table row, and the curves together.
+The slider moves the model, the table row, and the curves together. Its time
+sits above the middle of the slider, the date at caption size over the hour at
+heading size, between the window's first and last hour.
 
 ![The Compass and Raw samples](media/reading-compass.png)
 

@@ -46,13 +46,19 @@ const densityByValue = Object.fromEntries(
 	densities.map((choice) => [choice.value, choice]),
 ) as Record<Density, (typeof densities)[number]>;
 
-// Accent | scheme background, like OX's theme chip.
+// Light from the upper left: a specular glint, then shade toward the far limb, over the fill.
+const SPHERE = [
+	"radial-gradient(circle at 32% 28%, oklch(100% 0 0 / 0.85) 0, oklch(100% 0 0 / 0) 28%)",
+	"radial-gradient(circle at 38% 34%, oklch(0% 0 0 / 0) 45%, oklch(0% 0 0 / 0.55) 100%)",
+].join(", ");
+
+// Accent | scheme background, like OX's theme chip, shaded as a small sphere.
 function SchemeSwatch({ fill }: { fill: string }) {
 	return (
 		<span
 			aria-hidden="true"
-			className="inline-block size-utility shrink-0 rounded-full border border-control"
-			style={{ background: fill }}
+			className="inline-block size-md shrink-0 rounded-full border border-divider"
+			style={{ background: `${SPHERE}, ${fill}` }}
 		/>
 	);
 }

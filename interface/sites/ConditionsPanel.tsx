@@ -102,9 +102,13 @@ export function ConditionsPanel({
 				</div>
 				<div className="md:col-span-2 flex flex-col gap-md min-h-0 overflow-auto">
 					<div className="flex flex-col gap-xs shrink-0 min-w-0">
-						<div className="flex items-baseline justify-between gap-sm text-caption tabular-nums">
+						<div className="flex items-end justify-between gap-sm text-caption tabular-nums">
 							<span className="text-secondary">{stamp(first[0])}</span>
-							<output className="text-default">{time} UTC</output>
+							{/* The scrubbed time drives the scene: date over a larger time of day. */}
+							<output htmlFor="reading-time" className="flex flex-col items-center text-default">
+								<span>{time.slice(0, 10)}</span>
+								<span className="text-heading">{time.slice(11)} UTC</span>
+							</output>
 							<span className="text-secondary">{stamp(first[first.length - 1])}</span>
 						</div>
 						<Slider
@@ -153,9 +157,12 @@ export function ReadingSkeleton() {
 					))}
 				</div>
 				<div className="md:col-span-2 flex flex-col gap-md min-h-0 overflow-hidden">
-					<div className="flex justify-between gap-sm">
+					<div className="flex items-end justify-between gap-sm">
 						<Skeleton width="10ch" height="0.75rem" />
-						<Skeleton width="14ch" height="0.75rem" />
+						<div className="flex flex-col items-center gap-xs">
+							<Skeleton width="10ch" height="0.75rem" />
+							<Skeleton width="9ch" height="1.25rem" />
+						</div>
 						<Skeleton width="10ch" height="0.75rem" />
 					</div>
 					<Skeleton height="var(--spacing-control)" />

@@ -30,6 +30,7 @@ declare module "three" {
 		crossVectors(a: Vector3, b: Vector3): this;
 		applyQuaternion(quaternion: Quaternion): this;
 		multiplyScalar(scalar: number): this;
+		setScalar(scalar: number): this;
 		length(): number;
 		dot(vector: Vector3): number;
 	}
@@ -46,6 +47,7 @@ declare module "three" {
 		makeBasis(x: Vector3, y: Vector3, z: Vector3): this;
 	}
 	export class Object3D {
+		constructor();
 		position: Vector3;
 		up: Vector3;
 		scale: Vector3;
@@ -122,6 +124,30 @@ declare module "three" {
 	export class Mesh<M extends Material = Material> extends Object3D {
 		constructor(geometry: BufferGeometry, material: M);
 		material: M;
+	}
+	export class Color {
+		constructor(color: string);
+		r: number;
+		g: number;
+		b: number;
+	}
+	export class CanvasTexture {
+		constructor(canvas: HTMLCanvasElement);
+		image: HTMLCanvasElement;
+		needsUpdate: boolean;
+		dispose(): void;
+	}
+	export class SpriteMaterial extends Material {
+		constructor(params?: {
+			map?: CanvasTexture;
+			color?: string;
+			transparent?: boolean;
+			depthWrite?: boolean;
+		});
+	}
+	export class Sprite extends Object3D {
+		constructor(material: SpriteMaterial);
+		material: SpriteMaterial;
 	}
 	export class DirectionalLight extends Object3D {
 		constructor(color?: string, intensity?: number);

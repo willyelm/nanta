@@ -2,7 +2,7 @@ import type { Body as Entry } from "body";
 import type { State } from "position";
 import { codes, names } from "./geometry";
 
-export type Star = { name: string; ra: number; dec: number; magnitude: number };
+export type Star = { name: string; ra: number; dec: number; magnitude: number; radiance: number };
 
 export async function fetchStars(): Promise<Star[]> {
 	const response = await fetch("/api/bodies");
@@ -12,7 +12,7 @@ export async function fetchStars(): Promise<Star[]> {
 	for (const star of list) {
 		const { ra, dec, magnitude } = star;
 		if (ra === undefined || dec === undefined || magnitude === undefined) continue;
-		stars.push({ name: star.name, ra, dec, magnitude });
+		stars.push({ name: star.name, ra, dec, magnitude, radiance: star.radiance ?? 2 });
 	}
 	return stars;
 }

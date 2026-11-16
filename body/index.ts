@@ -7,6 +7,7 @@ import { get } from "system";
 //   day: mean solar day, in seconds; radius: mean radius, in km (IAU)
 //   ra, dec: a fixed star's J2000 right ascension and declination, in degrees
 //   magnitude: visual brightness, lower is brighter; distance: in light years
+//   radiance: how far a star's light spreads around its disc, in disc radii (drawn, not physical)
 export type Body = {
 	code: string;
 	name: string;
@@ -20,6 +21,7 @@ export type Body = {
 	dec?: number;
 	magnitude?: number;
 	distance?: number;
+	radiance?: number;
 };
 
 export const bodies: Body[] = [
@@ -74,6 +76,7 @@ export const bodies: Body[] = [
 		name: "Sun",
 		type: "star",
 		radius: 695_700,
+		radiance: 5,
 	},
 	{
 		code: "HIP 32349",
@@ -83,6 +86,7 @@ export const bodies: Body[] = [
 		dec: -16.716,
 		magnitude: -1.46,
 		distance: 8.6,
+		radiance: 4,
 	},
 	{
 		code: "HIP 30438",
@@ -92,6 +96,7 @@ export const bodies: Body[] = [
 		dec: -52.696,
 		magnitude: -0.74,
 		distance: 310,
+		radiance: 3.5,
 	},
 	{
 		code: "HIP 69673",
@@ -101,6 +106,7 @@ export const bodies: Body[] = [
 		dec: 19.182,
 		magnitude: -0.05,
 		distance: 36.7,
+		radiance: 3,
 	},
 	{
 		code: "HIP 91262",
@@ -110,6 +116,7 @@ export const bodies: Body[] = [
 		dec: 38.784,
 		magnitude: 0.03,
 		distance: 25,
+		radiance: 3,
 	},
 	{
 		code: "HIP 24608",
@@ -119,6 +126,7 @@ export const bodies: Body[] = [
 		dec: 45.998,
 		magnitude: 0.08,
 		distance: 42.9,
+		radiance: 3,
 	},
 	{
 		code: "HIP 24436",
@@ -128,6 +136,7 @@ export const bodies: Body[] = [
 		dec: -8.202,
 		magnitude: 0.13,
 		distance: 860,
+		radiance: 3,
 	},
 	{
 		code: "HIP 27989",
@@ -137,6 +146,7 @@ export const bodies: Body[] = [
 		dec: 7.407,
 		magnitude: 0.5,
 		distance: 550,
+		radiance: 3,
 	},
 	{
 		code: "HIP 21421",
@@ -146,6 +156,7 @@ export const bodies: Body[] = [
 		dec: 16.509,
 		magnitude: 0.86,
 		distance: 65,
+		radiance: 2.5,
 	},
 	{
 		code: "HIP 80763",
@@ -155,6 +166,7 @@ export const bodies: Body[] = [
 		dec: -26.432,
 		magnitude: 0.96,
 		distance: 550,
+		radiance: 2.5,
 	},
 	{
 		code: "HIP 65474",
@@ -164,6 +176,7 @@ export const bodies: Body[] = [
 		dec: -11.161,
 		magnitude: 0.97,
 		distance: 250,
+		radiance: 2.5,
 	},
 	{
 		code: "HIP 49669",
@@ -173,6 +186,7 @@ export const bodies: Body[] = [
 		dec: 11.967,
 		magnitude: 1.35,
 		distance: 79,
+		radiance: 2,
 	},
 	{
 		code: "HIP 11767",
@@ -182,6 +196,7 @@ export const bodies: Body[] = [
 		dec: 89.264,
 		magnitude: 1.98,
 		distance: 433,
+		radiance: 2,
 	},
 ];
 

@@ -1,10 +1,13 @@
+import { bodies } from "body";
 import type { Body, Position, State } from "position";
 import { useEffect, useRef } from "react";
 import { classNames } from "system";
 import {
 	AmbientLight,
 	type BufferGeometry,
+	CanvasTexture,
 	CircleGeometry,
+	Color,
 	CylinderGeometry,
 	DirectionalLight,
 	type Line,
@@ -14,6 +17,7 @@ import {
 	Mesh,
 	MeshBasicMaterial,
 	MeshStandardMaterial,
+	Object3D,
 	PerspectiveCamera,
 	PointLight,
 	Points,
@@ -22,6 +26,8 @@ import {
 	RingGeometry,
 	Scene,
 	SphereGeometry,
+	Sprite,
+	SpriteMaterial,
 	type Vector3,
 	WebGLRenderer,
 } from "three";
@@ -69,6 +75,44 @@ const deg = (radians: number) => `${Math.round(radians / toRad)}°`;
 const OVERVIEW = 40;
 const overview = () => vec(0, 1, 0.35).normalize().multiplyScalar(OVERVIEW);
 
+// The Sun's radiance, from its body: how many of its radii its light spreads.
+const WHITE = "#ffffff";
+const SUN_RADIANCE = bodies.find((b) => b.code === "10")?.radiance ?? 5;
+
+// Paints a star's light: solid to its limb, then its color falling off smoothly to nothing.
+// `reach` is the star's radiance: the texture is that many radii out, so the limb is at 1/reach.
+function radiance(texture: CanvasTexture, core: string, sun: string, reach: number) {
+	const canvas = texture.image as HTMLCanvasElement;
+	const ctx = canvas.getContext("2d");
+	if (!ctx) return;
+	const n = canvas.width;
+	const c = n / 2;
+	const limb = 1 / reach;
+	// The color `mix` of the way from core to sun, at alpha `a`.
+	const from = new Color(core);
+	const to = new Color(sun);
+	const rgba = (mix: number, a: number) => {
+		const ch = (x: number, y: number) => Math.round((x + (y - x) * mix) * 255);
+		return `rgba(${ch(from.r, to.r)},${ch(from.g, to.g)},${ch(from.b, to.b)},${a})`;
+	};
+	ctx.clearRect(0, 0, n, n);
+
+	// Glow: solid core to the limb, then shading into the sun color as it fades to nothing.
+	const glow = ctx.createRadialGradient(c, c, 0, c, c, c);
+	glow.addColorStop(0, rgba(0, 1));
+	glow.addColorStop(limb, rgba(0, 0.95));
+	const STOPS = 16;
+	for (let i = 1; i <= STOPS; i++) {
+		const t = i / STOPS;
+		const fade = (1 - t) ** 3;
+		glow.addColorStop(limb + (1 - limb) * t, rgba(Math.sqrt(t), 0.6 * fade));
+	}
+	ctx.fillStyle = glow;
+	ctx.fillRect(0, 0, n, n);
+
+	texture.needsUpdate = true;
+}
+
 export function Space() {
 	const canvas = useRef<HTMLCanvasElement>(null);
 	const labels = useRef<Partial<Record<Body, HTMLSpanElement | null>>>({});
@@ -92,14 +136,15 @@ export function Space() {
 
 		const grids = {} as Record<Body, BufferGeometry>;
 		const ball = new SphereGeometry(0.995, 64, 32);
-		const meshes = {} as Record<Body, Mesh>;
+		// Planets and moons are lit spheres; the Sun is only its light (the corona below).
+		const meshes = {} as Record<Body, Object3D>;
 		const paints: [Body, Material, Material][] = [];
+		meshes.sun = new Object3D();
+		scene.add(meshes.sun);
 		for (const body of all) {
+			if (body === "sun") continue;
 			const c = paint(body);
-			const surface =
-				body === "sun"
-					? new MeshBasicMaterial({ color: c, transparent: true, opacity: 0.35 })
-					: new MeshStandardMaterial({ color: c, transparent: true, opacity: 0.7 });
+			const surface = new MeshStandardMaterial({ color: c, transparent: true, opacity: 0.7 });
 			const lines = new LineBasicMaterial({ color: c, vertexColors: true });
 			grids[body] = graticule();
 			meshes[body] = new Mesh(ball, surface);
@@ -107,6 +152,17 @@ export function Space() {
 			paints.push([body, surface, lines]);
 			scene.add(meshes[body]);
 		}
+
+		// A child of the Sun, so it follows the Sun's place and size; it always faces the camera.
+		const shine = new CanvasTexture(
+			Object.assign(document.createElement("canvas"), { width: 512, height: 512 }),
+		);
+		radiance(shine, WHITE, paint("sun"), SUN_RADIANCE);
+		const corona = new Sprite(
+			new SpriteMaterial({ map: shine, transparent: true, depthWrite: false }),
+		);
+		corona.scale.setScalar(SUN_RADIANCE * 2);
+		meshes.sun.add(corona);
 
 		const goals = {} as Record<Body, Vector3>;
 		for (const body of all) goals[body] = meshes[body].position.clone();
@@ -142,9 +198,10 @@ export function Space() {
 
 		const starColor = () => getComputedStyle(el).getPropertyValue("--body-color-moon").trim();
 		const faint = new PointsMaterial({ color: starColor(), size: 1, sizeAttenuation: false });
-		const bright = new MeshBasicMaterial({ color: starColor() });
+		// Named stars are discs of light facing the camera, each spreading as far as its radiance.
 		scene.add(new Points(filler(3000), faint));
-		const named: { mesh: Mesh; label: HTMLSpanElement; ra: number; dec: number }[] = [];
+		const glows: { texture: CanvasTexture; material: SpriteMaterial; reach: number }[] = [];
+		const named: { mesh: Object3D; label: HTMLSpanElement; ra: number; dec: number }[] = [];
 
 		const renderer = new WebGLRenderer({ canvas: el, antialias: true, alpha: true });
 		renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -239,7 +296,12 @@ export function Space() {
 			ring.quaternion.copy(camera.quaternion);
 			renderer.render(scene, camera);
 			const [width, height] = [el.clientWidth, el.clientHeight];
-			const pin = (mesh: Mesh, label: HTMLElement | null | undefined, lift: number, dy: string) => {
+			const pin = (
+				mesh: Object3D,
+				label: HTMLElement | null | undefined,
+				lift: number,
+				dy: string,
+			) => {
 				if (!label) return;
 				point.set(mesh.position.x, mesh.position.y + lift, mesh.position.z).project(camera);
 				label.hidden = !mesh.visible || point.z > 1;
@@ -664,7 +726,8 @@ export function Space() {
 				lines.color.set(c);
 			}
 			faint.color.set(starColor());
-			bright.color.set(starColor());
+			for (const glow of glows) radiance(glow.texture, starColor(), starColor(), glow.reach);
+			radiance(shine, WHITE, now.getPropertyValue("--body-color-sun").trim(), SUN_RADIANCE);
 			draw();
 		});
 		scheme.observe(document.documentElement, { attributeFilter: ["data-scheme"] });
@@ -682,10 +745,19 @@ export function Space() {
 			.then((list) => {
 				if (stopped) return;
 				for (const star of list) {
-					const mesh = new Mesh(
-						new SphereGeometry(Math.max(0.25, 0.9 - star.magnitude * 0.25), 8, 6),
-						bright,
+					const texture = new CanvasTexture(
+						Object.assign(document.createElement("canvas"), { width: 64, height: 64 }),
 					);
+					radiance(texture, starColor(), starColor(), star.radiance);
+					const material = new SpriteMaterial({
+						map: texture,
+						transparent: true,
+						depthWrite: false,
+					});
+					glows.push({ texture, material, reach: star.radiance });
+					const mesh = new Sprite(material);
+					const disc = Math.max(0.25, 0.9 - star.magnitude * 0.25);
+					mesh.scale.setScalar(disc * star.radiance * 2);
 					mesh.position.copy(starAt(star.ra, star.dec));
 					const label = Object.assign(document.createElement("span"), {
 						textContent: star.name,
@@ -723,12 +795,18 @@ export function Space() {
 			scheme.disconnect();
 			for (const [type, fn] of pointers) el.removeEventListener(type, fn);
 			el.removeEventListener("wheel", wheel);
+			shine.dispose();
+			for (const glow of glows) {
+				glow.texture.dispose();
+				glow.material.dispose();
+			}
+			corona.material.dispose();
 			renderer.dispose();
 		};
 	}, []);
 
 	return (
-		<div className="fixed inset-0 -z-10 overflow-hidden">
+		<div className="fixed inset-0 -z-10 overflow-hidden bg-space">
 			<canvas
 				ref={canvas}
 				role="img"

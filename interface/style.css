@@ -24,6 +24,8 @@
 	--background-color-neutral: oklch(100% 0 0);
 	--background-color-neutralHover: oklch(96% 0 0);
 	--background-color-neutralActive: oklch(92% 0 0);
+	/* space: behind the scene, a soft gray in light so the white Sun and stars don't wash out. */
+	--background-color-space: oklch(94% 0 0);
 	/* accent: the text color as a fill, for the one action a panel leads to. Cochineal is only
 	   ever a ring, never a fill. */
 	--background-color-accent: var(--text-color-default);
@@ -120,6 +122,14 @@
 	}
 }
 
+/* While the scheme swaps, nothing fades: every color changes in the same frame. */
+[data-scheme-swap] *,
+[data-scheme-swap] *::before,
+[data-scheme-swap] *::after {
+	/* biome-ignore lint/complexity/noImportantStyles: must beat every transition utility */
+	transition: none !important;
+}
+
 /* The scheme switch sets data-scheme on <html>. Dark overrides the colors that change. */
 [data-scheme="light"] {
 	color-scheme: light;
@@ -131,6 +141,7 @@
 	--background-color-neutral: oklch(15% 0.002 286);
 	--background-color-neutralHover: oklch(21% 0.004 286);
 	--background-color-neutralActive: oklch(27% 0.006 286);
+	--background-color-space: oklch(15% 0.002 286);
 
 	--text-color-default: oklch(94.6% 0 0);
 	--text-color-secondary: oklch(77.3% 0 0);

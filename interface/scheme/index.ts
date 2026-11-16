@@ -17,17 +17,27 @@ function resolve(scheme: Scheme) {
 	return matchMedia(DARK).matches ? "dark" : "light";
 }
 
+// Swaps the scheme with transitions off, so colors change at once instead of fading through.
+// Reading a computed style commits the new colors before the next frame turns transitions back on.
+function apply(scheme: "light" | "dark") {
+	const root = document.documentElement;
+	root.dataset.schemeSwap = "";
+	root.dataset.scheme = scheme;
+	getComputedStyle(root).color;
+	requestAnimationFrame(() => delete root.dataset.schemeSwap);
+}
+
 export function setScheme(scheme: Scheme) {
 	if (scheme === "auto") localStorage.removeItem(KEY);
 	else localStorage.setItem(KEY, scheme);
-	document.documentElement.dataset.scheme = resolve(scheme);
+	apply(resolve(scheme));
 	window.dispatchEvent(new Event("scheme"));
 }
 
 export function subscribeScheme(onChange: () => void) {
 	const onStorage = (event: StorageEvent) => {
 		if (event.key !== KEY && event.key !== null) return;
-		document.documentElement.dataset.scheme = resolve(readScheme());
+		apply(resolve(readScheme()));
 		onChange();
 	};
 	window.addEventListener("storage", onStorage);
@@ -39,4 +49,4 @@ export function subscribeScheme(onChange: () => void) {
 }
 
 // Applies the scheme before paint, and keeps auto in step with the system while the page is open.
-export const schemeBoot = `(function(){var m=matchMedia("${DARK}");function a(){var s=localStorage.getItem("${KEY}");document.documentElement.dataset.scheme=s==="light"||s==="dark"?s:m.matches?"dark":"light"}a();m.addEventListener("change",a)})();`;
+export const schemeBoot = `(function(){var m=matchMedia("${DARK}");var d=document.documentElement;function a(){var s=localStorage.getItem("${KEY}");d.dataset.scheme=s==="light"||s==="dark"?s:m.matches?"dark":"light"}a();m.addEventListener("change",function(){d.dataset.schemeSwap="";a();getComputedStyle(d).color;requestAnimationFrame(function(){delete d.dataset.schemeSwap})})})();`;
