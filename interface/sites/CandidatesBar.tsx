@@ -1,17 +1,20 @@
 import { Button } from "interface/button";
+import ArrowDown from "interface/icon/arrow-down.svg";
 import ArrowSeparateVertical from "interface/icon/arrow-separate-vertical.svg";
 import ArrowUnionVertical from "interface/icon/arrow-union-vertical.svg";
+import ArrowUp from "interface/icon/arrow-up.svg";
 import NavArrowDown from "interface/icon/nav-arrow-down.svg";
 import NavArrowUp from "interface/icon/nav-arrow-up.svg";
 import Xmark from "interface/icon/xmark.svg";
 import { Overlay } from "interface/overlay";
 import { Panel } from "interface/panel";
+import { compare, type State } from "interface/sites/compare";
 import { type Shown, useShown } from "interface/sites/data";
-import { diff } from "interface/sites/diff";
 import { type Candidate, removeCandidate, savedCandidates } from "interface/sites/store";
 import { keepHref } from "interface/sites/url";
 import { Skeleton } from "interface/skeleton";
 import { Tooltip } from "interface/tooltip";
+import { stamp } from "interface/windows";
 import { Fragment, type ReactNode, Suspense, useRef, useState } from "react";
 import { classNames, useHydrated } from "system";
 
@@ -224,21 +227,18 @@ function CandidateBox({
 	);
 }
 
-// The diff card's shape while the candidate loads: the two labels, then each condition's lines.
+// The comparison's shape while the candidate loads: per condition, a header and three rows of
+// four columns.
 function DiffSkeleton() {
 	return (
-		<div role="status" className="flex flex-col gap-sm">
-			<div className="flex gap-sm">
-				<Skeleton width="14ch" height="0.75rem" />
-				<Skeleton width="14ch" height="0.75rem" />
-			</div>
+		<div role="status" className="flex flex-col gap-md">
 			{[1, 2].map((group) => (
-				<div key={group} className="flex flex-col gap-xs pt-xs">
-					<Skeleton width="12ch" height="0.75rem" />
-					{[1, 2, 3].map((line) => (
-						<div key={line} className="flex gap-sm">
-							<Skeleton width="1ch" height="0.75rem" />
-							<Skeleton className="flex-1" height="0.75rem" />
+				<div key={group} className="flex flex-col gap-xs">
+					{[1, 2, 3, 4].map((line) => (
+						<div key={line} className="flex gap-md">
+							<Skeleton width="12ch" height="0.75rem" />
+							<Skeleton width="12ch" height="0.75rem" />
+							<Skeleton width="12ch" height="0.75rem" />
 							<Skeleton width="6ch" height="0.75rem" />
 						</div>
 					))}
@@ -249,10 +249,23 @@ function DiffSkeleton() {
 	);
 }
 
+// Up or down from the horizon as an arrow, named by its tooltip ("Sun up", "Earth down").
+function Updown({ state }: { state?: State }) {
+	if (!state) return null;
+	const Arrow = state.up ? ArrowUp : ArrowDown;
+	return (
+		<Tooltip label={state.name}>
+			<span role="img" aria-label={state.name} className="inline-flex align-middle">
+				<Arrow icon />
+			</span>
+		</Tooltip>
+	);
+}
+
 const trendClass = { more: "text-more", less: "text-less" };
 
-// The candidate against the reading in view, as a unified diff: - is the candidate, + is the
-// reading, at the same hour into each window. Plain text, so it pastes as it reads.
+// The reading in view against the hovered candidate, at the same hour into each window: per
+// condition, the two readings side by side, the candidate with its change from the current.
 function CandidateDiff({
 	against,
 	candidate,
@@ -260,38 +273,52 @@ function CandidateDiff({
 	against: Shown & { at: number };
 	candidate: Candidate;
 }) {
-	const a = useShown(against);
-	const b = useShown({ code: candidate.body, site: candidate.site, window: candidate.window });
-	const lines = diff({ ...a, at: against.at }, { ...b, at: against.at });
-	// One line of text per diff line, the change padded into a column: it copies as it reads.
-	const width = Math.max(0, ...lines.filter((l) => !l.heading).map((l) => l.text.length));
+	const current = useShown(against);
+	const other = useShown({ code: candidate.body, site: candidate.site, window: candidate.window });
+	const groups = compare({ ...current, at: against.at }, { ...other, at: against.at });
+	// When each side is read: the same hour into each window, as a date and hour, so it is clear.
+	const when = (first: { time: string }[]) => stamp(first[Math.min(against.at, first.length - 1)]);
 	return (
-		<div className="flex flex-col gap-sm">
-			<pre className="m-0 font-[inherit] tabular-nums whitespace-pre">
-				<span className="text-secondary">{`- ${candidateLabel(candidate)}\n`}</span>
-				<span className="text-default">{`+ ${against.code}/${against.site} ${against.window}\n`}</span>
-				{lines.map((line, i) => {
-					const tone =
-						line.sign === "-" || line.sign === " "
-							? "text-secondary"
-							: line.trend
-								? trendClass[line.trend]
-								: "text-default";
-					const row = line.heading
-						? `\n${line.text.toUpperCase()}`
-						: `${line.sign} ${line.delta ? line.text.padEnd(width) : line.text}`;
-					return (
-						// biome-ignore lint/suspicious/noArrayIndexKey: lines are fixed for one render
-						<Fragment key={i}>
-							<span className={line.heading ? "text-default" : tone}>
-								{row}
-								{line.delta ? `  ${line.delta}` : ""}
-							</span>
-							{"\n"}
-						</Fragment>
-					);
-				})}
-			</pre>
+		<div className="grid grid-cols-3 gap-x-md gap-y-nano whitespace-nowrap tabular-nums">
+			<span className="text-secondary">UTC</span>
+			<span>{when(current.first)}</span>
+			<span>{when(other.first)}</span>
+			<span className="col-span-3 h-sm" />
+			{groups.map((group, index) => (
+				<Fragment key={group.condition}>
+					{index ? <span className="col-span-3 h-sm" /> : null}
+					<span className="uppercase">{group.condition}</span>
+					<span className="uppercase text-secondary">
+						{against.code}/{against.site} {against.window}
+					</span>
+					<span className="uppercase text-secondary">{candidateLabel(candidate)}</span>
+					{group.rows.map((row) => {
+						const same =
+							row.current === row.candidate && row.up?.current?.up === row.up?.candidate?.up;
+						return (
+							<Fragment key={row.fact}>
+								<span className="text-secondary">{row.fact}</span>
+								<span>
+									{row.current} <Updown state={row.up?.current} />
+								</span>
+								{same ? (
+									<span className="text-secondary">same</span>
+								) : (
+									<span>
+										{row.candidate} <Updown state={row.up?.candidate} />
+										{row.change ? (
+											<span className={row.trend ? trendClass[row.trend] : undefined}>
+												{" "}
+												({row.change})
+											</span>
+										) : null}
+									</span>
+								)}
+							</Fragment>
+						);
+					})}
+				</Fragment>
+			))}
 		</div>
 	);
 }

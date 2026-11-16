@@ -104,12 +104,21 @@ decorative.
 ### 1.3 Typography
 
 Nanta Mono is a manual subset of Commit Mono Regular. Weight 400, upright, 16px.
-CSS only names the family. The file holds the rest.
+CSS only names the family. The file holds the rest. There is no bold: emphasis is
+the default text color against secondary, and case.
 
 `0` uses `cv07`, `l` uses `cv10`, and `1` uses `cv11`, so `0`/`O` and
 `1`/`l`/`I` stay distinct. Digits are equal width. Word spacing is a required
 feature (`rclt`) in the file. 16px sits above the about-14px body size for a 60
 cm console. Confirmation is on the real display.
+
+#### Sizes
+
+Spacing is a 4px grid of tokens, `nano` (2px), `xs`, `sm`, `md`, `lg`; Compact
+halves the small steps. The theme replaces Tailwind's scale, so only these names
+exist. Controls are `control`, 44px, the touch target: every button, input, and
+bar is at least that tall, so a bar of buttons and a bar of text line up. Icon
+buttons are `control` wide, not `aspect-square`, which grows in a stretched row.
 
 ### 1.4 Model
 
@@ -254,21 +263,26 @@ browser; the server holds only the predefined ones.
 
 ![Adding a site](media/site-form.png)
 
-> Adding a site inline: a code name, a description, latitude and longitude, and
-> what to look for, Sunlight or Earth visibility. A click on the body picks the
-> point, and the model follows as you type.
+> Adding a site inline: a code name, a description under it, latitude and
+> longitude, and Look for (conditions): Sunlight or Earthview. Latitude and
+> longitude are spin buttons like the dates: degrees, thousandths, and N or S;
+> longitude runs 0 to 360°E. Arrow keys and the wheel step the segment under
+> them, Shift by ten, and digits type into it. The ? on Longitude says "You can
+> click in the 3D model": a click on the body picks the point, and the model
+> follows as you type. A taken code name is the only line under the fields.
 
 ![Adding a window](media/window-form.png)
 
-> Adding a window inline: a code name and two UTC dates, typed as spin buttons,
-> with the 31-day limit from Horizons stated under them. The focus ring is
-> cochineal, drawn inside the edge.
+> Adding a window inline: a code name and two UTC dates, typed as spin buttons.
+> The ? on Dates says the end is at most 31 days after the start, the Horizons
+> limit. Both forms share the same fields, labels, and spacing. The focus ring
+> is cochineal, drawn inside the edge.
 
 <video src="media/create-site-window.mp4" controls muted playsinline width="100%"></video>
 
 > [Creating a site and a window](media/create-site-window.mp4). Recording, 21
 > seconds: a site added inline with a code name, a description, coordinates, and
-> Sunlight and Earth visibility, the marker following on the Moon as the numbers
+> Sunlight and Earthview, the marker following on the Moon as the numbers
 > change, then a window added with two dates.
 
 A site and a window are pinned as a candidate with the Pin button in the
@@ -280,11 +294,16 @@ are kept in this browser.
 Each box has a chevron on its left that opens the Compare card. Hovering the box
 previews it; the chevron keeps it open, so its text can be selected and copied.
 It opens below, left-aligned, or above when there is no room, and the chevron
-points to it. It's a unified diff at the same hour into each window: `-` the
-candidate, `+` the reading, the change on the right. Equal facts are one line,
-and it copies as it reads. Like a game's item compare, a `+` line is green for
-more of the condition and red for less; the signs carry it without color. It
-says more or less, never better or worse.
+points to it. It reads both at the same hour into each window, and says when:
+the first row is each side's date and hour in UTC, so the card stands on its
+own. Then, per condition, three facts in columns, the reading in view, then the
+hovered candidate: elevation, hours above the horizon, and the next change.
+Elevation carries an arrow, up or down from the horizon, named by its tooltip
+("Sun up", "Earth down"). The candidate shows its change from the reading in
+parentheses, green for more of the condition and red for less; the sign carries
+it without color. A fact equal on both reads "same", and a change that can't be
+taken (one side has no next change) is left out. It says more or less, never
+better or worse.
 
 ![The Candidates bar](media/candidates-bar.png)
 
@@ -299,15 +318,16 @@ says more or less, never better or worse.
 
 ![The Compare card, zoomed](media/compare-card-zoom.png)
 
-> The diff, zoomed. Minus is SCR, plus is APL17, in the same window. APL17 has
-> far less Sun at this hour, red, −64.3°, and far more Earth, green, +39.0°.
-> Equal facts sit on one line, in gray.
+> The comparison, zoomed (this capture predates the columns). Today the first
+> column is the reading in view and the second the hovered candidate, its change
+> in parentheses: red for less of the condition, green for more, and "same" in
+> gray.
 
 <video src="media/comparing.mp4" controls muted playsinline width="100%"></video>
 
 > [Comparing](media/comparing.mp4). Recording, 18 seconds: sites pinned to the
 > Candidates bar, then each candidate opened against the reading in view with
-> its chevron, the Compare card showing the diff.
+> its chevron, the Compare card showing the comparison.
 
 ### 3.3 The model
 
@@ -432,6 +452,14 @@ URL.
 the pictures around the site: three by three Trek tiles, or for Earth two GIBS
 pictures 2° across: Blue Marble without clouds, and VIIRS on NOAA-20 for a past
 day. It builds the URLs only; the browser loads the images from NASA.
+
+From a site, every body is placed from the site's point, not the body's center:
+distances are squashed by a cube root, so only that keeps the direction seen
+from the site true. A test holds the model to Horizons: answers recorded for
+every catalog site (`scripts/record-horizons.ts`) are replayed offline, and each
+body, placed as the scene places it, must sit within 1.5° of where Horizons
+says. The worst today is under 0.8°, the Moon from Earth, seen from Earth's
+center rather than its surface.
 
 There is no success percentage, no dust, no slope limit, and no hidden rank.
 

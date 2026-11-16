@@ -87,6 +87,7 @@ npm run dev
 
 - [Day 318, November 14, 2026](docs/2026-318.md)
 - [Day 319, November 15, 2026](docs/2026-319.md)
+- [Day 320, November 16, 2026: post challenge](docs/2026-320.md)
 
 ## Data
 
