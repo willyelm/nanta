@@ -42,6 +42,15 @@ Project page:
 ## Preview
 
 https://github.com/user-attachments/assets/13a95e50-8aec-40ff-9884-0d174e749341
+> [**Bodies**](https://github.com/user-attachments/assets/13a95e50-8aec-40ff-9884-0d174e749341). Start in space and travel to a body.
+
+https://github.com/user-attachments/assets/d109babb-080a-451a-bcb5-099f17f17ac3
+> [**Sites**](https://github.com/user-attachments/assets/d109babb-080a-451a-bcb5-099f17f17ac3). Pick a site and land on its horizon.
+
+https://github.com/user-attachments/assets/ff6cf719-8ddf-4be4-8126-d10ca1bb2f2f
+> [**Compare**](https://github.com/user-attachments/assets/ff6cf719-8ddf-4be4-8126-d10ca1bb2f2f). Compare plans: more or less, never better or worse.
+
+
 
 ## Name
 
