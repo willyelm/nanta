@@ -5,10 +5,11 @@ import { classNames } from "system";
 import {
 	AmbientLight,
 	BufferAttribute,
-	BufferGeometry,
+	type BufferGeometry,
 	CircleGeometry,
+	CylinderGeometry,
 	DirectionalLight,
-	Line,
+	type Line,
 	LineBasicMaterial,
 	LineDashedMaterial,
 	LineSegments,
@@ -24,69 +25,47 @@ import {
 	RingGeometry,
 	Scene,
 	SphereGeometry,
-	Vector3,
+	type Vector3,
 	WebGLRenderer,
 } from "three";
+import {
+	AU,
+	all,
+	byCode,
+	codes,
+	direction,
+	distance,
+	EARTH,
+	ecliptic,
+	eclipticOver,
+	filler,
+	frame,
+	graticule,
+	J2000,
+	line,
+	MOON,
+	names,
+	OBLIQUITY,
+	plus,
+	radius,
+	SCALE,
+	SKY,
+	SUN_SIZE,
+	shade,
+	size,
+	spaceSize,
+	spin,
+	starAt,
+	starOver,
+	toBody,
+	toRad,
+	vec,
+} from "./geometry";
 import { advance } from "./orbit";
+import { store, type View } from "./view";
 
-// What the model shows: the body by Horizons code, a site on it (degrees, east longitude), and
-// the other bodies seen from that site over a window, at sample `at`.
-export type View = {
-	body?: string;
-	lat?: number;
-	lon?: number;
-	radius?: number; // km around the site
-	sky?: Sky;
-	at?: number;
-	// Set while a site is being placed: a click on the body reports its latitude and longitude.
-	onPick?: (lat: number, lon: number) => void;
-};
-
-let view: View = {};
-let apply: ((view: View) => void) | undefined;
-
-// Sets the given parts of the view while the calling component is mounted, and clears them after.
-export function useView(part: View) {
-	const { body, lat, lon, radius, sky, at, onPick } = part;
-	useEffect(() => {
-		const set = Object.entries({ body, lat, lon, radius, sky, at, onPick }).filter(
-			([, v]) => v !== undefined,
-		);
-		view = { ...view, ...Object.fromEntries(set) };
-		apply?.(view);
-		return () => {
-			view = { ...view };
-			for (const [key] of set) delete view[key as keyof View];
-			apply?.(view);
-		};
-	}, [body, lat, lon, radius, sky, at, onPick]);
-}
-
-// Radii in km, label names, and the body each Horizons center code names.
-const radius: Record<Body, number> = { sun: 695_700, earth: 6_371, moon: 1_737.4, mars: 3_389.5 };
-const names: Record<Body, string> = { sun: "Sun", earth: "Earth", moon: "Moon", mars: "Mars" };
-const codes: Record<string, Body> = { "10": "sun", "301": "moon", "399": "earth", "499": "mars" };
-const all = Object.keys(radius) as Body[];
-
-// Space, before a site: the Sun at the center and each body where it is now, from one Horizons
-// state each, advanced by the clock. Directions are true and distances from the Sun linear in
-// AU (8 units each). Sizes are enlarged so every body can be seen: Earth, Moon, and Mars keep
-// their true ratio to each other; the Sun can't (109 Earths). The Moon keeps its true direction
-// from the Earth at a set distance, clear of it. Ecliptic x, y, z is scene x, -z, y.
-const AU = 149_597_870.7;
-const SCALE = 8;
-const EARTH = 0.3;
-const spaceSize: Record<Body, number> = {
-	sun: 1,
-	earth: EARTH,
-	moon: EARTH * (radius.moon / radius.earth),
-	mars: EARTH * (radius.mars / radius.earth),
-};
-const MOON = 2;
-const byCode: Record<string, Body> = { "399": "earth", "301": "moon", "499": "mars" };
-const ecliptic = ([x, y, z]: number[], k = 1) => vec(x * k, z * k, -y * k);
 let states: State[] = [];
-
+let statesFor: ((time?: number) => State[] | undefined) | undefined;
 // The camera readout: where the camera sits around what it looks at, as labeled columns.
 // The render loop writes the cells directly, so it never re-renders.
 const cells: (HTMLElement | null)[] = [];
@@ -109,161 +88,6 @@ export function CameraReadout() {
 
 const degrees = (radians: number) => `${Math.round(radians / toRad)}°`;
 
-// The scene is the site's body frame, the body's radius 1. Directions come from Horizons and are
-// exact. Earth, Moon, and Mars are true size against the site's body; the Sun is fixed, since
-// true size (400 Moon radii) can't fit. Distance is log10 of the real range, spread wide enough
-// that a true-size Earth stands clear of the Moon.
-const SUN_SIZE = 6;
-const distance = (km: number, base: number) => 1 + 6 * Math.log10(km / base);
-const size = (body: Body, base: number) => (body === "sun" ? SUN_SIZE : radius[body] / base);
-
-const toRad = Math.PI / 180;
-const vec = (x = 0, y = 0, z = 0) => new Vector3().set(x, y, z);
-const plus = (a: Vector3, b: Vector3, k = 1) => vec(a.x + b.x * k, a.y + b.y * k, a.z + b.z * k);
-
-// The site's local frame on the unit sphere: up, north, and east. Body north (z) is scene y.
-function frame(lat: number, lon: number) {
-	const [la, lo] = [lat * toRad, lon * toRad];
-	const body = (x: number, y: number, z: number) => vec(x, z, -y);
-	return {
-		up: body(Math.cos(la) * Math.cos(lo), Math.cos(la) * Math.sin(lo), Math.sin(la)),
-		north: body(-Math.sin(la) * Math.cos(lo), -Math.sin(la) * Math.sin(lo), Math.cos(la)),
-		east: body(-Math.sin(lo), Math.cos(lo), 0),
-	};
-}
-
-// A direction from azimuth (from north toward east) and elevation, in a site's frame.
-function direction(f: ReturnType<typeof frame>, p: Position) {
-	const [az, el] = [p.azimuth * toRad, p.elevation * toRad];
-	const d = plus(vec(), f.north, Math.cos(el) * Math.cos(az));
-	return plus(plus(d, f.east, Math.cos(el) * Math.sin(az)), f.up, Math.sin(el));
-}
-
-// Latitude and longitude lines on the unit sphere, every 15°, as segments for one draw.
-function graticule() {
-	const points: number[] = [];
-	const at = (lat: number, lon: number) => {
-		const [la, lo] = [lat * toRad, lon * toRad];
-		points.push(Math.cos(la) * Math.cos(lo), Math.sin(la), -Math.cos(la) * Math.sin(lo));
-	};
-	for (let lon = 0; lon < 360; lon += 15) {
-		for (let lat = -90; lat < 90; lat += 3) {
-			at(lat, lon);
-			at(lat + 3, lon);
-		}
-	}
-	for (let lat = -75; lat <= 75; lat += 15) {
-		for (let lon = 0; lon < 360; lon += 3) {
-			at(lat, lon);
-			at(lat, lon + 3);
-		}
-	}
-	// Each point's brightness, set by shade(); starts fully lit.
-	return new BufferGeometry()
-		.setAttribute("position", new BufferAttribute(new Float32Array(points), 3))
-		.setAttribute("color", new BufferAttribute(new Float32Array(points.length).fill(1), 3));
-}
-
-// The sky behind everything: a far sphere, fixed to space (the ecliptic frame), for stars.
-const SKY = 200;
-const OBLIQUITY = 23.4393 * toRad;
-
-// A star's direction from right ascension and declination (equatorial, degrees), turned onto the
-// ecliptic by the tilt of Earth's axis, as a scene point on the sky sphere.
-function starAt(ra: number, dec: number) {
-	const [a, d] = [ra * toRad, dec * toRad];
-	const [x, y, z] = [Math.cos(d) * Math.cos(a), Math.cos(d) * Math.sin(a), Math.sin(d)];
-	const ecliptic = [
-		x,
-		y * Math.cos(OBLIQUITY) + z * Math.sin(OBLIQUITY),
-		-y * Math.sin(OBLIQUITY) + z * Math.cos(OBLIQUITY),
-	];
-	return vec(ecliptic[0] * SKY, ecliptic[2] * SKY, -ecliptic[1] * SKY);
-}
-
-// How each body turns (IAU WGCCRE): the pole's right ascension and declination, and the prime
-// meridian's angle W = w0 + rate × days since J2000, all in degrees. Close to a degree, which
-// is enough to set the stars over a site; librations are left out.
-const spin: Record<Exclude<Body, "sun">, [number, number, number, number]> = {
-	moon: [269.9949, 66.5392, 38.3213, 13.17635815],
-	earth: [0, 90, 190.147, 360.9856235],
-	mars: [317.681, 52.887, 176.63, 350.89198226],
-};
-const J2000 = Date.UTC(2000, 0, 1, 12);
-
-// A star's direction in a body's own frame at `time`, as a scene point on the sky sphere (body
-// north is scene y, like the site frame).
-function starOver(body: Exclude<Body, "sun">, ra: number, dec: number, time: number) {
-	const [a, d] = [ra * toRad, dec * toRad];
-	const v = [Math.cos(d) * Math.cos(a), Math.cos(d) * Math.sin(a), Math.sin(d)];
-	return toBody(body, v, time).multiplyScalar(SKY);
-}
-
-// An ecliptic vector (as the space states give) to the equatorial frame, then to a body's own
-// frame at `time`, as a scene vector of the same length.
-function eclipticOver(body: Exclude<Body, "sun">, [x, y, z]: number[], time: number) {
-	const [c, s] = [Math.cos(OBLIQUITY), Math.sin(OBLIQUITY)];
-	return toBody(body, [x, y * c - z * s, y * s + z * c], time);
-}
-
-// An equatorial vector in a body's own frame at `time`, as a scene vector (body north is y).
-function toBody(body: Exclude<Body, "sun">, v: number[], time: number) {
-	const [pa, pd, w0, rate] = spin[body];
-	const w = (w0 + rate * ((time - J2000) / 86_400_000)) * toRad;
-	let [x, y, z] = v;
-	// Rz(90° + pole RA), then Rx(90° − pole Dec), then Rz(W): equatorial to body-fixed.
-	const rz = (t: number) => {
-		[x, y] = [x * Math.cos(t) + y * Math.sin(t), -x * Math.sin(t) + y * Math.cos(t)];
-	};
-	rz((90 + pa) * toRad);
-	const t = (90 - pd) * toRad;
-	[y, z] = [y * Math.cos(t) + z * Math.sin(t), -y * Math.sin(t) + z * Math.cos(t)];
-	rz(w);
-	return vec(x, z, -y);
-}
-
-// A filler of faint stars, the same on every load (a fixed seed), not a catalog.
-function filler(count: number) {
-	let seed = 7;
-	const random = () => {
-		seed = (seed * 16807) % 2147483647;
-		return seed / 2147483647;
-	};
-	const points = new Float32Array(count * 3);
-	for (let i = 0; i < count; i++) {
-		const z = random() * 2 - 1;
-		const a = random() * Math.PI * 2;
-		const r = Math.sqrt(1 - z * z) * SKY;
-		points.set([Math.cos(a) * r, z * SKY, Math.sin(a) * r], i * 3);
-	}
-	return new BufferGeometry().setAttribute("position", new BufferAttribute(points, 3));
-}
-
-// Lights a body's grid from `toward` (the Sun's direction from the body): each point by the cosine
-// between its surface direction and the Sun, with a floor so the night side stays faintly drawn.
-function shade(grid: BufferGeometry, toward: Vector3) {
-	const position = grid.getAttribute("position").array;
-	const color = grid.getAttribute("color");
-	for (let i = 0; i < position.length; i += 3) {
-		const light = position[i] * toward.x + position[i + 1] * toward.y + position[i + 2] * toward.z;
-		const k = Math.max(0.12, light);
-		color.array[i] = color.array[i + 1] = color.array[i + 2] = k;
-	}
-	color.needsUpdate = true;
-}
-
-// A line through `points`, or two points updated in place.
-function line(color: string, dashed = false, points?: Vector3[]) {
-	const array = points
-		? new Float32Array(points.flatMap((p) => [p.x, p.y, p.z]))
-		: new Float32Array(6);
-	const geometry = new BufferGeometry().setAttribute("position", new BufferAttribute(array, 3));
-	const material = dashed
-		? new LineDashedMaterial({ color, dashSize: 0.08, gapSize: 0.06 })
-		: new LineBasicMaterial({ color });
-	return new Line(geometry, material);
-}
-
 // The one scene of the app, behind every page, built once. Without a site it is space now: the
 // Sun, and the bodies where they are, moving with the clock. With a site, the body is at the
 // center with the site on it, and the other bodies where Horizons puts them from that site.
@@ -272,6 +96,7 @@ export function Space() {
 	const canvas = useRef<HTMLCanvasElement>(null);
 	const labels = useRef<Partial<Record<Body, HTMLSpanElement | null>>>({});
 	const status = useRef<HTMLParagraphElement>(null);
+	const caption = useRef<HTMLParagraphElement>(null);
 
 	useEffect(() => {
 		const el = canvas.current;
@@ -319,7 +144,35 @@ export function Space() {
 			new RingGeometry(0.14, 0.17, 48),
 			new MeshBasicMaterial({ color: color("select") }),
 		);
-		const sight = { sun: line(color("sun")), earth: line(color("earth"), true) };
+		// Sunlight as a beam, wide at the Sun and narrowing onto the site; the Earth link as dashes,
+		// like pulses. Solid while the body is above the site's horizon, faint once the ground is
+		// in the way. Shapes, not lines, since WebGL draws lines a pixel wide.
+		// The beam is light: a bright pale-gold core inside a faint amber glow, both narrowing from
+		// the Sun onto the site.
+		const core = new Mesh(
+			new CylinderGeometry(0.002, 0.014, 1, 24, 1, true),
+			new MeshBasicMaterial({
+				color: style.getPropertyValue("--body-color-sunlight").trim(),
+				transparent: true,
+				opacity: 1,
+			}),
+		);
+		const glow = new Mesh(
+			new CylinderGeometry(0.008, 0.06, 1, 24, 1, true),
+			new MeshBasicMaterial({ color: paint("sun"), transparent: true, opacity: 0.22 }),
+		);
+		const beam = new Scene();
+		beam.add(core, glow);
+		const DASHES = 28;
+		const pulse = new MeshBasicMaterial({ color: color("earth"), transparent: true, opacity: 0.9 });
+		const dash = new CylinderGeometry(0.003, 0.003, 1, 8);
+		const link = new Scene();
+		const dashes = Array.from({ length: DASHES }, () => {
+			const mesh = new Mesh(dash, pulse);
+			link.add(mesh);
+			return mesh;
+		});
+		const sight = { sun: beam, earth: link };
 		// The selected body, before a site: the same outline, around the body, facing the camera.
 		const ring = new Mesh(new RingGeometry(1.12, 1.18, 96), outline.material);
 		scene.add(horizon, outline, ring, sight.sun, sight.earth);
@@ -530,8 +383,9 @@ export function Space() {
 			}
 		};
 
-		// The body the camera last aimed at with its real position.
+		// The body the camera last aimed at with its real position, and where it was last frame.
 		let aimed: string | undefined;
+		const followed = vec();
 
 		const space = (next: View) => {
 			for (const star of named) star.mesh.position.copy(starAt(star.ra, star.dec));
@@ -541,7 +395,7 @@ export function Space() {
 				east: vec(0, 0, -1),
 				up: vec(0, 1, 0),
 			});
-			const now = Date.now();
+			const now = next.time ?? Date.now();
 			// The Sun always; each other body once its state has arrived.
 			for (const body of all) meshes[body].visible = body === "sun";
 			meshes.sun.position.set(0, 0, 0);
@@ -575,9 +429,21 @@ export function Space() {
 				ring.position.copy(meshes[selected].position);
 				ring.scale.set(k, k, k);
 			}
+			// Follow the selected body as time moves it: shift the camera and its target by the same
+			// step, so the angle and zoom stay and the body stays framed.
+			const placed = !!selected && (selected === "sun" || meshes[selected].visible);
+			if (placed && selected && aimed === next.body && next.body === last.body) {
+				const step = plus(meshes[selected].position, followed, -1);
+				if (step.length() > 1e-9) {
+					camera.position.copy(plus(camera.position, step));
+					target.copy(plus(target, step));
+					goal.position.copy(plus(goal.position, step));
+					goal.target.copy(plus(goal.target, step));
+				}
+			}
+			if (selected) followed.copy(meshes[selected].position);
 			// Aim when the selection changes, and again once the selected body has its real position
 			// (on first load the URL picks it before its Horizons state has arrived).
-			const placed = !!selected && (selected === "sun" || meshes[selected].visible);
 			if (next.body !== last.body || last.lat !== undefined || (placed && aimed !== next.body)) {
 				aimed = placed ? next.body : undefined;
 				const at = selected ? meshes[selected].position : vec();
@@ -597,13 +463,15 @@ export function Space() {
 			draw();
 		};
 
-		apply = (next) => {
+		store.apply = (next) => {
+			if (caption.current) caption.current.textContent = next.caption ?? "";
+			states = statesFor?.(next.time) ?? states;
 			if (next.lat === undefined || next.lon === undefined) return space(next);
 			for (const ring of Object.values(rings)) if (ring) ring.visible = false;
 			const home = codes[next.body ?? "301"] ?? "moon";
 			// The stars over this body at the slider's time, or now before a window is chosen.
 			const sample = Object.values(next.sky ?? {})[0]?.[next.at ?? 0];
-			const when = sample ? Date.parse(sample.time) : Date.now();
+			const when = sample ? Date.parse(sample.time) : (next.time ?? Date.now());
 			if (home !== "sun") {
 				for (const star of named) star.mesh.position.copy(starOver(home, star.ra, star.dec, when));
 			}
@@ -619,12 +487,10 @@ export function Space() {
 			horizon.visible = outline.visible = hasSite;
 			ring.visible = !hasSite && next.body !== undefined;
 			if (hasSite) {
-				// The outline at the site's true radius, never smaller than can be seen.
-				const k = Math.max((next.radius ?? 0) / radius[home] / 0.155, 0.08);
+				// A fixed marker for reference: Horizons answers for the point, not an area.
 				for (const mesh of [horizon, outline]) {
 					mesh.position.copy(plus(vec(), site, 1.002));
 					mesh.lookAt(plus(vec(), site, 2));
-					mesh.scale.set(k, k, k);
 				}
 			}
 
@@ -670,16 +536,33 @@ export function Space() {
 				}
 			}
 
-			// Sight lines from the site to the Sun and the Earth.
+			// The beam to the Sun and the link to the Earth, bright above the horizon, faint below.
+			const along = vec(0, 1, 0);
 			for (const body of ["sun", "earth"] as const) {
 				const target = meshes[body].position;
 				const shown = hasSite && body !== home && meshes[body].visible;
 				sight[body].visible = shown;
 				if (!shown) continue;
-				const attribute = sight[body].geometry.getAttribute("position");
-				attribute.array.set([site.x, site.y, site.z, target.x, target.y, target.z]);
-				attribute.needsUpdate = true;
-				if (body === "earth") sight[body].computeLineDistances();
+				const toward = plus(target, site, -1);
+				const length = toward.length();
+				const direction = toward.clone().normalize();
+				const up = direction.dot(f.up) > 0;
+				if (body === "sun") {
+					// The cylinder runs along y; turn it onto the ray, centered between site and Sun.
+					beam.position.copy(plus(site, toward, 0.5));
+					beam.quaternion.setFromUnitVectors(along, direction.clone().multiplyScalar(-1));
+					beam.scale.set(1, length, 1);
+					core.material.opacity = up ? 1 : 0.15;
+					glow.material.opacity = up ? 0.22 : 0.04;
+				} else {
+					const step = length / DASHES;
+					dashes.forEach((mesh, i) => {
+						mesh.position.copy(plus(site, direction, step * (i + 0.5)));
+						mesh.quaternion.setFromUnitVectors(along, direction);
+						mesh.scale.set(1, step * 0.55, 1);
+					});
+					pulse.opacity = up ? 0.9 : 0.15;
+				}
 			}
 
 			// At a site the camera stands just above it with the site's zenith as up, so the sky is
@@ -725,8 +608,8 @@ export function Space() {
 		// from the camera meets the unit sphere, and its direction is the latitude and longitude.
 		const up = (event: PointerEvent) => {
 			dragging = null;
-			const pick = view.onPick;
-			if (!pick || view.lat === undefined) return;
+			const pick = store.view.onPick;
+			if (!pick || store.view.lat === undefined) return;
 			if (Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y) > 4) return;
 			const box = el.getBoundingClientRect();
 			const ndc = vec(
@@ -772,7 +655,7 @@ export function Space() {
 		const observer = new ResizeObserver(resize);
 		observer.observe(el);
 		resize();
-		apply(view);
+		store.apply(store.view);
 
 		let stopped = false;
 
@@ -796,41 +679,60 @@ export function Space() {
 					named.push({ mesh, label, ra, dec });
 					scene.add(mesh);
 				}
-				apply?.(view);
+				store.apply?.(store.view);
 			})
 			.catch((error: unknown) => {
 				console.error("[space] stars", error);
 				say("Couldn't load the reference stars.");
 			});
 
-		// One Horizons state per body for the current hour, in turn, each placed as it arrives;
-		// the clock advances them after that. The status line says what's happening.
+		// One Horizons state per body for a UTC day (its 00:00), in turn, each placed as it arrives,
+		// then advanced to the exact moment: close over a day. The day is today, or the chosen
+		// time's, so a slider moving through a window loads each day once, not each hour.
 		const say = (text: string) => {
 			if (status.current) status.current.textContent = text;
 		};
-		(async () => {
-			const hour = `${new Date().toISOString().slice(0, 13)}:00`;
-			for (const code of ["399", "301", "499"]) {
-				say(`Loading Horizons state: ${names[byCode[code]]} (${code})…`);
-				const response = await fetch(`/api/space?time=${hour}&body=${code}`).catch(() => null);
-				if (stopped) return;
-				if (!response?.ok) {
-					say(`Couldn't load ${names[byCode[code]]}.`);
-					return;
+		const loaded = new Map<string, State[]>();
+		let queue = Promise.resolve();
+		const hourOf = (time: number) => `${new Date(time).toISOString().slice(0, 10)}T00:00`;
+		const load = (hour: string) => {
+			if (loaded.has(hour)) return;
+			loaded.set(hour, []);
+			queue = queue.then(async () => {
+				for (const code of ["399", "301", "499"]) {
+					say(
+						`Loading Horizons state for ${hour.replace("T", " ")}: ${names[byCode[code]]} (${code})…`,
+					);
+					const response = await fetch(`/api/space?time=${hour}&body=${code}`).catch(() => null);
+					if (stopped) return;
+					if (!response?.ok) {
+						say(`Couldn't load ${names[byCode[code]]}.`);
+						return;
+					}
+					loaded.set(hour, [...(loaded.get(hour) ?? []), (await response.json()) as State]);
+					say(`Rendering ${names[byCode[code]]}…`);
+					store.apply?.(store.view);
 				}
-				states = [...states, (await response.json()) as State];
-				say(`Rendering ${names[byCode[code]]}…`);
-				apply?.(view);
-			}
-			say("");
-		})();
-		const clock = setInterval(() => apply?.(view), 60_000);
+				say("");
+			});
+		};
+		// The states for the view's moment once its day has fully loaded. Until then the bodies stay
+		// where they are, rather than jump to another day's positions and back.
+		statesFor = (time) => {
+			const day = hourOf(time ?? Date.now());
+			load(day);
+			const exact = loaded.get(day) ?? [];
+			return exact.length === 3 ? exact : undefined;
+		};
+		store.apply?.(store.view);
+		const clock = setInterval(() => store.apply?.(store.view), 60_000);
 
 		return () => {
 			stopped = true;
+			statesFor = undefined;
 			for (const { label } of named) label.remove();
 			clearInterval(clock);
-			apply = undefined;
+			store.apply = undefined;
 			cancelAnimationFrame(frameId);
 			observer.disconnect();
 			scheme.disconnect();
@@ -850,6 +752,11 @@ export function Space() {
 				role="img"
 				aria-label="Space now: the Sun, Earth, Moon, and Mars where they are. At a site, the sky from it."
 				className="absolute inset-0 size-full touch-none cursor-grab active:cursor-grabbing"
+			/>
+			{/* What the model shows, in words, under the header: the view's own summary. */}
+			<p
+				ref={caption}
+				className="absolute inset-x-0 top-[4.5rem] text-center font-mono text-label text-default tabular-nums pointer-events-none"
 			/>
 			<p
 				ref={status}

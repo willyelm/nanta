@@ -1,1 +1,2 @@
-export { CameraReadout, Space, useView, type View } from "./Space";
+export { CameraReadout, Space } from "./Space";
+export { useView, type View } from "./view";
