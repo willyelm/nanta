@@ -7,11 +7,12 @@ type TextBoxProps<T extends ElementType> = {
 } & Omit<ComponentPropsWithoutRef<T>, "as" | "className">;
 
 // Shared field styling. `as` is the element: span for a group, input, or textarea. The input
-// border is the cue for entering data; a group outlines as a whole when a part inside has focus.
+// border is the cue for entering data; a group outlines as a whole, inside its edge like every
+// focus ring, when a part inside has focus.
 const base =
 	"font-mono text-body leading-standard text-default bg-neutral border border-input " +
 	"min-h-control py-sm px-md placeholder:text-secondary " +
-	"focus-within:outline-2 focus-within:outline-focus focus-within:outline-offset-2";
+	"focus-within:outline-2 focus-within:outline-focus focus-within:-outline-offset-2";
 
 const layout: Record<string, string> = {
 	input: "block w-full",
