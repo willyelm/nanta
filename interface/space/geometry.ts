@@ -16,18 +16,21 @@ export const radius: Record<Body, number> = {
 	earth: 6_371,
 	moon: 1_737.4,
 	mars: 3_389.5,
+	mercury: 2_439.7,
 };
 export const names: Record<Body, string> = {
 	sun: "Sun",
 	earth: "Earth",
 	moon: "Moon",
 	mars: "Mars",
+	mercury: "Mercury",
 };
 export const codes: Record<string, Body> = {
 	"10": "sun",
 	"301": "moon",
 	"399": "earth",
 	"499": "mars",
+	"199": "mercury",
 };
 export const all = Object.keys(radius) as Body[];
 
@@ -44,9 +47,15 @@ export const spaceSize: Record<Body, number> = {
 	earth: EARTH,
 	moon: EARTH * (radius.moon / radius.earth),
 	mars: EARTH * (radius.mars / radius.earth),
+	mercury: EARTH * (radius.mercury / radius.earth),
 };
 export const MOON = 2;
-export const byCode: Record<string, Body> = { "399": "earth", "301": "moon", "499": "mars" };
+export const byCode: Record<string, Body> = {
+	"199": "mercury",
+	"399": "earth",
+	"301": "moon",
+	"499": "mars",
+};
 export const ecliptic = ([x, y, z]: number[], k = 1) => vec(x * k, z * k, -y * k);
 
 // The scene is the site's body frame, the body's radius 1. Directions come from Horizons and are
@@ -135,43 +144,18 @@ export function starAt(ra: number, dec: number) {
 	return vec(ecliptic[0] * SKY, ecliptic[2] * SKY, -ecliptic[1] * SKY);
 }
 
-// How each body turns (IAU WGCCRE): the pole's right ascension and declination, and the prime
-// meridian's angle W, in degrees, at `d` days since J2000. Checked against Horizons az/el: the
-// Moon keeps its periodic terms, since without them its pole is off by up to 1.5°, which at the
-// south pole is the whole Sun. Earth keeps the J2000 pole (closer to Horizons with this W), and
-// Mars the IAU 2000 values (2015 lands farther from Horizons). All within about 0.3°.
+// How each body turns (IAU): pole right ascension and declination, and the prime meridian W, in
+// degrees, at `d` days since J2000. The Moon keeps its main wobble term (E1): without it the pole
+// is off by up to 1.5°, which at the south pole is the whole Sun. Within 0.3° of Horizons.
 export function spin(body: Exclude<Body, "sun">, d: number): [number, number, number] {
-	const T = d / 36525;
 	if (body === "earth") return [0, 90, 190.147 + 360.9856235 * d];
-	if (body === "mars")
-		return [317.68143 - 0.1061 * T, 52.8865 - 0.0609 * T, 176.63 + 350.89198226 * d];
-	const E = [
-		[125.045, -0.0529921],
-		[250.089, -0.1059842],
-		[260.008, 13.0120009],
-		[176.625, 13.3407154],
-		[357.529, 0.9856003],
-		[311.589, 26.4057084],
-		[134.963, 13.064993],
-		[276.617, 0.3287146],
-		[34.226, 1.7484877],
-		[15.134, -0.1589763],
-		[119.743, 0.0036096],
-		[239.961, 0.1643573],
-		[25.053, 12.9590088],
-	].map(([a, b]) => (a + b * d) * toRad);
-	const sum = (f: (x: number) => number, k: number[]) =>
-		k.reduce((total, c, i) => total + c * f(E[i]), 0);
-	const ra = [-3.8787, -0.1204, 0.07, -0.0172, 0, 0.0072, 0, 0, 0, -0.0052, 0, 0, 0.0043];
-	const dec = [1.5419, 0.0239, -0.0278, 0.0068, 0, -0.0029, 0.0009, 0, 0, 0.0008, 0, 0, -0.0009];
-	const w = [
-		3.561, 0.1208, -0.0642, 0.0158, 0.0252, -0.0066, -0.0047, -0.0046, 0.0028, 0.0052, 0.004,
-		0.0019, -0.0044,
-	];
+	if (body === "mars") return [317.681, 52.887, 176.63 + 350.89198226 * d];
+	if (body === "mercury") return [281.0097, 61.4143, 329.5469 + 6.1385025 * d];
+	const e = (125.045 - 0.0529921 * d) * toRad;
 	return [
-		269.9949 + 0.0031 * T + sum(Math.sin, ra),
-		66.5392 + 0.013 * T + sum(Math.cos, dec),
-		38.3213 + 13.17635815 * d - 1.4e-12 * d * d + sum(Math.sin, w),
+		269.9949 - 3.8787 * Math.sin(e),
+		66.5392 + 1.5419 * Math.cos(e),
+		38.3213 + 13.17635815 * d + 3.561 * Math.sin(e),
 	];
 }
 export const J2000 = Date.UTC(2000, 0, 1, 12);
@@ -207,37 +191,16 @@ export function toBody(body: Exclude<Body, "sun">, v: number[], time: number) {
 	return vec(x, z, -y);
 }
 
-// How a body sits in space at `time`: the turn from its own frame (north is y, as the grid and
-// the site frame are drawn) to the ecliptic scene, so its grid, poles, and day line are true.
+// How a body sits in space at `time`: the turn from its own frame to the scene, so its grid,
+// poles, and day line are true. The scene's axes are ecliptic x, z, and -y.
 export function orientation(body: Body, time: number) {
 	if (body === "sun") return new Quaternion();
 	const [x, y, z] = [
 		[1, 0, 0],
-		[0, 1, 0],
 		[0, 0, 1],
-	].map((e) => eclipticOver(body, e, time));
-	// Columns: where the ecliptic axes land in the body frame. Its transpose takes body to
-	// ecliptic, then ecliptic x, y, z is scene x, -z, y.
-	const toEcliptic = new Matrix4().set(
-		x.x,
-		x.y,
-		x.z,
-		0,
-		y.x,
-		y.y,
-		y.z,
-		0,
-		z.x,
-		z.y,
-		z.z,
-		0,
-		0,
-		0,
-		0,
-		1,
-	);
-	const toScene = new Matrix4().set(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
-	return new Quaternion().setFromRotationMatrix(toScene.multiply(toEcliptic));
+		[0, -1, 0],
+	].map((v) => eclipticOver(body, v, time));
+	return new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(x, y, z)).invert();
 }
 
 // A filler of faint stars, the same on every load (a fixed seed), not a catalog.

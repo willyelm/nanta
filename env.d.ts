@@ -42,8 +42,7 @@ declare module "three" {
 		setFromAxisAngle(axis: Vector3, angle: number): this;
 	}
 	export class Matrix4 {
-		set(...elements: number[]): this;
-		multiply(matrix: Matrix4): this;
+		makeBasis(x: Vector3, y: Vector3, z: Vector3): this;
 	}
 	export class Object3D {
 		position: Vector3;
