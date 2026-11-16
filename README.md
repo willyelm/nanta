@@ -41,6 +41,8 @@ Project page:
 
 ## Preview
 
+https://github.com/user-attachments/assets/13a95e50-8aec-40ff-9884-0d174e749341
+
 ## Name
 
 **Semantic.** Nanta comes from the Quechua _ñanta_, "the path", as the one you
