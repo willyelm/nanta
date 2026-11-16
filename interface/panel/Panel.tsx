@@ -126,7 +126,7 @@ export function ListItem({
 				{...props}
 				aria-current={current ? "true" : undefined}
 				className={classNames(
-					"flex flex-col gap-xs min-h-control p-md text-default no-underline",
+					"flex items-center gap-sm min-h-control p-md text-default no-underline",
 					"hover:bg-neutralHover pressed:bg-neutralActive",
 					action ? "flex-1" : undefined,
 					className,

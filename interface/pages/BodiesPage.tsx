@@ -21,42 +21,55 @@ export function duration(seconds: number) {
 	return `${two(d)}d ${two(h)}h ${two(m)}m`;
 }
 
-// The first page: the bodies on the left, the windows on the right (NOW by default), and the
-// time across the bottom. The bodies sit where Horizons puts them at that time.
+// The first page: bodies on the left, Window Selection on the right, Reading across the bottom.
+// Expanding the reading fills the screen and keeps the window in a strip.
 export function BodiesPage() {
 	const window = useSearchParams().get("window") ?? "NOW";
+	const [expanded, setExpanded] = useState(false);
+	const toggle = () => setExpanded((open) => !open);
 	return (
 		<>
-			<Panels>
-				<Loader label="Loading bodies…" error="Couldn't load bodies." fallback={<BodiesSkeleton />}>
-					<BodiesPanel />
-				</Loader>
-				<Loader label="Loading windows…" error="Couldn't load the windows.">
-					<WindowsPanel here="/" window={window} />
-				</Loader>
-			</Panels>
-			<Loader label="Loading the window…" error="Couldn't load the window." className="max-w-none">
-				<TimePanel window={window} />
+			{expanded ? null : (
+				<Panels>
+					<Loader
+						label="Loading bodies…"
+						error="Couldn't load bodies."
+						fallback={<BodiesSkeleton />}
+					>
+						<BodiesPanel />
+					</Loader>
+					<Loader label="Loading windows…" error="Couldn't load the windows.">
+						<WindowsPanel here="/" window={window} />
+					</Loader>
+				</Panels>
+			)}
+			<Loader
+				label="Loading the reading…"
+				error="Couldn't load the reading."
+				className={expanded ? "max-w-none flex-1 min-h-0" : "max-w-none"}
+			>
+				<TimePanel window={window} expanded={expanded} onExpand={toggle} />
 			</Loader>
 		</>
 	);
 }
 
-// The body list while it loads: three rows shaped like the cards, the name and NAIF ID on top
-// and the three facts under them, in the same grid and padding, so the list lands in place.
+// Matches BodiesPanel: bar, then cards with name + NAIF on top and three facts under them
+// (ListItem p-md, grid gap-x-sm gap-y-sm).
 function BodiesSkeleton() {
 	return (
-		<ul aria-hidden="true" className="flex flex-col divide-y divide-divider">
+		<div aria-hidden="true" className="flex flex-col divide-y divide-divider">
+			<Skeleton height="var(--spacing-control)" />
 			{[1, 2, 3].map((row) => (
-				<li key={row} className="grid grid-cols-3 gap-x-md gap-y-sm p-lg">
-					<Skeleton className="col-span-2" height="var(--spacing-lg)" />
-					<Skeleton height="var(--spacing-lg)" />
-					<Skeleton height="var(--spacing-row)" />
-					<Skeleton height="var(--spacing-row)" />
-					<Skeleton height="var(--spacing-row)" />
-				</li>
+				<div key={row} className="grid grid-cols-3 gap-x-sm gap-y-sm p-md">
+					<Skeleton className="col-span-2" height="1.25rem" />
+					<Skeleton height="1.25rem" />
+					<Skeleton height="2.5rem" />
+					<Skeleton height="2.5rem" />
+					<Skeleton height="2.5rem" />
+				</div>
 			))}
-		</ul>
+		</div>
 	);
 }
 
@@ -106,11 +119,11 @@ function BodiesPanel() {
 									<dd className="text-heading tabular-nums">{body.code}</dd>
 								</div>
 
-								<div className="flex flex-col gap-xs">
+								<div className="flex flex-col">
 									<dt className="text-caption text-secondary">Solar day</dt>
 									<dd className="tabular-nums">{body.day ? duration(body.day) : "—"}</dd>
 								</div>
-								<div className="flex flex-col gap-xs">
+								<div className="flex flex-col">
 									<dt className="text-caption text-secondary">Air</dt>
 									<dd>
 										{body.air ? "Yes" : "No"}
@@ -119,7 +132,7 @@ function BodiesPanel() {
 										</span>
 									</dd>
 								</div>
-								<div className="flex flex-col gap-xs">
+								<div className="flex flex-col">
 									<dt className="text-caption text-secondary">Radius</dt>
 									<dd className="tabular-nums">
 										{body.radius

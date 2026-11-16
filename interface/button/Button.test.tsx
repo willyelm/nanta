@@ -56,13 +56,13 @@ test("as a link, renders an anchor that looks like the button", async () => {
 	roots.push(root);
 	await act(async () =>
 		root.render(
-			<Button as="a" href="/301/sites/new" aria-label="Add a site">
+			<Button as="a" href="/301/sites" aria-label="Sites">
 				+
 			</Button>,
 		),
 	);
 	const link = container.querySelector("a") as HTMLAnchorElement;
-	assert.equal(link.getAttribute("href"), "/301/sites/new");
+	assert.equal(link.getAttribute("href"), "/301/sites");
 	assert.equal(container.querySelector("button"), null);
 	assert.match(link.className, /\bborder-control\b/);
 });
