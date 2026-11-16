@@ -156,11 +156,26 @@ The Camera readout names the frame and the camera's angle around what it looks
 at: azimuth and elevation in the body's frame at a site, or longitude and
 latitude on the ecliptic in space, then the distance.
 
-![The Reading, expanded](media/expanded.png)
+![The application shell](media/shell-reading.png)
 
-> The Reading expanded over the whole screen at `?reading=full`. The side panels
-> step away; its bar keeps the Candidates, the Pin button, and Collapse, so the
-> site and window stay in view. (Placeholder: capture pending.)
+> APL17 in JUN27. The model fills the screen; Sites on the left and Windows on
+> the right sit over it, and the Reading runs across the bottom: the Compass,
+> the slider and Conditions, and Moon Trek imagery. The Earth hangs in the sky
+> with its dashed link to the site.
+
+![The header](media/header.png)
+
+> The header, zoomed. The Camera readout names the frame and the camera's angle,
+> here Space at longitude 270°, latitude 31°, 0.31 AU. Then the UTC clock, and
+> the Appearance menu's trigger, `S/R`, beside its swatch of the accent over the
+> page.
+
+![The Reading, expanded](media/reading-expanded.png)
+
+> The Reading expanded at `?reading=full`. The side panels step away and the bar
+> keeps `APL17 · JUN27` in view with the Pin and Collapse buttons. The Compass
+> and Raw samples, the Conditions with their curves, and two imagery layers fill
+> the screen.
 
 ### 2.2 Navigation
 
@@ -200,11 +215,16 @@ The whole card is the link. The air line is why elevation `0°` is not the same
 fact on every body. The Sun and the reference stars are in the model, never in
 the list: they are references, not places.
 
-![Space, the bodies](media/space.png)
+![Space, the bodies](media/space-bodies.png)
 
-> The first page, `/`. The Sun at the center and the bodies where they are now,
-> from Horizons. Bodies on the left, Windows on the right, and the Candidates
-> bar along the bottom. (Placeholder: capture pending.)
+> The first page, `/`. Space as it is now, from Horizons: the Moon ringed in
+> cochineal, the ecliptic as a faint line, and the brightest stars named. Bodies
+> on the left, Windows on the right.
+
+![The Bodies panel](media/bodies-panel.png)
+
+> Bodies, zoomed. Each card is the link: name and NAIF ID, solar day, air,
+> radius, and the horizon Horizons uses for it, geometric or refracted.
 
 ### 3.2 Sites and windows
 
@@ -224,11 +244,30 @@ by code. Changing the site keeps the window, and changing the window keeps the
 site. Your sites and windows are kept in this browser; the server holds only the
 predefined ones.
 
-![A body and its sites](media/sites.png)
+![A body and its sites](media/moon-sites.png)
 
-> The Moon's sites at `/301/sites`. Sites on the left with their code names,
-> Windows on the right, and the Moon turned to face the camera, its sites
-> marked. (Placeholder: capture pending.)
+> The Moon at `/301/sites`. The camera has flown to it, ringed, with the Earth
+> and Mars where they are. The Sites panel lists its sites, and Windows stays on
+> the right.
+
+![The Sites panel](media/sites-panel.png)
+
+> Sites, zoomed. Code name, latitude and east longitude, and what each place is:
+> SCR on the Shackleton connecting ridge, the Apollo 11 and 17 sites, and
+> Chandrayaan-3's Statio Shiv Shakti. The back arrow goes up one level, and +
+> adds a site.
+
+![Adding a site](media/site-form.png)
+
+> Adding a site inline: a code name, a description, latitude and longitude, and
+> what to look for, Sunlight or Earth visibility. A click on the body picks the
+> point, and the model follows as you type.
+
+![Adding a window](media/window-form.png)
+
+> Adding a window inline: a code name and two UTC dates, typed as spin buttons,
+> with the 31-day limit from Horizons stated under them. The focus ring is
+> cochineal, drawn inside the edge.
 
 ![Add your own site and window](media/add.mp4)
 
@@ -251,12 +290,22 @@ and it copies as it reads. Like a game's item compare, a `+` line is green for
 more of the condition and red for less; the signs carry it without color. It
 says more or less, never better or worse.
 
-![The Compare card](media/candidates.png)
+![The Candidates bar](media/candidates-bar.png)
 
-> The Compare card open over the Candidates bar: `301/SCR MAR27` against
-> `301/SCR JUN27`, a launch slip. Minus lines in gray, plus lines green for more
-> Sun and red for less Earth time, the changes in a column on the right.
-> (Placeholder: capture pending.)
+> The Candidates bar, zoomed: `301/APL17` and `301/SCR`, each in `JUN27`, body
+> and site over window. The chevron on the left of each box opens the Compare
+> card.
+
+![The Compare card](media/compare-card.png)
+
+> The Compare card open over the Reading, frosted like the panels, with SCR as
+> the candidate and APL17 as the reading in view.
+
+![The Compare card, zoomed](media/compare-card-zoom.png)
+
+> The diff, zoomed. Minus is SCR, plus is APL17, in the same window. APL17 has
+> far less Sun at this hour, red, −64.3°, and far more Earth, green, +39.0°.
+> Equal facts sit on one line, in gray.
 
 ![Compare a launch slip and a moved site](media/compare.mp4)
 
@@ -289,11 +338,12 @@ One scene, built once, never swapped. A selection moves only the camera.
 The chart and the model are pictures of the numbers. The panels hold the
 reading.
 
-![A site in the model](media/site.png)
+![A site in the model](media/earth-inti.png)
 
-> The camera on SCR's skyline, the site's zenith up. The Sun just over the
-> horizon with its beam, the Earth low on the other side with its dashed link,
-> and the stars in their true places. (Placeholder: capture pending.)
+> Earth at INTI, Inti Punku. The Sun sits along its true direction from the
+> site, with the sight line to it, and Aldebaran and Capella in their true
+> places. The site is ringed on Earth. Below, the Compass traces the Sun's daily
+> loop at 13°S and the image is Blue Marble.
 
 ### 3.4 Detail
 
@@ -311,12 +361,23 @@ The Reading has three parts, left to right:
 
 The slider moves the model, the table row, and the curves together.
 
-![A site in a window](media/reading.png)
+![The Compass and Raw samples](media/reading-compass.png)
 
-> The Reading for `301/SCR` in `JUN27`. The Compass over the Raw samples and
-> when Horizons was asked, the slider and Conditions in the middle, and Moon
-> Trek imagery with the site ringed on the right. (Placeholder: capture
-> pending.)
+> The Compass and the Raw samples, zoomed. Bearing around, elevation from the
+> center out, the ring is the horizon: the Sun's path in orange well outside it,
+> the Earth's blue dot inside. Under it, when Horizons was asked, and the table
+> a planner can quote.
+
+![The Conditions](media/reading-conditions.png)
+
+> The slider and Conditions, zoomed. The time in UTC, a one-line summary, then
+> each condition: the elevation now, hours above the horizon in the window, the
+> next change, and its curve like a forecast.
+
+![The Imagery](media/reading-imagery.png)
+
+> Imagery, zoomed: the LRO WAC mosaic and LOLA color relief from Moon Trek, each
+> with the site ringed at its point and how wide it is on the ground.
 
 ![Scrub time on the horizon](media/scrub.mp4)
 
