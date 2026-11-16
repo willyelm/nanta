@@ -31,7 +31,8 @@ radio link home.
 A review groups the sites for a date window by those conditions, so the useful
 ones and the poor ones are visible together.
 
-The Moon is `301`, Mars is `499`, and Earth is `399` in Horizons.
+The Moon is `301`, Earth is `399`, Mars is `499`, and Mercury is `199` in
+Horizons.
 
 It does not score a place, rank places, or show the ground. Hills, slopes, and
 dust are a separate study.
@@ -168,11 +169,12 @@ Each view is one step. The URL changes. The reading updates in place.
 `/` lists the bodies a site can stand on. Pointing at or focusing one moves the
 model to it. A body opens `/{code}/sites`.
 
-| Name  | NAIF ID | Air | Horizon   | Solar day     | Radius     |
-| ----- | ------- | --- | --------- | ------------- | ---------- |
-| Moon  | `301`   | No  | Geometric | `29d 12h 44m` | 1,737.4 km |
-| Earth | `399`   | Yes | Refracted | `01d 00h 00m` | 6,371.0 km |
-| Mars  | `499`   | Yes | Geometric | `01d 00h 40m` | 3,389.5 km |
+| Name    | NAIF ID | Air | Horizon   | Solar day      | Radius     |
+| ------- | ------- | --- | --------- | -------------- | ---------- |
+| Moon    | `301`   | No  | Geometric | `29d 12h 44m`  | 1,737.4 km |
+| Earth   | `399`   | Yes | Refracted | `01d 00h 00m`  | 6,371.0 km |
+| Mars    | `499`   | Yes | Geometric | `01d 00h 40m`  | 3,389.5 km |
+| Mercury | `199`   | No  | Geometric | `175d 22h 30m` | 2,439.7 km |
 
 The whole card is the link. The air line is why elevation `0°` is not the same
 fact on every body. The Sun and the reference stars are in the model, never in
@@ -186,9 +188,10 @@ name (`APL11`, `CY3`, `SCR`), a description, its coordinates, and two flags:
 - `sunlight`: the Sun above the horizon, which is power.
 - `earth_visibility`: the Earth above the horizon, a direct link home.
 
-Moon sites have both; Earth and Mars sites have sunlight only. The flags decide
-which bodies Horizons is asked about and what is drawn. A site is a point: the
-outline in the model is a fixed marker, since Horizons answers for a point.
+Moon sites have both; Mercury, Earth, and Mars sites have sunlight only. The
+flags decide which bodies Horizons is asked about and what is drawn. A site is a
+point: the outline in the model is a fixed marker, since Horizons answers for a
+point.
 
 Windows are their own list, predefined (`MAR27`, `JUN27`) and your own, picked
 by code. Changing the site keeps the window, and changing the window keeps the
@@ -196,8 +199,8 @@ site. Your sites and windows are kept in this browser; the server holds only
 the predefined ones.
 
 A site and a window are paired into a candidate with Compare, the link button in
-the Reading. Candidates sit as boxes in the bottom bar, site over window, on
-every page, even before a site is open. A box opens its pair and keeps the
+the Reading. Candidates sit as boxes in the bottom bar, body and site over
+window (`301/SCR` over `JUN27`), on every page, even before a site is open. A box opens its pair and keeps the
 camera; the × on hover unlinks it. Candidates are kept in this browser.
 
 ### 3.3 The model
@@ -226,13 +229,19 @@ reading.
 
 ### 3.4 Detail
 
-The right panel holds each condition at the chosen time: hours above the horizon
-in the window, and the next rise or set. Under it, the table: time in UTC and
-each condition's elevation. Units sit on the number. A missing sample is a dash.
-This is the text a planner can quote.
+The Reading has three parts, left to right:
 
-The bottom panel holds the time slider and one curve per condition, like a
-forecast. The slider moves the model, the table row, and the curves together.
+- The horizon compass, and under it the table: time in UTC and each condition's
+  elevation. Above the table, when Horizons was asked: "Last updated
+  2026-11-15 21:40 UTC, JPL Horizons". Units sit on the number. A missing sample
+  is a dash. This is the text a planner can quote.
+- The time slider, and each condition at the chosen time: hours above the
+  horizon in the window, the next rise or set, and one curve, like a forecast.
+- Imagery of the site, ringed at its point: Moon Trek for the Moon, Mars Trek
+  for Mars, Mercury Trek for Mercury, and the day's satellite picture from GIBS
+  for Earth.
+
+The slider moves the model, the table row, and the curves together.
 
 ## 4. System
 
@@ -274,8 +283,13 @@ an empty cache.
 
 Horizons refracts only for sites on Earth, so Earth is requested refracted, and
 the Moon and Mars airless: their horizons are geometric. No request
-includes terrain, so the horizon is the smooth sphere. Moon Trek images and LOLA
-heights are not used yet. The camera angle is kept in the URL.
+includes terrain, so the horizon is the smooth sphere. Moon Trek and Mars Trek
+images are shown, but no heights. The camera angle is kept in the URL.
+
+`/api/imagery/{body}?lat=&lon=&date=` picks the source for the body and returns
+the pictures around the site: three by three Trek tiles, or one GIBS picture 2°
+across for a past day. It builds the URLs only; the browser loads the images
+from NASA.
 
 There is no success percentage, no dust, no slope limit, and no hidden rank.
 
