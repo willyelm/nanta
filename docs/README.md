@@ -101,12 +101,6 @@ for text that an operator reads. Control and input borders, the focus outline,
 and other non-text cues are 3:1 against the surface they sit on. Dividers are
 decorative.
 
-![The Appearance menu, Light and Compact](media/appearance.png)
-
-> The Appearance menu open from the header, with Light and Compact checked. The
-> same Reading behind it, in light, with tighter spacing. The trigger reads
-> `L/C`. (Placeholder: capture pending.)
-
 ### 1.3 Typography
 
 Nanta Mono is a manual subset of Commit Mono Regular. Weight 400, upright, 16px.
@@ -193,11 +187,11 @@ reading. An unknown path is "Page not found." The server answers 404.
 
 Each view is one step. The URL changes. The reading updates in place.
 
-![Pick a body, then a site, then a window](media/pick.mp4)
+<video src="media/navigating.mp4" controls muted playsinline width="100%"></video>
 
-> Recording: from space to a reading. A body is picked and the camera flies to
-> it, a site and the camera lands on its skyline, a window and the Reading fills
-> in. (Placeholder: recording pending.)
+> [Navigating](media/navigating.mp4). Recording, 7 seconds: the Moon's sites in
+> the Sites panel, a site picked, and the camera flying down to its horizon with
+> Mars and the Earth in the sky.
 
 ### 3.1 Body selector
 
@@ -269,11 +263,12 @@ predefined ones.
 > with the 31-day limit from Horizons stated under them. The focus ring is
 > cochineal, drawn inside the edge.
 
-![Add your own site and window](media/add.mp4)
+<video src="media/create-site-window.mp4" controls muted playsinline width="100%"></video>
 
-> Recording: a site added with +, by typing coordinates or clicking the body,
-> then a window added with two dates. Both open inline, and the model follows as
-> you type. (Placeholder: recording pending.)
+> [Creating a site and a window](media/create-site-window.mp4). Recording, 21
+> seconds: a site added inline with a code name, a description, coordinates, and
+> Sunlight and Earth visibility, the marker following on the Moon as the numbers
+> change, then a window added with two dates.
 
 A site and a window are pinned as a candidate with the Pin button in the
 Reading's bar. Candidates sit as boxes in the Candidates bar, body and site over
@@ -307,11 +302,11 @@ says more or less, never better or worse.
 > far less Sun at this hour, red, −64.3°, and far more Earth, green, +39.0°.
 > Equal facts sit on one line, in gray.
 
-![Compare a launch slip and a moved site](media/compare.mp4)
+<video src="media/comparing.mp4" controls muted playsinline width="100%"></video>
 
-> Recording: two candidates pinned, the same site in two windows and a nearby
-> site in the same window. Hovering each box previews its diff; the chevron pins
-> one open to copy. (Placeholder: recording pending.)
+> [Comparing](media/comparing.mp4). Recording, 18 seconds: sites pinned to the
+> Candidates bar, then each candidate opened against the reading in view with
+> its chevron, the Compare card showing the diff.
 
 ### 3.3 The model
 
@@ -378,12 +373,6 @@ The slider moves the model, the table row, and the curves together.
 
 > Imagery, zoomed: the LRO WAC mosaic and LOLA color relief from Moon Trek, each
 > with the site ringed at its point and how wide it is on the ground.
-
-![Scrub time on the horizon](media/scrub.mp4)
-
-> Recording: dragging the slider across the window. The Sun moves along its path
-> on the Compass, the table row and the curves follow, and the model turns with
-> it. (Placeholder: recording pending.)
 
 ## 4. System
 
