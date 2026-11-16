@@ -146,9 +146,9 @@ Pages only fill the panels. Empty space passes the pointer to the model, so it
 can be turned anywhere it shows. On narrow screens the panels stack below the
 model.
 
-The Camera readout names the frame and the camera's angle around what it looks
-at: azimuth and elevation in the body's frame at a site, or longitude and
-latitude on the ecliptic in space, then the distance.
+The Camera readout's Target is what the camera looks at and turns around: the
+site's code with azimuth and elevation in the body's frame, or the body's code,
+or Space, with longitude and latitude on the ecliptic, then the distance.
 
 ![The application shell](media/shell-reading.png)
 
@@ -159,7 +159,7 @@ latitude on the ecliptic in space, then the distance.
 
 ![The header](media/header.png)
 
-> The header, zoomed. The Camera readout names the frame and the camera's angle,
+> The header, zoomed. The Camera readout names the target and the camera's angle,
 > here Space at longitude 270°, latitude 31°, 0.31 AU. Then the UTC clock, and
 > the Appearance menu's trigger, `S/R`, beside its swatch of the accent over the
 > page.
@@ -234,9 +234,10 @@ drawn. A site is a point: the outline in the model is a fixed marker, since
 Horizons answers for a point.
 
 Windows are their own list, predefined (`MAR27`, `JUN27`) and your own, picked
-by code. Changing the site keeps the window, and changing the window keeps the
-site. Your sites and windows are kept in this browser; the server holds only the
-predefined ones.
+by code. With no site open, picking a window moves the bodies in the model to
+its start, so space can be explored by date. Changing the site keeps the window,
+and changing the window keeps the site. Your sites and windows are kept in this
+browser; the server holds only the predefined ones.
 
 ![A body and its sites](media/moon-sites.png)
 
@@ -317,11 +318,12 @@ One scene, built once, never swapped. A selection moves only the camera.
   distances from the Sun are true; sizes are enlarged so each body can be seen,
   with Earth, Moon, Mars, and Mercury in their true ratio.
 - A site: the body at the center and the site on it, with its horizon and an
-  outline. The camera stands on the skyline with the site's zenith as up,
-  looking toward the Earth's bearing, or the Sun's. The other bodies sit along
-  their true directions from the site. Distance is the cube root of the real
-  range, so order and gaps read, and bodies are true size against the site's
-  body. The Sun is fixed, since its true size can't fit.
+  outline. A cursor-like triangle points at the site, its code above it. The
+  camera stands on the skyline with the site's zenith as up, looking toward the
+  Earth's bearing, or the Sun's. The other bodies sit along their true
+  directions from the site. Distance is the cube root of the real range, so
+  order and gaps read, and bodies are true size against the site's body. The Sun
+  is fixed, since its true size can't fit.
 - The Sun lights every body from where it is, so day, night, and the line
   between them show.
 - Each body turns as the IAU model says, its poles and grid true for the time.
@@ -355,6 +357,8 @@ The Reading has three parts, left to right:
 - Imagery of the site, ringed at its point: Moon Trek for the Moon, Mars Trek
   for Mars, Mercury Trek for Mercury, and for Earth Blue Marble and the day's
   picture from GIBS. A day with no picture yet shows the latest, captioned so.
+  Past 80° the Trek grid stretches pictures into streaks, so polar sites say so
+  instead, until the polar layers are in.
 
 The slider moves the model, the table row, and the curves together.
 
