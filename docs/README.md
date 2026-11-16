@@ -56,8 +56,11 @@ path favorable and another poor.
 
 ### 1.2 Colors and schemes
 
-The scheme choice is `auto`, `light`, or `dark`, stored as `scheme`; `auto` is
-the default, stored as no value, and follows the system live. The resolved
+The scheme choice is System, Light, or Dark (`auto`, `light`, `dark`), stored as
+`scheme`; `auto` is the default, stored as no value, and follows the system
+live. Density is Regular or Compact, stored as `density`; Regular is the default
+and Compact tightens the spacing tokens. Both are set on `<html>` before the
+first paint. The resolved
 `light` or `dark` is set on `<html data-scheme>` before the first paint.
 
 | Token                              | Use                                       |
@@ -116,7 +119,8 @@ Three ideas, kept apart so they mix and match:
 - A candidate is a plan: one site and one window, saved by name.
 
 The same site in another window is a launch slip. The same window at another
-site is a moved landing. Candidates are what get compared, up to three at a time.
+site is a moved landing. Candidates are what get compared, side by side in the
+bottom bar.
 
 ## 2. Workspace, layout, and elements
 
@@ -126,7 +130,9 @@ The model fills the screen behind everything. Over it, a header and a stable
 shape that does not change between pages:
 
 - The header: the name, the camera readout at the center, the UTC clock, and the
-  scheme switch (Auto, Light, Dark).
+  appearance menu. The menu holds the scheme (System, Light, Dark) and the
+  density (Regular, Compact). Its trigger shows a short code, `S/R` or `D/C`,
+  next to a swatch of the accent over the page color.
 - A row of side panels: the Site Navigator (or bodies) on the left, Window
   Selection on the right. Each panel is as tall as its content, up to the row,
   then scrolls.
@@ -147,7 +153,8 @@ latitude on the ecliptic in space, then the distance.
 The URL is the state.
 
 - `/` is the body list.
-- `/{code}/sites?site=&from=&to=` is one place on that body, in one window.
+- `/{code}/sites` is that body's sites.
+- `/{code}/sites/{site}?window=` is one place on that body, in one window.
 
 A link moves among these. Back, refresh, and a shared link restore the same
 reading. An unknown path is "Page not found." The server answers 404.
@@ -188,8 +195,10 @@ by code. Changing the site keeps the window, and changing the window keeps the
 site. Your sites and windows are kept in this browser; the server holds only
 the predefined ones.
 
-Saving a site and a window as a candidate, and comparing up to three, come
-next.
+A site and a window are paired into a candidate with Compare, the link button in
+the Reading. Candidates sit as boxes in the bottom bar, site over window, on
+every page, even before a site is open. A box opens its pair and keeps the
+camera; the × on hover unlinks it. Candidates are kept in this browser.
 
 ### 3.3 The model
 
@@ -248,7 +257,9 @@ Sites and windows you add are edited inline in their panels, so the other
 panels stay up; only the place or the window in the URL changes.
 
 Back, refresh, and a shared link restore the reading, the camera angle
-included. A site or window added in another browser is not there yet.
+included. The window defaults to `TODAY`. The tab title is `Nanta - ` and the
+place: the body (`Moon 301`), the site (`SCR`), or the site and window
+(`SCR/JUN27`). A site or window added in another browser is not there yet.
 
 ### 4.3 Data and limits
 
@@ -263,6 +274,31 @@ includes terrain, so the horizon is the smooth sphere. Moon Trek images and LOLA
 heights are not used yet. The camera angle is kept in the URL.
 
 There is no success percentage, no dust, no slope limit, and no hidden rank.
+
+## 5. Screens and flows
+
+Screenshots and short recordings of each step. Placeholders until the final
+captures.
+
+### 5.1 Screenshots
+
+| Screen               | File                               |
+| -------------------- | ---------------------------------- |
+| Space, the bodies    | `docs/media/space.png` (TODO)      |
+| A body and its sites | `docs/media/sites.png` (TODO)      |
+| A site in a window   | `docs/media/reading.png` (TODO)    |
+| Reading, expanded    | `docs/media/expanded.png` (TODO)   |
+| Candidates compared  | `docs/media/candidates.png` (TODO) |
+| Light and Compact    | `docs/media/appearance.png` (TODO) |
+
+### 5.2 Flows
+
+| Flow                                    | File                            |
+| --------------------------------------- | ------------------------------- |
+| Pick a body, then a site, then a window | `docs/media/pick.mp4` (TODO)    |
+| Add your own site and window            | `docs/media/add.mp4` (TODO)     |
+| Scrub time on the horizon               | `docs/media/scrub.mp4` (TODO)   |
+| Compare a launch slip and a moved site  | `docs/media/compare.mp4` (TODO) |
 
 [^wcag2]:
 
