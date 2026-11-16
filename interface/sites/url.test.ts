@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
-import { cancelReplace, flushReplace, replaceLater } from "./url.ts";
+import { cancelReplace, flushReplace, keepHref, replaceLater } from "./url.ts";
 
 const calls: string[] = [];
 
@@ -41,4 +41,10 @@ test("cancelReplace drops a pending write", () => {
 	cancelReplace();
 	flushReplace();
 	assert.deepEqual(calls, []);
+});
+
+test("keepHref carries camera pose when switching a candidate window", () => {
+	const live = new URLSearchParams("window=TODAY&time=2027-06-01T06:00&az=12&el=30&d=20");
+	const href = keepHref("/301/sites/SCR", { window: "JUN27", time: null }, live);
+	assert.equal(href, "/301/sites/SCR?window=JUN27&az=12&el=30&d=20");
 });

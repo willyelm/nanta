@@ -140,6 +140,18 @@
 /* dark: for the rare one-off; the colors above already switch. */
 @custom-variant dark (&:where([data-scheme="dark"], [data-scheme="dark"] *));
 
+/* The density switch sets data-density on <html>. Compact tightens the 4px grid and controls. */
+[data-density="compact"] {
+	--spacing-xs: 0.125rem;
+	--spacing-sm: 0.375rem;
+	--spacing-md: 0.75rem;
+	--spacing-lg: 1rem;
+	--spacing-utility: 1.25rem;
+	/* 32px controls: still above WCAG 2.5.8's 24px minimum. */
+	--spacing-control: 2rem;
+	--spacing-row: 2rem;
+}
+
 /* pressed: the selected neutral item. Being clicked, a toggle's choice, or the current link. */
 @custom-variant pressed (
 	&:active,

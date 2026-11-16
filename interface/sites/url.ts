@@ -17,34 +17,43 @@ function liveCamera(live: URLSearchParams, key: (typeof CAMERA)[number]) {
 	return null;
 }
 
+export type KeepChange = {
+	window?: string | null;
+	time?: string | null;
+	az?: string | null;
+	el?: string | null;
+	d?: string | null;
+};
+
 // A path with the window, time, and camera kept from the URL, so they survive every move: a
-// site, editing it, back, saving. `change` sets one, or drops it with null. On the client,
-// camera angles come from `location.search` (the scene writes them with history.replaceState);
-// on the server, from the router's search params.
+// site, editing it, back, saving. `change` sets one, or drops it with null. Camera angles prefer
+// `live` (usually `location.search`, which the scene writes with history.replaceState).
+export function keepHref(
+	path: string,
+	change: KeepChange = {},
+	live: URLSearchParams = new URLSearchParams(),
+	fallback: URLSearchParams = live,
+) {
+	const query = new URLSearchParams();
+	const window = change.window === undefined ? fallback.get("window") : change.window;
+	const time = change.time === undefined ? fallback.get("time") : change.time;
+	if (window) query.set("window", window);
+	if (time) query.set("time", time);
+	for (const key of CAMERA) {
+		const value = change[key] === undefined ? liveCamera(live, key) : change[key];
+		if (value) query.set(key, value);
+	}
+	const text = query.toString();
+	return text ? `${path}?${text}` : path;
+}
+
+// On the client, camera angles come from `location.search`; on the server, from the router's
+// search params.
 export function useKeep() {
 	const params = useSearchParams();
-	return (
-		path: string,
-		change: {
-			window?: string | null;
-			time?: string | null;
-			az?: string | null;
-			el?: string | null;
-			d?: string | null;
-		} = {},
-	) => {
-		const query = new URLSearchParams();
+	return (path: string, change: KeepChange = {}) => {
 		const live = typeof location !== "undefined" ? new URLSearchParams(location.search) : params;
-		const window = change.window === undefined ? params.get("window") : change.window;
-		const time = change.time === undefined ? params.get("time") : change.time;
-		if (window) query.set("window", window);
-		if (time) query.set("time", time);
-		for (const key of CAMERA) {
-			const value = change[key] === undefined ? liveCamera(live, key) : change[key];
-			if (value) query.set(key, value);
-		}
-		const text = query.toString();
-		return text ? `${path}?${text}` : path;
+		return keepHref(path, change, live, params);
 	};
 }
 

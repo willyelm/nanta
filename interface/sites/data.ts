@@ -62,10 +62,10 @@ export function useShown({ code, site, window }: Shown) {
 	const span = useWindows().find((w) => w.code === window);
 	const [from, to] = span ? [span.from, span.to] : ["", ""];
 	// Stable across time scrubs: only the site's flags change the list, not each render.
-	const sunlight = chosen?.sunlight ?? false;
-	const earth = chosen?.earth_visibility ?? false;
+	const sunlight = chosen?.sunlight ?? true;
+	const earth = chosen?.earth_visibility ?? true;
 	const list = useMemo(() => flagged({ sunlight, earth_visibility: earth }), [sunlight, earth]);
 	const sky = useHorizon(code, chosen?.lat ?? 0, chosen?.lon ?? 0, from, to, span ? list : []);
 	const first = list.length ? samples(sky, list[0]) : [];
-	return { list, sky, first };
+	return { list, sky, first, sunlight, earth_visibility: earth };
 }

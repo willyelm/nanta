@@ -433,11 +433,16 @@ export function Space() {
 				}
 				sunlight.visible = true;
 				sunpoint.visible = false;
+				const placing = next.onPick != null;
 				const i = next.at ?? 0;
-				for (const [body, positions] of Object.entries(next.sky ?? {}) as [Body, Position[]][]) {
-					const p = positions[Math.min(i, positions.length - 1)];
-					if (!p || body === home) continue;
-					go(body, plus(site, direction(f, p), distance(p.range, base)), size(body, base), snap);
+				// Sky az/el belong to one fixed site. While placing/editing, lat/lon are a draft, so
+				// keep Sun/Earth on the body-centered helio frame and only move the marker + sights.
+				if (!placing) {
+					for (const [body, positions] of Object.entries(next.sky ?? {}) as [Body, Position[]][]) {
+						const p = positions[Math.min(i, positions.length - 1)];
+						if (!p || body === home) continue;
+						go(body, plus(site, direction(f, p), distance(p.range, base)), size(body, base), snap);
+					}
 				}
 				if (home !== "sun" && states.length) {
 					const center = helio(states, home, when);
@@ -458,9 +463,15 @@ export function Space() {
 						);
 					}
 				}
+				// Sight lines: explicit Look for flags (SiteForm), else which bodies the sky loaded.
+				const skyBodies = next.sky ?? {};
+				const look = {
+					sun: next.sunlight ?? (next.sky ? "sun" in skyBodies : true),
+					earth: next.earth_visibility ?? (next.sky ? "earth" in skyBodies : true),
+				};
 				siteSight = () => {
 					for (const body of ["sun", "earth"] as const) {
-						const shown = body !== home && meshes[body].visible;
+						const shown = body !== home && meshes[body].visible && look[body];
 						sight[body].visible = shown;
 						if (!shown) continue;
 						const toward = plus(meshes[body].position, site, -1);

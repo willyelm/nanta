@@ -38,6 +38,13 @@ test("adds a className after its own classes", async () => {
 	assert.equal((await render(<Button className="wide" />)).className, `${own} wide`);
 });
 
+test("compact is the 24px utility target instead of the control height", async () => {
+	const button = await render(<Button size="compact" aria-label="Close" />);
+	assert.match(button.className, /\bmin-h-utility\b/);
+	assert.match(button.className, /\bmin-w-utility\b/);
+	assert.doesNotMatch(button.className, /\bmin-h-control\b/);
+});
+
 test("passes other props and events through", async () => {
 	let clicks = 0;
 	const button = await render(

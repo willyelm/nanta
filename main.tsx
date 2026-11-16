@@ -5,6 +5,7 @@
 import body from "body";
 import { routes } from "interface";
 import { schemeBoot } from "interface/scheme";
+import { densityBoot } from "interface/scheme/density";
 import position from "position";
 import { renderToReadableStream } from "react-dom/server.browser";
 import site from "site";
@@ -30,13 +31,14 @@ const page = get("*", async (request) => {
 	const start = performance.now();
 	const { pathname } = new URL(request.url);
 	const stream = await renderToReadableStream(
-		<html lang="en" data-scheme="light">
+		<html lang="en" data-scheme="light" data-density="regular">
 			<head>
 				<script>{schemeBoot}</script>
+				<script>{densityBoot}</script>
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
-				<title>Nanta</title>
 				<meta name="description" content="Plan locations against changing conditions." />
+				<link rel="icon" href="/favicon.png" type="image/png" />
 				<script type="importmap">{importMap}</script>
 				<link rel="stylesheet" href={MANIFEST.style} />
 				<script type="module">

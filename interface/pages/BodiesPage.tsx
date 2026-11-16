@@ -1,14 +1,13 @@
 import type { Body } from "body";
-import { Button } from "interface/button";
-import Bookmark from "interface/icon/bookmark.svg";
-import { List, ListItem, Loader, Panel, PanelBar, Panels } from "interface/panel";
+import { List, ListItem, Loader, Panel, Panels } from "interface/panel";
+import { CandidatesBar } from "interface/sites/CandidatesBar";
 import { useKeep } from "interface/sites/url";
 import { Skeleton } from "interface/skeleton";
 import { useView } from "interface/space";
-import { Tooltip } from "interface/tooltip";
-import { TimePanel, WindowsPanel } from "interface/windows";
+import { WindowsPanel } from "interface/windows";
 import { useState } from "react";
 import { type Api, json, resumable, useSearchParams } from "system";
+import { nantaTitle } from "./title";
 
 const [, useBodies] = resumable(async (api: Api) => json<Body[]>(api("/api/bodies")));
 
@@ -21,45 +20,31 @@ export function duration(seconds: number) {
 	return `${two(d)}d ${two(h)}h ${two(m)}m`;
 }
 
-// The first page: bodies on the left, Window Selection on the right, Reading across the bottom.
-// Expanding the reading fills the screen and keeps the window in a strip.
+// The first page: bodies on the left, Window Selection on the right. Saved candidates keep a
+// comparison bar across the bottom even before a site is open.
 export function BodiesPage() {
-	const window = useSearchParams().get("window") ?? "NOW";
-	const [expanded, setExpanded] = useState(false);
-	const toggle = () => setExpanded((open) => !open);
+	const window = useSearchParams().get("window") ?? "TODAY";
 	return (
 		<>
-			{expanded ? null : (
-				<Panels>
-					<Loader
-						label="Loading bodies…"
-						error="Couldn't load bodies."
-						fallback={<BodiesSkeleton />}
-					>
-						<BodiesPanel />
-					</Loader>
-					<Loader label="Loading windows…" error="Couldn't load the windows.">
-						<WindowsPanel here="/" window={window} />
-					</Loader>
-				</Panels>
-			)}
-			<Loader
-				label="Loading the reading…"
-				error="Couldn't load the reading."
-				className={expanded ? "max-w-none flex-1 min-h-0" : "max-w-none"}
-			>
-				<TimePanel window={window} expanded={expanded} onExpand={toggle} />
-			</Loader>
+			<title>{nantaTitle("Landing path finder")}</title>
+			<Panels>
+				<Loader label="Loading bodies…" error="Couldn't load bodies." fallback={<BodiesSkeleton />}>
+					<BodiesPanel />
+				</Loader>
+				<Loader label="Loading windows…" error="Couldn't load the windows.">
+					<WindowsPanel here="/" window={window} />
+				</Loader>
+			</Panels>
+			<CandidatesBar />
 		</>
 	);
 }
 
-// Matches BodiesPanel: bar, then cards with name + NAIF on top and three facts under them
+// Matches BodiesPanel cards: name + NAIF on top and three facts under them
 // (ListItem p-md, grid gap-x-sm gap-y-sm).
 function BodiesSkeleton() {
 	return (
 		<div aria-hidden="true" className="flex flex-col divide-y divide-divider">
-			<Skeleton height="var(--spacing-control)" />
 			{[1, 2, 3].map((row) => (
 				<div key={row} className="grid grid-cols-3 gap-x-sm gap-y-sm p-md">
 					<Skeleton className="col-span-2" height="1.25rem" />
@@ -83,21 +68,6 @@ function BodiesPanel() {
 	useView({ body: selected });
 	return (
 		<Panel as="nav" aria-label="Body" className="divide-y divide-divider">
-			<PanelBar
-				title="Bodies"
-				action={
-					<Tooltip label="Candidates">
-						<Button
-							as="a"
-							href="/candidates"
-							aria-label="Candidates"
-							className="px-0 aspect-square border-0"
-						>
-							<Bookmark icon />
-						</Button>
-					</Tooltip>
-				}
-			/>
 			<List>
 				{bodies
 					// Sites stand on planets and satellites; the Sun is always in space, but not a place.

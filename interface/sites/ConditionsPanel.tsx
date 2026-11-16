@@ -2,11 +2,17 @@ import { Button } from "interface/button";
 import { Conditions } from "interface/horizon/Conditions";
 import { HorizonChart } from "interface/horizon/HorizonChart";
 import { Reading } from "interface/horizon/Reading";
-import Bookmark from "interface/icon/bookmark.svg";
-import Check from "interface/icon/check.svg";
+import Link from "interface/icon/link.svg";
+import LinkSlash from "interface/icon/link-slash.svg";
 import { Panel } from "interface/panel";
+import {
+	CandidatesStrip,
+	ExpandReading,
+	ReadingContext,
+	readingClass,
+	useCandidates,
+} from "interface/sites/CandidatesBar";
 import { type Shown, useShown } from "interface/sites/data";
-import { ExpandReading, ReadingContext, readingClass } from "interface/sites/Reading";
 import {
 	candidateCode,
 	removeCandidate,
@@ -45,6 +51,10 @@ export function ConditionsPanel({
 		return keep(pathname, { time: sample?.time.slice(0, 16) ?? null });
 	});
 	const time = stamp(first[at]);
+	const [candidates, refreshCandidates] = useCandidates();
+	const current = candidateCode(shown.site, shown.window);
+	// Look-for sight flags come from SiteForm/SiteView while placing; otherwise Space derives
+	// them from which bodies are in `sky`.
 	useView({
 		sky,
 		at,
@@ -53,19 +63,23 @@ export function ConditionsPanel({
 	return (
 		<Panel as="section" aria-label="Reading" className={readingClass(expanded)}>
 			<div className="flex items-center divide-x divide-divider">
-				{expanded ? (
-					<div className="flex-1 min-w-0">
+				<div className="flex-1 min-w-0">
+					{candidates.length ? (
+						<CandidatesStrip items={candidates} current={current} onRemove={refreshCandidates} />
+					) : expanded ? (
 						<ReadingContext site={shown.site} window={shown.window} />
-					</div>
-				) : (
-					<div className="flex-1" />
-				)}
-				<SaveCandidate {...shown} />
+					) : null}
+				</div>
+				<CompareCandidate {...shown} onChange={refreshCandidates} />
 				{onExpand ? <ExpandReading expanded={expanded} onToggle={onExpand} /> : null}
 			</div>
 			<div className="grid flex-1 min-h-0 gap-md p-md md:grid-cols-4">
-				<div className="flex min-h-0 items-start justify-center md:justify-start">
-					<div className="w-full max-w-[9rem] aspect-square shrink-0">
+				<div
+					className="flex h-full min-h-0 min-w-0 w-full items-center justify-center"
+					style={{ containerType: "size" }}
+				>
+					{/* Square: as wide as the column, or as tall as the cell, whichever is smaller. */}
+					<div className="aspect-square w-[min(100%,100cqh)] max-w-full">
 						<HorizonChart
 							list={list}
 							sky={sky}
@@ -105,27 +119,35 @@ export function ConditionsPanel({
 	);
 }
 
-export function SaveCandidate({ code, site, window }: Shown) {
+// Pair this site and window into the comparison bar, or unlink it.
+export function CompareCandidate({
+	code,
+	site,
+	window,
+	onChange,
+}: Shown & { onChange?: () => void }) {
 	const id = candidateCode(site, window);
 	const hydrated = useHydrated();
-	const [saved, setSaved] = useState<boolean | null>(null);
-	const isSaved = saved ?? (hydrated && savedCandidates().some((c) => c.code === id));
-	const label = isSaved ? `Remove candidate ${id}` : `Save candidate ${id}`;
+	// Bump after toggle so the button re-reads storage for this site/window.
+	const [, setTick] = useState(0);
+	const linked = hydrated && savedCandidates().some((candidate) => candidate.code === id);
+	const label = linked ? `Unlink ${id} from comparison` : `Compare ${id}`;
 	const toggle = () => {
-		if (isSaved) removeCandidate(id);
+		if (linked) removeCandidate(id);
 		else saveCandidate({ code: id, body: code, site, window });
-		setSaved(!isSaved);
+		setTick((tick) => tick + 1);
+		onChange?.();
 	};
 	return (
-		<Tooltip label={isSaved ? "Saved candidate" : "Save candidate"}>
+		<Tooltip label={linked ? "Comparing" : "Compare"}>
 			<Button
-				variant={isSaved ? "neutral" : "accent"}
+				variant={linked ? "neutral" : "accent"}
 				aria-label={label}
-				aria-pressed={isSaved}
+				aria-pressed={linked}
 				className="px-0 aspect-square border-0"
 				onClick={toggle}
 			>
-				{isSaved ? <Check icon /> : <Bookmark icon />}
+				{linked ? <LinkSlash icon /> : <Link icon />}
 			</Button>
 		</Tooltip>
 	);

@@ -13,6 +13,9 @@ export type View = {
 	caption?: string;
 	// The moment the bodies are placed at, in ms; now when unset. A window sets it.
 	time?: number;
+	// Which site→body sight lines to draw (Look for checkboxes). Default both when unset.
+	sunlight?: boolean;
+	earth_visibility?: boolean;
 	// Set while a site is being placed: a click on the body reports its latitude and longitude.
 	onPick?: (lat: number, lon: number) => void;
 };
@@ -23,7 +26,18 @@ export const store: { view: View; apply?: (view: View) => void } = { view: {} };
 // Sets these parts of the view while mounted, and clears them on unmount. Updates merge in place
 // so a dragged time slider does not clear then re-apply. onPick is an effect event: the scene
 // keeps one stable callback and always sees the latest handler.
-export function useView({ body, lat, lon, sky, at, time, caption, onPick }: View) {
+export function useView({
+	body,
+	lat,
+	lon,
+	sky,
+	at,
+	time,
+	caption,
+	sunlight,
+	earth_visibility,
+	onPick,
+}: View) {
 	const owned = useRef<(keyof View)[]>([]);
 	const picking = onPick != null;
 	const pick = useEffectEvent((la: number, lo: number) => {
@@ -39,6 +53,8 @@ export function useView({ body, lat, lon, sky, at, time, caption, onPick }: View
 		if (at !== undefined) next.at = at;
 		if (time !== undefined) next.time = time;
 		if (caption !== undefined) next.caption = caption;
+		if (sunlight !== undefined) next.sunlight = sunlight;
+		if (earth_visibility !== undefined) next.earth_visibility = earth_visibility;
 		if (picking) next.onPick = pick;
 
 		const view = { ...store.view };
@@ -49,7 +65,7 @@ export function useView({ body, lat, lon, sky, at, time, caption, onPick }: View
 		owned.current = Object.keys(next) as (keyof View)[];
 		store.view = view;
 		store.apply?.(view);
-	}, [body, lat, lon, sky, at, time, caption, picking]);
+	}, [body, lat, lon, sky, at, time, caption, sunlight, earth_visibility, picking]);
 
 	useEffect(() => {
 		return () => {

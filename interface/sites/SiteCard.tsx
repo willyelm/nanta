@@ -32,6 +32,11 @@ export function SiteCard({ site }: { site: Site }) {
 
 // Puts the site on the model while it's shown.
 export function SiteView({ site }: { site: Site }) {
-	useView({ lat: site.lat, lon: site.lon });
+	useView({
+		lat: site.lat,
+		lon: site.lon,
+		sunlight: site.sunlight,
+		earth_visibility: site.earth_visibility,
+	});
 	return null;
 }

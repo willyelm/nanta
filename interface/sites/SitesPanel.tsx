@@ -40,7 +40,7 @@ function SiteForm({
 		lat: String(current?.lat ?? 0),
 		lon: String(current?.lon ?? 0),
 		sunlight: current?.sunlight ?? true,
-		earth_visibility: current?.earth_visibility ?? code === "301",
+		earth_visibility: current?.earth_visibility ?? true,
 	});
 	const lat = Number(form.lat);
 	const lon = ((Number(form.lon) % 360) + 360) % 360 || 0;
@@ -55,6 +55,8 @@ function SiteForm({
 	useView({
 		lat,
 		lon,
+		sunlight: form.sunlight,
+		earth_visibility: form.earth_visibility,
 		// Keep the camera still on pick (scene holds while onPick is set); store full precision.
 		onPick: (la, lo) => setForm((f) => ({ ...f, lat: String(la), lon: String(lo) })),
 	});

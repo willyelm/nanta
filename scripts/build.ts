@@ -3,7 +3,7 @@
 // names become MANIFEST; dev keeps plain names so watch rebuilds don't change it.
 
 import { spawn } from "node:child_process";
-import { rm, utimes } from "node:fs/promises";
+import { cp, rm, utimes } from "node:fs/promises";
 import { relative } from "node:path";
 import {
 	analyzeMetafile,
@@ -123,8 +123,14 @@ const defines = (env: "production" | "development") => ({
 	"process.env.NODE_ENV": JSON.stringify(env),
 });
 
+// Root-level static files (favicon, …). Wrangler serves dist/public before the Worker.
+async function copyPublic() {
+	await cp("public", `${dist}/public`, { recursive: true });
+}
+
 async function production() {
 	await rm(dist, { recursive: true, force: true });
+	await copyPublic();
 	const define = defines("production");
 	const hashed = { define, minify: true, entryNames: "[name]-[hash]" };
 	const runtimeOut = await build({ ...runtimeBuild, ...hashed });
@@ -145,6 +151,7 @@ async function production() {
 async function dev() {
 	// Start from an empty local cache, so answers cached by older code never come back.
 	await rm(".wrangler/state/v3/cache", { recursive: true, force: true });
+	await copyPublic();
 	const define = defines("development");
 	const runtimeCtx = await context({ ...runtimeBuild, define });
 	const interfaceCtx = await context({

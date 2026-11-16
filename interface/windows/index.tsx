@@ -5,22 +5,11 @@ import Plus from "interface/icon/plus.svg";
 import Trash from "interface/icon/trash.svg";
 import Xmark from "interface/icon/xmark.svg";
 import { List, ListItem, Panel, PanelBar } from "interface/panel";
-import { ExpandReading, ReadingContext } from "interface/sites/Reading";
 import { removeWindow, savedWindows, saveWindow } from "interface/sites/store";
-import { hourOf, useKeep, useTimeScrub } from "interface/sites/url";
-import { Slider } from "interface/slider";
-import { useView } from "interface/space";
+import { useKeep } from "interface/sites/url";
 import { Tooltip } from "interface/tooltip";
 import { useState } from "react";
-import {
-	type Api,
-	json,
-	navigate,
-	resumable,
-	useHydrated,
-	useLocation,
-	useSearchParams,
-} from "system";
+import { type Api, json, navigate, resumable, useHydrated } from "system";
 import type { Window } from "window";
 
 const field = "flex flex-col gap-xs";
@@ -219,79 +208,6 @@ export function WindowsPanel({ here, window }: { here: string; window: string })
 				)}
 			</List>
 			{window ? null : <p className="p-md">Choose a window.</p>}
-		</Panel>
-	);
-}
-
-const HOUR = 3_600_000;
-
-// The reading without a site: hour by hour across the window. Expand fills the screen; while
-// expanded, a strip keeps the window in view.
-export function TimePanel({
-	window,
-	expanded = false,
-	onExpand,
-}: {
-	window: string;
-	expanded?: boolean;
-	onExpand?: () => void;
-}) {
-	const span = useWindows().find((w) => w.code === window);
-	const keep = useKeep();
-	const params = useSearchParams();
-	const { pathname } = useLocation();
-	const start = span ? Date.parse(`${span.from}T00:00:00Z`) : 0;
-	const end = span ? Date.parse(`${span.to}T00:00:00Z`) : 0;
-	const hours = Math.max(Math.round((end - start) / HOUR), 0);
-	const chosen = Date.parse(`${params.get("time") ?? ""}:00Z`);
-	const from = Number.isFinite(chosen) ? chosen : Date.now();
-	const fromUrl = Math.min(Math.max(Math.floor((from - start) / HOUR), 0), hours);
-	const { at, setTime, onDragStart, onDragEnd } = useTimeScrub(fromUrl, (index) =>
-		keep(pathname, { time: hourOf(start + index * HOUR) }),
-	);
-	const time = start + at * HOUR;
-	useView({ time: span ? time : undefined });
-	if (!span) return null;
-	const hour = (ms: number) => stamp({ time: new Date(ms).toISOString() });
-	const current = hour(time);
-	return (
-		<Panel
-			as="section"
-			aria-label="Reading"
-			className={
-				expanded
-					? "max-w-none flex-1 min-h-0 divide-y divide-divider"
-					: "max-w-none divide-y divide-divider"
-			}
-		>
-			<div className="flex items-center divide-x divide-divider">
-				{expanded ? (
-					<div className="flex-1 min-w-0">
-						<ReadingContext window={window} />
-					</div>
-				) : (
-					<div className="flex-1" />
-				)}
-				{onExpand ? <ExpandReading expanded={expanded} onToggle={onExpand} /> : null}
-			</div>
-			<div className="flex flex-col gap-xs p-md min-w-0">
-				<div className="flex items-baseline justify-between gap-sm text-caption tabular-nums">
-					<span className="text-secondary">{hour(start)}</span>
-					<output className="text-default">{current} UTC</output>
-					<span className="text-secondary">{hour(end)}</span>
-				</div>
-				<Slider
-					id="window-time"
-					label="Time"
-					min={0}
-					max={hours}
-					value={at}
-					valueText={`${current} UTC`}
-					onChange={setTime}
-					onChangeStart={onDragStart}
-					onChangeEnd={onDragEnd}
-				/>
-			</div>
 		</Panel>
 	);
 }
