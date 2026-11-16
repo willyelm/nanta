@@ -33,6 +33,12 @@ export function writeDate(parts: Parts): string {
 	return `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+// Today in UTC, as parts: where an empty part starts.
+function today(): Record<Part, number> {
+	const now = new Date();
+	return { year: now.getUTCFullYear(), month: now.getUTCMonth() + 1, day: now.getUTCDate() };
+}
+
 function maxFor(part: Part, parts: Parts) {
 	if (part === "day" && parts.year != null && parts.month != null)
 		return daysInMonth(parts.year, parts.month);
@@ -72,9 +78,14 @@ export function DateSegments({
 	const buffer = useRef("");
 	const refs = useRef<Partial<Record<Part, HTMLSpanElement>>>({});
 
+	// Every change keeps the day real for its month and year (31 never shows in February).
 	function commit(next: Parts) {
-		setParts(next);
-		onChange(writeDate(next));
+		const fixed =
+			next.day != null && next.year != null && next.month != null
+				? { ...next, day: Math.min(next.day, daysInMonth(next.year, next.month)) }
+				: next;
+		setParts(fixed);
+		onChange(writeDate(fixed));
 	}
 
 	function focusPart(part: Part) {
@@ -83,13 +94,22 @@ export function DateSegments({
 		refs.current[part]?.focus();
 	}
 
+	// Past the first or last part, focus moves to the neighboring date in the same field, so a
+	// range reads as one: the start's day, then the end's year.
+	function focusBeyond(from: HTMLElement, delta: 1 | -1) {
+		const field = from.closest("fieldset") ?? from.parentElement;
+		const all = [...(field?.querySelectorAll<HTMLElement>('[role="spinbutton"]') ?? [])];
+		all[all.indexOf(from) + delta]?.focus();
+	}
+
+	// An empty part starts at today's value; a filled one steps.
 	function step(part: Part, delta: number) {
-		const current = parts[part] ?? (part === "year" ? 2027 : 1);
-		const next = { ...parts, [part]: clamp(part, current + delta, parts) };
-		if (part !== "day" && next.day != null && next.year != null && next.month != null) {
-			next.day = Math.min(next.day, daysInMonth(next.year, next.month));
+		const current = parts[part];
+		if (current == null) {
+			commit({ ...parts, [part]: today()[part] });
+			return;
 		}
-		commit(next);
+		commit({ ...parts, [part]: clamp(part, current + delta, parts) });
 	}
 
 	function typeDigit(part: Part, digit: string) {
@@ -126,10 +146,12 @@ export function DateSegments({
 			event.preventDefault();
 			const index = order.indexOf(part);
 			if (order[index + 1]) focusPart(order[index + 1]);
+			else focusBeyond(event.currentTarget, 1);
 		} else if (event.key === "ArrowLeft") {
 			event.preventDefault();
 			const index = order.indexOf(part);
 			if (order[index - 1]) focusPart(order[index - 1]);
+			else focusBeyond(event.currentTarget, -1);
 		} else if (event.key === "Home") {
 			event.preventDefault();
 			buffer.current = "";
