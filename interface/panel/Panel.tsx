@@ -1,10 +1,11 @@
-import ArrowLeft from "interface/icon/arrow-left.svg";
+import NavArrowLeft from "interface/icon/nav-arrow-left.svg";
 import { Skeleton } from "interface/skeleton";
+import { Tooltip } from "interface/tooltip";
 import { type AnchorHTMLAttributes, type HTMLAttributes, type ReactNode, Suspense } from "react";
 import { Catch, classNames } from "system";
 
 // A panel over the model: translucent, with the scene blurred behind it, so every panel reads
-// the same. It takes the pointer back from the layout, which passes it to the model. `as` keeps
+// the same. It sizes to its content between 20rem and 40rem; a page can set its own. It takes the pointer back from the layout, which passes it to the model. `as` keeps
 // the right element for the content (aside, section, nav).
 export function Panel({
 	as: Element = "div",
@@ -15,7 +16,7 @@ export function Panel({
 		<Element
 			{...props}
 			className={classNames(
-				"flex flex-col min-h-0 max-h-full overflow-auto pointer-events-auto",
+				"flex flex-col min-h-0 max-h-full overflow-auto pointer-events-auto min-w-[20rem] max-w-[40rem]",
 				"bg-neutral/80 backdrop-blur-panel border border-divider",
 				className,
 			)}
@@ -35,16 +36,19 @@ export function Panels({ children }: { children: ReactNode }) {
 }
 
 // A panel that loads: `children` suspends while its data loads. Until then a panel of the same
-// shape says what's loading; on failure, one says what failed. Pass the panel's own classes.
+// shape says what's loading, with `fallback` drawn like the content (a plain skeleton without
+// one); on failure, one says what failed. Pass the panel's own classes.
 export function Loader({
 	label,
 	error,
 	className,
+	fallback,
 	children,
 }: {
 	label: string;
 	error: string;
 	className?: string;
+	fallback?: ReactNode;
 	children: ReactNode;
 }) {
 	return (
@@ -59,7 +63,7 @@ export function Loader({
 				fallback={
 					<Panel role="status" aria-busy="true" className={className}>
 						<span className="sr-only">{label}</span>
-						<Skeleton height="var(--spacing-chart)" />
+						{fallback ?? <Skeleton height="var(--spacing-chart)" />}
 					</Panel>
 				}
 			>
@@ -70,6 +74,7 @@ export function Loader({
 }
 
 // A panel's top bar: a way back, the title, and an action at the end, divided like the panel.
+// It's one control tall. Back is a square cell; an icon action fills the last cell the same way.
 export function PanelBar({
 	back,
 	title,
@@ -82,11 +87,17 @@ export function PanelBar({
 	return (
 		<div className="flex flex-row divide-x divide-divider">
 			{back ? (
-				<a href={back} className="flex items-center p-md" aria-label="Back">
-					<ArrowLeft icon />
-				</a>
+				<Tooltip label="Back">
+					<a
+						href={back}
+						aria-label="Back"
+						className="flex items-center justify-center aspect-square min-h-control hover:bg-neutralHover"
+					>
+						<NavArrowLeft icon />
+					</a>
+				</Tooltip>
 			) : null}
-			<h2 className="p-md uppercase flex-1">{title}</h2>
+			<h2 className="flex items-center px-md py-sm uppercase flex-1">{title}</h2>
 			{action}
 		</div>
 	);
@@ -101,23 +112,27 @@ export function List({ children, ...props }: HTMLAttributes<HTMLUListElement>) {
 	);
 }
 
-// One row of a List: the whole row is the link. `current` marks the one you're on.
+// One row of a List: the whole row is the link. `current` marks the one you're on. `action` is
+// a control at the end of the row, beside the link, like remove.
 export function ListItem({
 	current = false,
+	action,
 	className,
 	...props
-}: { current?: boolean } & AnchorHTMLAttributes<HTMLAnchorElement>) {
+}: { current?: boolean; action?: ReactNode } & AnchorHTMLAttributes<HTMLAnchorElement>) {
 	return (
-		<li>
+		<li className={action ? "flex items-stretch divide-x divide-divider" : undefined}>
 			<a
 				{...props}
 				aria-current={current ? "true" : undefined}
 				className={classNames(
 					"flex flex-col gap-xs min-h-control p-md text-default no-underline",
 					"hover:bg-neutralHover pressed:bg-neutralActive",
+					action ? "flex-1" : undefined,
 					className,
 				)}
 			/>
+			{action}
 		</li>
 	);
 }
