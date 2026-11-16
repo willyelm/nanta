@@ -118,6 +118,32 @@ for (const name of ["light", "dark"]) {
 	test(`${name}: cues on bg are at least 3:1`, () => {
 		check(`${name}: cues on bg`, combinations(tokens, "border-color", "cue", cue, "names"), 3);
 	});
+	// The accent button: its text on its fill keeps text contrast, and the focus ring shows on it.
+	test(`${name}: accent button`, () => {
+		const color = (token: string) => tokens.get(token) ?? "";
+		check(
+			`${name}: onAccent on accent`,
+			[
+				{
+					text: "onAccent",
+					bg: "accent",
+					ratio: contrast(color("text-color-onAccent"), color("background-color-accent")),
+				},
+			],
+			6,
+		);
+		check(
+			`${name}: focus on accent`,
+			[
+				{
+					focus: "focus",
+					bg: "accent",
+					ratio: contrast(color("outline-color-focus"), color("background-color-accent")),
+				},
+			],
+			3,
+		);
+	});
 	test(`${name}: focus outline on bg is at least 3:1`, () => {
 		check(
 			`${name}: focus on bg`,

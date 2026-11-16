@@ -24,10 +24,14 @@
 	--background-color-neutral: oklch(100% 0 0);
 	--background-color-neutralHover: oklch(96% 0 0);
 	--background-color-neutralActive: oklch(92% 0 0);
+	/* accent: the text color as a fill, for the one action a panel leads to. Cochineal is only
+	   ever a ring, never a fill. */
+	--background-color-accent: var(--text-color-default);
 	/* Accent: cobalt blue, the same in both schemes. Each step is darker; white text holds 6:1. */
 
 	--text-color-default: oklch(17.8% 0 0);
 	--text-color-secondary: oklch(38.7% 0 0);
+	--text-color-onAccent: var(--background-color-neutral);
 
 	/* chart: hex for WebGL (three.js reads hex and rgb only). Fixed in both schemes: each sits at
 	   mid luminance, 3:1 on every neutral step, light and dark, so nothing redraws on a switch. */
@@ -43,6 +47,7 @@
 	/* body: each sphere's own color in the model, a picture rather than a cue, so not held to
 	   3:1. The Sun's lines and curves keep the chart color above. Hex, for WebGL. */
 	--body-color-sun: #ffb000;
+	--body-color-sunlight: #ffe9a8; /* the core of the sunlight beam */
 	--body-color-mars: #b3261e;
 	--body-color-earth: #057ff3;
 	--body-color-moon: #797979;
@@ -71,9 +76,6 @@
 	--spacing-row: 2.5rem;
 	--spacing-scene: 31.25rem;
 	--spacing-chart: 5rem;
-
-	/* container: the side panel over the scene. */
-	--container-panel: 24rem;
 
 	/* Corners are fixed details, so px. */
 	/* blur: what a panel does to the scene behind it. */
@@ -157,10 +159,12 @@
 	animation: var(--animate-shimmer);
 }
 
-/* icon: an svg sized to the text around it, which doesn't shrink in a row. */
+/* icon: an svg sized to the text, which doesn't shrink in a row. Icons are drawn on a 24 grid
+   with padding around them, so a little over 1em (about 18px at body size) keeps their shapes close
+   to the height of the text. */
 @utility icon {
-	inline-size: 1em;
-	block-size: 1em;
+	inline-size: 1.15em;
+	block-size: 1.15em;
 	flex: none;
 }
 
