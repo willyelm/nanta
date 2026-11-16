@@ -696,7 +696,7 @@ export function Space() {
 			<canvas
 				ref={canvas}
 				role="img"
-				aria-label="Space now: the Sun, Earth, Moon, and Mars where they are. At a site, the sky from it."
+				aria-label="Space now: the Sun, Earth, Moon, Mars, and Mercury where they are. At a site, the sky from it."
 				className="absolute inset-0 size-full touch-none cursor-grab active:cursor-grabbing"
 			/>
 			<p

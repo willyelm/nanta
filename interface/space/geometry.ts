@@ -36,7 +36,7 @@ export const all = Object.keys(radius) as Body[];
 
 // Space, before a site: the Sun at the center and each body where it is now, from one Horizons
 // state each, advanced by the clock. Directions are true and distances from the Sun linear in
-// AU (8 units each). Sizes are enlarged so every body can be seen: Earth, Moon, and Mars keep
+// AU (8 units each). Sizes are enlarged so every body can be seen: Earth, Moon, Mars, and Mercury keep
 // their true ratio to each other; the Sun can't (109 Earths). The Moon keeps its true direction
 // from the Earth at a set distance, clear of it. Ecliptic x, y, z is scene x, -z, y.
 export const AU = 149_597_870.7;
@@ -59,7 +59,7 @@ export const byCode: Record<string, Body> = {
 export const ecliptic = ([x, y, z]: number[], k = 1) => vec(x * k, z * k, -y * k);
 
 // The scene is the site's body frame, the body's radius 1. Directions come from Horizons and are
-// exact. Earth, Moon, and Mars are true size against the site's body; the Sun is fixed, since
+// exact. Earth, Moon, Mars, and Mercury are true size against the site's body; the Sun is fixed, since
 // true size (400 Moon radii) can't fit. Distance is log10 of the real range, spread wide enough
 // that a true-size Earth stands clear of the Moon.
 export const SUN_SIZE = 6;

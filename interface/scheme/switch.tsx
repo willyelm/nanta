@@ -42,10 +42,9 @@ const schemeByValue = Object.fromEntries(schemes.map((choice) => [choice.value, 
 	Scheme,
 	(typeof schemes)[number]
 >;
-const densityByValue = Object.fromEntries(densities.map((choice) => [choice.value, choice])) as Record<
-	Density,
-	(typeof densities)[number]
->;
+const densityByValue = Object.fromEntries(
+	densities.map((choice) => [choice.value, choice]),
+) as Record<Density, (typeof densities)[number]>;
 
 // Accent | scheme background, like OX's theme chip.
 function SchemeSwatch({ fill }: { fill: string }) {
