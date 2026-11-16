@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { act, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { DateRangeInput } from "./DateRangeInput.tsx";
+import { DateRangeInput, parseDates } from "./DateRangeInput.tsx";
 
 function Range({ from = "", to = "" }: { from?: string; to?: string }) {
 	const [start, setStart] = useState(from);
@@ -80,5 +80,34 @@ test("the end cannot step before start plus 1 day", async () => {
 	assert.equal(spins()[3].textContent, "2027");
 	assert.equal(spins()[4].textContent, "06");
 	assert.equal(spins()[5].textContent, "02");
+	await act(async () => root.unmount());
+});
+
+test("reads ISO dates from pasted text", () => {
+	assert.deepEqual(parseDates("2026-11-16 to 2026/12/1"), ["2026-11-16", "2026-12-01"]);
+	assert.deepEqual(parseDates("no dates"), []);
+});
+
+const pasteInto = (target: HTMLElement, text: string) =>
+	act(async () => {
+		const event = new window.Event("paste", { bubbles: true, cancelable: true });
+		Object.assign(event, { clipboardData: { getData: () => text } });
+		target.dispatchEvent(event);
+	});
+const shown = (spins: HTMLElement[]) => spins.map((spin) => spin.textContent).join(" ");
+
+test("pasting two dates fills the window, the end kept within 31 days", async () => {
+	const { root, spins } = await render(<Range />);
+	await pasteInto(spins()[0], "2026-11-16, 2026-11-20");
+	assert.equal(shown(spins()), "2026 11 16 2026 11 20");
+	await pasteInto(spins()[0], "2026-11-16 2027-03-01");
+	assert.equal(shown(spins()), "2026 11 16 2026 12 17");
+	await act(async () => root.unmount());
+});
+
+test("pasting one date fills only that date", async () => {
+	const { root, spins } = await render(<Range from="2026-11-16" to="2026-11-20" />);
+	await pasteInto(spins()[3], "2026-11-25");
+	assert.equal(shown(spins()), "2026 11 16 2026 11 25");
 	await act(async () => root.unmount());
 });

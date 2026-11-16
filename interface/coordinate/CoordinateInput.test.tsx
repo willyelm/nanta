@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { act, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { CoordinateInput } from "./CoordinateInput.tsx";
+import { CoordinateInput, parseCoordinates } from "./CoordinateInput.tsx";
 
 async function render(kind: "latitude" | "longitude", start: number) {
 	let value = start;
@@ -103,4 +103,48 @@ test("scrolling over a segment steps it, up for north", async () => {
 	for (let n = 0; n < 9; n++) await wheel(spins()[0], -10);
 	assert.equal(value(), 11.999);
 	await act(async () => root.unmount());
+});
+
+test("reads decimal degrees, signed by hemisphere letters", () => {
+	assert.deepEqual(
+		parseCoordinates("39.48670519709631, -105.0273758299388"),
+		[39.48670519709631, -105.0273758299388],
+	);
+	assert.deepEqual(parseCoordinates("89.45° S 222.3° E"), [-89.45, 222.3]);
+	assert.deepEqual(parseCoordinates("12.5 N, 30 W"), [12.5, -30]);
+	assert.deepEqual(parseCoordinates("no numbers"), []);
+});
+
+const pairs: [number, number][] = [];
+let pastedLat = 0;
+function PasteField() {
+	const [v, setV] = useState(0);
+	pastedLat = v;
+	return (
+		<CoordinateInput
+			label="Latitude"
+			kind="latitude"
+			value={v}
+			onChange={setV}
+			onPair={(a, b) => pairs.push([a, b])}
+		/>
+	);
+}
+
+test("pasting a pair fills latitude and longitude; one number fills the field", async () => {
+	const container = document.body.appendChild(document.createElement("div"));
+	const root = createRoot(container);
+	await act(async () => root.render(<PasteField />));
+	const paste = (text: string) =>
+		act(async () => {
+			const event = new window.Event("paste", { bubbles: true, cancelable: true });
+			Object.assign(event, { clipboardData: { getData: () => text } });
+			container.querySelector('[role="spinbutton"]')?.dispatchEvent(event);
+		});
+	await paste("39.48670519709631, -105.0273758299388");
+	assert.deepEqual(pairs, [[39.48670519709631, -105.0273758299388]]);
+	await paste("-12.25");
+	assert.equal(pastedLat, -12.25);
+	await act(async () => root.unmount());
+	container.remove();
 });

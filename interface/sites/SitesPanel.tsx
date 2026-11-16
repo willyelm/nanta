@@ -102,6 +102,7 @@ function SiteForm({
 						kind="latitude"
 						value={lat}
 						onChange={(next) => setForm((f) => ({ ...f, lat: next }))}
+						onPair={(lat, lon) => setForm((f) => ({ ...f, lat, lon: ((lon % 360) + 360) % 360 }))}
 					/>
 				</div>
 				<div className={field}>
@@ -111,6 +112,7 @@ function SiteForm({
 						kind="longitude"
 						value={lon}
 						onChange={(next) => setForm((f) => ({ ...f, lon: next }))}
+						onPair={(lat, lon) => setForm((f) => ({ ...f, lat, lon: ((lon % 360) + 360) % 360 }))}
 					/>
 				</div>
 			</div>

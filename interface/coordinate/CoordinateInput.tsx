@@ -1,5 +1,5 @@
 import { TextBox } from "interface/text";
-import { type KeyboardEvent, useEffect, useRef, useState } from "react";
+import { type ClipboardEvent, type KeyboardEvent, useEffect, useRef, useState } from "react";
 
 // A latitude (N/S, 0 to 90) or longitude (0 to 360 east) as spin buttons, like the date input:
 // whole degrees, thousandths, and for latitude the hemisphere. Up and down step the focused
@@ -15,16 +15,27 @@ const limits: Record<Kind, { max: number; size: number }> = {
 	longitude: { max: 360 * UNIT, size: 3 },
 };
 
+// Decimal degrees in pasted text, in order, each signed by a trailing N/S/E/W if present (S and
+// W negative): "39.4867, -105.0274" or "89.45° S 222.3° E".
+export function parseCoordinates(text: string): number[] {
+	return [...text.matchAll(/([-+]?\d+(?:\.\d+)?)\s*°?\s*([NSEW])?/gi)].map(([, number, side]) =>
+		/[SW]/i.test(side ?? "") ? -Math.abs(Number(number)) : Number(number),
+	);
+}
+
 export function CoordinateInput({
 	label,
 	kind,
 	value,
 	onChange,
+	onPair,
 }: {
 	label: string;
 	kind: Kind;
 	value: number;
 	onChange: (value: number) => void;
+	// A pasted pair, latitude then longitude, fills both fields.
+	onPair?: (lat: number, lon: number) => void;
 }) {
 	const { max, size } = limits[kind];
 	const parts: Part[] =
@@ -90,6 +101,7 @@ export function CoordinateInput({
 	}
 
 	function onKeyDown(part: Part, event: KeyboardEvent) {
+		if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "v") return pasteShortcut();
 		const up = event.key === "ArrowUp" ? 1 : event.key === "ArrowDown" ? -1 : 0;
 		if (up) step(part, up * (event.shiftKey ? 10 : 1));
 		else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
@@ -103,6 +115,33 @@ export function CoordinateInput({
 		} else return;
 		event.preventDefault();
 		if (!/^\d$/.test(event.key)) setTyping(null);
+	}
+
+	// Paste a coordinate, or a latitude and longitude pair; copy gives the value in degrees.
+	// Some browsers send no paste event to a non-editable element, so Cmd or Ctrl+V falls back
+	// to reading the clipboard when none arrives.
+	const pasted = useRef(false);
+	function paste(text: string) {
+		const numbers = parseCoordinates(text);
+		if (!numbers.length) return false;
+		setTyping(null);
+		if (numbers.length >= 2 && onPair) onPair(numbers[0], numbers[1]);
+		else set(Math.round(numbers[kind === "longitude" && numbers.length >= 2 ? 1 : 0] * UNIT));
+		return true;
+	}
+	function onPaste(event: ClipboardEvent) {
+		pasted.current = true;
+		if (paste(event.clipboardData.getData("text"))) event.preventDefault();
+	}
+	function pasteShortcut() {
+		pasted.current = false;
+		setTimeout(() => {
+			if (!pasted.current) navigator.clipboard?.readText().then(paste, () => {});
+		});
+	}
+	function onCopy(event: ClipboardEvent) {
+		event.preventDefault();
+		event.clipboardData.setData("text/plain", String(total / UNIT));
 	}
 
 	const shown: Record<Part, string> = {
@@ -132,7 +171,7 @@ export function CoordinateInput({
 	);
 
 	return (
-		<TextBox as="span" role="group" aria-label={label}>
+		<TextBox as="span" role="group" aria-label={label} onPaste={onPaste} onCopy={onCopy}>
 			{segment("degrees", "degrees")}
 			<span className="text-secondary" aria-hidden="true">
 				.

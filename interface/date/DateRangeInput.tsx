@@ -1,5 +1,5 @@
 import { TextBox } from "interface/text";
-import { Fragment, type KeyboardEvent, useRef, useState } from "react";
+import { type ClipboardEvent, Fragment, type KeyboardEvent, useRef, useState } from "react";
 
 type Part = "year" | "month" | "day";
 
@@ -35,6 +35,13 @@ function writeDate(parts: Parts): string {
 	if (parts.year == null || parts.month == null || parts.day == null) return "";
 	const day = Math.min(parts.day, daysInMonth(parts.year, parts.month));
 	return `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+// ISO dates in pasted text, in order: "2026-11-16", or "2026/11/16 to 2026/12/01".
+export function parseDates(text: string): string[] {
+	return [...text.matchAll(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/g)]
+		.map(([, y, m, d]) => `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`)
+		.filter((date) => !Number.isNaN(Date.parse(`${date}T00:00:00Z`)));
 }
 
 function addDays(value: string, days: number) {
@@ -77,12 +84,15 @@ function show(part: Part, value: number | null) {
 function DateSegments({
 	value,
 	onChange,
+	onPair,
 	name,
 	min,
 	max,
 }: {
 	value: string;
 	onChange: (value: string) => void;
+	// A pasted pair of dates, start then end, fills the whole window.
+	onPair?: (start: string, end: string) => void;
 	name: string;
 	min?: string;
 	max?: string;
@@ -152,8 +162,34 @@ function DateSegments({
 		if (order[index + 1]) focusPart(order[index + 1]);
 	}
 
+	// Paste a date, or a start and end pair; copy gives the date as YYYY-MM-DD. Some browsers
+	// send no paste event to a non-editable element, so Cmd or Ctrl+V falls back to reading
+	// the clipboard when none arrives.
+	const pasted = useRef(false);
+	function paste(text: string) {
+		const dates = parseDates(text);
+		if (!dates.length) return false;
+		buffer.current = "";
+		if (dates.length >= 2 && onPair) onPair(dates[0], dates[1]);
+		else commit(readDate(dates[0]));
+		return true;
+	}
+	function onPaste(event: ClipboardEvent) {
+		pasted.current = true;
+		if (paste(event.clipboardData.getData("text"))) event.preventDefault();
+	}
+	function onCopy(event: ClipboardEvent) {
+		event.preventDefault();
+		event.clipboardData.setData("text/plain", writeDate(parts));
+	}
+
 	function onKeyDown(part: Part, event: KeyboardEvent<HTMLSpanElement>) {
-		if (event.key === "ArrowUp") {
+		if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "v") {
+			pasted.current = false;
+			setTimeout(() => {
+				if (!pasted.current) navigator.clipboard?.readText().then(paste, () => {});
+			});
+		} else if (event.key === "ArrowUp") {
 			event.preventDefault();
 			buffer.current = "";
 			step(part, 1);
@@ -222,6 +258,8 @@ function DateSegments({
 								setFocus(part);
 							}}
 							onKeyDown={(event) => onKeyDown(part, event)}
+							onPaste={onPaste}
+							onCopy={onCopy}
 						>
 							{show(part, valueNow)}
 						</span>
@@ -250,6 +288,11 @@ export function DateRangeInput({
 	const bounded = ISO.test(start);
 	const endMin = bounded ? addDays(start, 1) : undefined;
 	const endMax = bounded ? addDays(start, MAX_DAYS) : undefined;
+	// A pasted window: the end kept between a day and MAX_DAYS after the start.
+	const pair = (from: string, to: string) => {
+		onStartChange(from);
+		onEndChange(clampDate(to, addDays(from, 1), addDays(from, MAX_DAYS)));
+	};
 
 	return (
 		<TextBox as="fieldset" aria-label={label}>
@@ -260,12 +303,14 @@ export function DateRangeInput({
 					onStartChange(value);
 					if (ISO.test(value)) onEndChange(addDays(value, MAX_DAYS));
 				}}
+				onPair={pair}
 			/>
 			<span className="text-secondary">to</span>
 			<DateSegments
 				name={`${label} end`}
 				value={end}
 				onChange={onEndChange}
+				onPair={pair}
 				min={endMin}
 				max={endMax}
 			/>
