@@ -303,8 +303,12 @@ export function CandidatesBar({ current }: { current?: string }) {
 	);
 }
 
-// Panel height: a bottom strip, or the full main column when expanded.
+// Panel height: a bottom strip, or the full main column when expanded. Both start from 30dvh and
+// only flex-grow changes, so expanding animates (a height to "the rest" can't). mt-auto keeps it
+// on the bottom when the panels above leave, so it grows upward instead of jumping to the top.
 export const readingClass = (expanded: boolean) =>
-	expanded
-		? "max-w-none flex-1 min-h-0 divide-y divide-divider"
-		: "max-w-none shrink-0 h-[30dvh] min-h-[15rem] divide-y divide-divider";
+	[
+		"max-w-none divide-y divide-divider basis-[30dvh] min-h-[15rem] shrink-0 mt-auto",
+		"transition-[flex-grow] duration-(--duration-size) ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none",
+		expanded ? "grow" : "grow-0",
+	].join(" ");

@@ -110,9 +110,10 @@
 	--leading-relaxed: 1.75;
 
 	/* Loading placeholders: a band sweeping across, once every 1.5s. */
-	/* Motion: colors change quickly on hover and press; overlays fade in and out. */
+	/* Motion: colors change quickly on hover and press; overlays fade in and out; panels resize. */
 	--duration-color: 120ms;
 	--duration-fade: 160ms;
+	--duration-size: 150ms;
 
 	--animate-shimmer: shimmer 1.5s linear infinite;
 	@keyframes shimmer {
@@ -157,9 +158,9 @@
 
 	/* Lighter bodies on the dark page: the Moon near white, Earth, Mars, and Mercury brighter. */
 	--body-color-moon: #e6e6e6;
-	--body-color-earth: #4da3ff;
 	--body-color-suncore: #ffffff;
 	--body-color-sunlight: #ffe9a8;
+	--body-color-earth: #4da3ff;
 	--body-color-mars: #e0483c;
 	--body-color-mercury: #c2b2a3;
 }
@@ -186,13 +187,19 @@
 	&[aria-current]:not([aria-current="false"])
 );
 
-/* shimmer: a loading placeholder in the neutral steps, so it follows the scheme. */
+/* shimmer: a loading placeholder from the neutral steps, so it follows the scheme: the active step,
+   with a band a little toward the text color sweeping across. */
 @utility shimmer {
+	--shimmer-band: color-mix(
+		in oklch,
+		var(--background-color-neutralActive),
+		var(--text-color-default) 8%
+	);
 	background: linear-gradient(
 		90deg,
-		var(--background-color-neutralHover) 25%,
-		var(--background-color-neutralActive) 50%,
-		var(--background-color-neutralHover) 75%
+		var(--background-color-neutralActive) 25%,
+		var(--shimmer-band) 50%,
+		var(--background-color-neutralActive) 75%
 	);
 	background-size: 200% 100%;
 	animation: var(--animate-shimmer);
