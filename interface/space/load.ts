@@ -17,7 +17,7 @@ export async function fetchStars(): Promise<Star[]> {
 	return stars;
 }
 
-// Queued Horizons fetches for Earth, Moon, Mars at a day. Calls `on` after each body loads.
+// Queued Horizons fetches for Earth, Moon, Mars, Mercury at a day. Calls `on` after each body loads.
 export function horizons(say: (text: string) => void, on: () => void) {
 	const loaded = new Map<string, State[]>();
 	let queue = Promise.resolve();
@@ -26,7 +26,7 @@ export function horizons(say: (text: string) => void, on: () => void) {
 		if (loaded.has(hour)) return;
 		loaded.set(hour, []);
 		queue = queue.then(async () => {
-			for (const code of ["399", "301", "499"]) {
+			for (const code of ["399", "301", "499", "199"]) {
 				const name = names[byCode[code]];
 				say(`Loading Horizons state for ${hour.replace("T", " ")}: ${name} (${code})…`);
 				const response = await fetch(`/api/space?time=${hour}&body=${code}`).catch(() => null);

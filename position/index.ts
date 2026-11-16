@@ -5,7 +5,7 @@ import { type Body, ephemeris, ids, type Position, type State, state } from "./e
 export type { Body, Position, State };
 
 // What each body goes around: Earth and Mars the Sun, the Moon the Earth.
-const ORBITS: Record<string, string> = { "399": "10", "301": "399", "499": "10" };
+const ORBITS: Record<string, string> = { "199": "10", "399": "10", "301": "399", "499": "10" };
 const HOUR = /^\d{4}-\d{2}-\d{2}T\d{2}:00$/;
 
 // Positions of each other body from one site, over one window.
@@ -20,10 +20,11 @@ export type Positions = {
 	from: string;
 	to: string;
 	step: string;
+	fetched: string; // when Horizons was asked, ISO UTC; cached answers keep it
 	positions: Position[];
 };
 
-const BODIES = new Set<Body>(["sun", "earth", "moon", "mars"]);
+const BODIES = new Set<Body>(["sun", "mercury", "earth", "moon", "mars"]);
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const STEPS = new Set(["10m", "30m", "1h", "6h", "1d"]);
 const MAX_DAYS = 31;
@@ -49,7 +50,7 @@ const cached =
 
 // GET /api/positions/:body?site=&from=&to=&step=
 // GET /api/positions/:body?lat=&lon=&from=&to=&step=
-// :body is sun, earth, moon, or mars, and not the body the site stands on (center).
+// :body is sun, mercury, earth, moon, or mars, and not the body the site stands on (center).
 export default [
 	// GET /api/space?time=YYYY-MM-DDTHH:00&body=399  One body's state around what it orbits, at
 	// one time. The client asks for each body in turn and advances them from there.
@@ -74,7 +75,7 @@ export default [
 		"/api/positions/:body",
 		cached(async (request, params) => {
 			const body = params.body as Body;
-			if (!BODIES.has(body)) return fail(404, "body must be sun, earth, moon, or mars");
+			if (!BODIES.has(body)) return fail(404, "body must be sun, mercury, earth, moon, or mars");
 			const q = new URL(request.url).searchParams;
 
 			// Where: a catalog site, or coordinates.
@@ -91,8 +92,8 @@ export default [
 			const to = q.get("to") ?? "";
 			const step = q.get("step") ?? "1h";
 			const center = q.get("center") ?? "301";
-			if (center !== "301" && center !== "399" && center !== "499")
-				return fail(400, "center must be 301, 399, or 499");
+			if (!["199", "301", "399", "499"].includes(center))
+				return fail(400, "center must be 199, 301, 399, or 499");
 			if (ids[body] === center) return fail(400, "body is the one the site stands on");
 			if (!DATE.test(from) || !DATE.test(to)) {
 				return fail(400, "from and to must be YYYY-MM-DD");
@@ -115,6 +116,7 @@ export default [
 					from,
 					to,
 					step,
+					fetched: new Date().toISOString(),
 					positions: await ephemeris(body, lat, lon, from, to, step, center),
 				};
 				return Response.json(result, {

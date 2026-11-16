@@ -26,7 +26,7 @@ export function advance(state: State, ms: number): Vec {
 	return [0, 1, 2].map((i) => r[i] * c + kr[i] * s + k[i] * along) as Vec;
 }
 
-// Heliocentric km at `time` from a set of Horizons states (Earth, Moon, Mars).
+// Heliocentric km at `time` from a set of Horizons states (Mercury, Earth, Moon, Mars).
 export function helio(states: State[], body: Body, time: number): number[] | null {
 	if (body === "sun") return [0, 0, 0];
 	const ahead = (code: string) => {
@@ -37,5 +37,5 @@ export function helio(states: State[], body: Body, time: number): number[] | nul
 		const [earth, moon] = [ahead("399"), ahead("301")];
 		return earth && moon ? earth.map((v, i) => v + moon[i]) : null;
 	}
-	return ahead(body === "earth" ? "399" : "499");
+	return ahead({ mercury: "199", earth: "399", mars: "499" }[body] ?? "");
 }

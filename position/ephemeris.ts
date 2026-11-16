@@ -5,14 +5,21 @@ import { log, since } from "system";
 
 const SOURCE = "https://ssd.jpl.nasa.gov/api/horizons.api";
 
-export type Body = "sun" | "earth" | "moon" | "mars";
+export type Body = "sun" | "mercury" | "earth" | "moon" | "mars";
 
 // azimuth and elevation in degrees, range in km.
 export type Position = { time: string; azimuth: number; elevation: number; range: number };
 
 const AU = 149_597_870.7;
+const WEST = new Set(["199", "499"]);
 
-export const ids: Record<Body, string> = { sun: "10", earth: "399", moon: "301", mars: "499" };
+export const ids: Record<Body, string> = {
+	sun: "10",
+	mercury: "199",
+	earth: "399",
+	moon: "301",
+	mars: "499",
+};
 
 const months: Record<string, string> = {
 	Jan: "01",
@@ -43,8 +50,8 @@ export async function ephemeris(
 		COMMAND: `'${ids[body]}'`,
 		CENTER: `'coord@${center}'`,
 		COORD_TYPE: "'GEODETIC'",
-		// Mars is IAU west-positive: Horizons wants its east longitude as a negative number.
-		SITE_COORD: `'${center === "499" ? -lon : lon},${lat},0'`,
+		// Mercury and Mars are IAU west-positive: Horizons wants east longitude as a negative number.
+		SITE_COORD: `'${WEST.has(center) ? -lon : lon},${lat},0'`,
 		MAKE_EPHEM: "'YES'",
 		EPHEM_TYPE: "'OBSERVER'",
 		START_TIME: `'${from}'`,

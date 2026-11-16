@@ -55,6 +55,16 @@ export const bodies: Body[] = [
 		day: 88_775, // the sol
 		radius: 3_389.5,
 	},
+	{
+		code: "199",
+		name: "Mercury",
+		type: "planet",
+		orbits: "10",
+		air: false,
+		refraction: false,
+		day: 15_201_000, // 175.94 days: three turns for every two years
+		radius: 2_439.7,
+	},
 
 	// Reference: the Sun, the brightest stars, the four on the ecliptic that mark where the
 	// planets move (Aldebaran, Regulus, Spica, Antares), and Polaris for north. Stars lie far

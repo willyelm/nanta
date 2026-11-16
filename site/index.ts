@@ -79,6 +79,15 @@ export const sites: Site[] = [
 		lat: 18.445,
 		lon: 77.451,
 	},
+	// MESSENGER's impact, 30 April 2015: about 54.44°N, 210.12°E, near Janáček crater (NASA/APL).
+	{
+		code: "MSG",
+		name: "MESSENGER impact site",
+		body: "199",
+		...sun,
+		lat: 54.44,
+		lon: 210.12,
+	},
 ];
 
 export type SitePage = {

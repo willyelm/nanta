@@ -49,6 +49,7 @@
 	--body-color-sun: #ffb000;
 	--body-color-sunlight: #ffe9a8; /* the core of the sunlight beam */
 	--body-color-mars: #b3261e;
+	--body-color-mercury: #8c7b6b;
 	--body-color-earth: #057ff3;
 	--body-color-moon: #797979;
 
@@ -131,10 +132,11 @@
 	--border-color-input: oklch(58% 0 0);
 	--border-color-divider: oklch(30% 0.004 286);
 
-	/* Lighter bodies on the dark page: the Moon near white, Earth and Mars brighter. */
+	/* Lighter bodies on the dark page: the Moon near white, Earth, Mars, and Mercury brighter. */
 	--body-color-moon: #e6e6e6;
 	--body-color-earth: #4da3ff;
 	--body-color-mars: #e0483c;
+	--body-color-mercury: #c2b2a3;
 }
 
 /* dark: for the rare one-off; the colors above already switch. */
