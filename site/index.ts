@@ -69,6 +69,16 @@ export const sites: Site[] = [
 		lat: 28.573,
 		lon: 279.351,
 	},
+	// Inti Punku, the Sun Gate of Machu Picchu, Peru: the Inca gateway on the trail where the solstice
+	// sunrise comes through. An approximate point, about 13.169°S, 72.537°W.
+	{
+		code: "INTI",
+		name: "Inti Punku, the Sun Gate of Machu Picchu",
+		body: "399",
+		...sun,
+		lat: -13.169,
+		lon: 287.463,
+	},
 	// Perseverance, Octavia E. Butler Landing in Jezero Crater: about 18.44°N, 77.45°E (NASA named
 	// the site in March 2021). The third decimal isn't confirmed from a NASA page.
 	{
