@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { advance } from "./orbit.ts";
+import type { State } from "position";
+import { advance, helio } from "./orbit.ts";
 
 // A circular orbit of radius 1 in the xy plane, one radian per second.
 const state = {
@@ -19,4 +20,21 @@ test("turns the position about the orbit's axis at its angular rate", () => {
 test("keeps the distance from the center", () => {
 	const p = advance(state, 1234);
 	assert.ok(Math.abs(Math.hypot(...p) - 1) < 1e-9);
+});
+
+const row = (code: string, position: [number, number, number]): State => ({
+	code,
+	center: "10",
+	time: "2026-01-01T00:00:00Z",
+	position,
+	velocity: [0, 0, 0],
+});
+
+test("helio is the origin for the Sun and sums Earth with the Moon", () => {
+	const t = Date.parse("2026-01-01T00:00:00Z");
+	const states = [row("399", [10, 0, 0]), row("301", [1, 0, 0]), row("499", [20, 0, 0])];
+	assert.deepEqual(helio(states, "sun", t), [0, 0, 0]);
+	assert.deepEqual(helio(states, "moon", t), [11, 0, 0]);
+	assert.deepEqual(helio(states, "earth", t), [10, 0, 0]);
+	assert.deepEqual(helio(states, "mars", t), [20, 0, 0]);
 });

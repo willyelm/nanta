@@ -1,4 +1,4 @@
-import type { State } from "position";
+import type { Body, State } from "position";
 
 type Vec = [number, number, number];
 
@@ -21,8 +21,21 @@ export function advance(state: State, ms: number): Vec {
 	const k: Vec = [h[0] / n, h[1] / n, h[2] / n];
 	const angle = (n / dot(r, r)) * (ms / 1000);
 	const [c, s] = [Math.cos(angle), Math.sin(angle)];
-	// Rodrigues: r cos θ + (k × r) sin θ + k (k · r)(1 − cos θ)
 	const kr = cross(k, r);
 	const along = dot(k, r) * (1 - c);
 	return [0, 1, 2].map((i) => r[i] * c + kr[i] * s + k[i] * along) as Vec;
+}
+
+// Heliocentric km at `time` from a set of Horizons states (Earth, Moon, Mars).
+export function helio(states: State[], body: Body, time: number): number[] | null {
+	if (body === "sun") return [0, 0, 0];
+	const ahead = (code: string) => {
+		const s = states.find((row) => row.code === code);
+		return s ? advance(s, time - Date.parse(s.time)) : null;
+	};
+	if (body === "moon") {
+		const [earth, moon] = [ahead("399"), ahead("301")];
+		return earth && moon ? earth.map((v, i) => v + moon[i]) : null;
+	}
+	return ahead(body === "earth" ? "399" : "499");
 }

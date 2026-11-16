@@ -1,5 +1,5 @@
 import type { Sky } from "position";
-import { useEffect } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 
 // What the model shows: the body by Horizons code, a site on it (degrees, east longitude), and
 // the other bodies seen from that site over a window, at sample `at`.
@@ -20,20 +20,44 @@ export type View = {
 // The view, and how the scene applies it: the scene sets apply while it's mounted.
 export const store: { view: View; apply?: (view: View) => void } = { view: {} };
 
-// Sets the given parts of the view while the calling component is mounted, and clears them after.
-export function useView(part: View) {
-	const { body, lat, lon, sky, at, time, caption, onPick } = part;
+// Sets these parts of the view while mounted, and clears them on unmount. Updates merge in place
+// so a dragged time slider does not clear then re-apply. onPick is an effect event: the scene
+// keeps one stable callback and always sees the latest handler.
+export function useView({ body, lat, lon, sky, at, time, caption, onPick }: View) {
+	const owned = useRef<(keyof View)[]>([]);
+	const picking = onPick != null;
+	const pick = useEffectEvent((la: number, lo: number) => {
+		onPick?.(la, lo);
+	});
+
 	useEffect(() => {
-		const set = Object.entries({ body, lat, lon, sky, at, time, caption, onPick }).filter(
-			([, v]) => v !== undefined,
-		);
-		store.view = { ...store.view, ...Object.fromEntries(set) };
-		store.apply?.(store.view);
+		const next: View = {};
+		if (body !== undefined) next.body = body;
+		if (lat !== undefined) next.lat = lat;
+		if (lon !== undefined) next.lon = lon;
+		if (sky !== undefined) next.sky = sky;
+		if (at !== undefined) next.at = at;
+		if (time !== undefined) next.time = time;
+		if (caption !== undefined) next.caption = caption;
+		if (picking) next.onPick = pick;
+
+		const view = { ...store.view };
+		for (const key of owned.current) {
+			if (!(key in next)) delete view[key];
+		}
+		Object.assign(view, next);
+		owned.current = Object.keys(next) as (keyof View)[];
+		store.view = view;
+		store.apply?.(view);
+	}, [body, lat, lon, sky, at, time, caption, picking]);
+
+	useEffect(() => {
 		return () => {
-			const next = { ...store.view };
-			for (const [key] of set) delete next[key as keyof View];
-			store.view = next;
-			store.apply?.(store.view);
+			const view = { ...store.view };
+			for (const key of owned.current) delete view[key];
+			owned.current = [];
+			store.view = view;
+			store.apply?.(view);
 		};
-	}, [body, lat, lon, sky, at, time, caption, onPick]);
+	}, []);
 }

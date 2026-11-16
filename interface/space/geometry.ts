@@ -60,12 +60,25 @@ export const vec = (x = 0, y = 0, z = 0) => new Vector3().set(x, y, z);
 export const plus = (a: Vector3, b: Vector3, k = 1) =>
 	vec(a.x + b.x * k, a.y + b.y * k, a.z + b.z * k);
 
-// The site's local frame on the unit sphere: up, north, and east. Body north (z) is scene y.
+// Unit sphere in the scene: body north (z) is scene y; east longitude from the x–z plane.
+// One conversion for graticule, site frames, and picking so a click lands on the same point.
+export function pointOnBody(lat: number, lon: number) {
+	const [la, lo] = [lat * toRad, lon * toRad];
+	return vec(Math.cos(la) * Math.cos(lo), Math.sin(la), -Math.cos(la) * Math.sin(lo));
+}
+
+export function latLon(point: { x: number; y: number; z: number }) {
+	const lat = Math.asin(Math.max(-1, Math.min(1, point.y))) / toRad;
+	const lon = (Math.atan2(-point.z, point.x) / toRad + 360) % 360;
+	return { lat, lon };
+}
+
+// The site's local frame on the unit sphere: up, north, and east.
 export function frame(lat: number, lon: number) {
 	const [la, lo] = [lat * toRad, lon * toRad];
 	const body = (x: number, y: number, z: number) => vec(x, z, -y);
 	return {
-		up: body(Math.cos(la) * Math.cos(lo), Math.cos(la) * Math.sin(lo), Math.sin(la)),
+		up: pointOnBody(lat, lon),
 		north: body(-Math.sin(la) * Math.cos(lo), -Math.sin(la) * Math.sin(lo), Math.cos(la)),
 		east: body(-Math.sin(lo), Math.cos(lo), 0),
 	};
@@ -82,8 +95,8 @@ export function direction(f: ReturnType<typeof frame>, p: Position) {
 export function graticule() {
 	const points: number[] = [];
 	const at = (lat: number, lon: number) => {
-		const [la, lo] = [lat * toRad, lon * toRad];
-		points.push(Math.cos(la) * Math.cos(lo), Math.sin(la), -Math.cos(la) * Math.sin(lo));
+		const p = pointOnBody(lat, lon);
+		points.push(p.x, p.y, p.z);
 	};
 	for (let lon = 0; lon < 360; lon += 15) {
 		for (let lat = -90; lat < 90; lat += 3) {
