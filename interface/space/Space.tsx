@@ -446,33 +446,28 @@ export function Space() {
 				sunpoint.visible = false;
 				const placing = next.onPick != null;
 				const i = next.at ?? 0;
+				// A body `km` away along `toward`, from `origin`, at the scene's distance and size.
+				const place = (body: Body, origin: Vector3, toward: Vector3, km: number) =>
+					go(body, plus(origin, toward.normalize(), distance(km, base)), size(body, base), snap);
 				// Sky az/el belong to one fixed site. While placing/editing, lat/lon are a draft, so
 				// keep Sun/Earth on the body-centered helio frame and only move the marker + sights.
 				if (!placing) {
 					for (const [body, positions] of Object.entries(next.sky ?? {}) as [Body, Position[]][]) {
 						const p = positions[Math.min(i, positions.length - 1)];
-						if (!p || body === home) continue;
-						go(body, plus(site, direction(f, p), distance(p.range, base)), size(body, base), snap);
+						if (p && body !== home) place(body, site, direction(f, p), p.range);
 					}
 				}
-				if (home !== "sun" && states.length) {
-					const center = helio(states, home, when);
-					for (const body of all) {
-						if (body === home || meshes[body].visible) continue;
-						const from = helio(states, body, when);
-						if (!from || !center) continue;
-						const toward = eclipticOver(
-							home,
-							[0, 1, 2].map((axis) => from[axis] - center[axis]),
-							when,
-						);
-						go(
-							body,
-							toward.normalize().multiplyScalar(distance(toward.length(), base)),
-							size(body, base),
-							snap,
-						);
-					}
+				// The rest from the space states, around the body's center.
+				const center = home !== "sun" && helio(states, home, when);
+				for (const body of all) {
+					const from = !meshes[body].visible && helio(states, body, when);
+					if (home === "sun" || !center || !from || body === home) continue;
+					const toward = eclipticOver(
+						home,
+						[0, 1, 2].map((axis) => from[axis] - center[axis]),
+						when,
+					);
+					place(body, vec(), toward, toward.length());
 				}
 				// Sight lines: explicit Look for flags (SiteForm), else which bodies the sky loaded.
 				const skyBodies = next.sky ?? {};

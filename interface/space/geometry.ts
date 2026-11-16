@@ -59,11 +59,11 @@ export const byCode: Record<string, Body> = {
 export const ecliptic = ([x, y, z]: number[], k = 1) => vec(x * k, z * k, -y * k);
 
 // The scene is the site's body frame, the body's radius 1. Directions come from Horizons and are
-// exact. Earth, Moon, Mars, and Mercury are true size against the site's body; the Sun is fixed, since
-// true size (400 Moon radii) can't fit. Distance is log10 of the real range, spread wide enough
-// that a true-size Earth stands clear of the Moon.
+// exact. Distance is the cube root of the real range, so order and gaps read and everything fits:
+// from the Moon, the Earth at about 9 and the Sun at about 66. Bodies are true size against the
+// site's body; the Sun is fixed, since true size (400 Moon radii) can't fit.
 export const SUN_SIZE = 6;
-export const distance = (km: number, base: number) => 1 + 6 * Math.log10(km / base);
+export const distance = (km: number, base: number) => 1.5 * Math.cbrt(km / base);
 export const size = (body: Body, base: number) => (body === "sun" ? SUN_SIZE : radius[body] / base);
 
 export const toRad = Math.PI / 180;

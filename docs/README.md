@@ -319,7 +319,9 @@ One scene, built once, never swapped. A selection moves only the camera.
 - A site: the body at the center and the site on it, with its horizon and an
   outline. The camera stands on the skyline with the site's zenith as up,
   looking toward the Earth's bearing, or the Sun's. The other bodies sit along
-  their true directions from the site; distance is drawn on a log scale.
+  their true directions from the site. Distance is the cube root of the real
+  range, so order and gaps read, and bodies are true size against the site's
+  body. The Sun is fixed, since its true size can't fit.
 - The Sun lights every body from where it is, so day, night, and the line
   between them show.
 - Each body turns as the IAU model says, its poles and grid true for the time.
