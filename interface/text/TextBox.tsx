@@ -25,6 +25,6 @@ export function TextBox<T extends ElementType = "span">({
 	...props
 }: TextBoxProps<T>) {
 	const Tag = (as ?? "span") as ElementType;
-	const shape = layout[String(Tag)] ?? "inline-flex items-center gap-xs";
+	const shape = layout[String(Tag)] ?? "inline-flex items-center gap-nano";
 	return <Tag className={classNames(base, shape, className)} {...props} />;
 }

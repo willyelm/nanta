@@ -26,7 +26,7 @@ export const conditions: Record<
 	},
 	earth_visibility: {
 		body: "earth",
-		name: "Earth visibility",
+		name: "Earthview",
 		label: "Earth",
 		states: ["Earth up", "Earth down"],
 		changes: ["sets", "rises"],

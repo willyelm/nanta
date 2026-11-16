@@ -213,7 +213,7 @@ function DateSegments({
 							aria-valuetext={show(part, valueNow)}
 							tabIndex={focus === part ? 0 : -1}
 							data-empty={valueNow == null}
-							className="px-xs tabular-nums data-[empty=true]:text-secondary focus:outline-2 focus:outline-focus focus:-outline-offset-2"
+							className="px-nano tabular-nums data-[empty=true]:text-secondary focus:outline-2 focus:outline-focus focus:-outline-offset-2"
 							ref={(node) => {
 								if (node) refs.current[part] = node;
 							}}

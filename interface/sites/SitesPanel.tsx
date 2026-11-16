@@ -1,4 +1,6 @@
 import { Button } from "interface/button";
+import { CoordinateInput } from "interface/coordinate";
+import { field, input, Label } from "interface/field";
 import { conditions } from "interface/horizon/catalog";
 import EditPencil from "interface/icon/edit-pencil.svg";
 import Plus from "interface/icon/plus.svg";
@@ -17,9 +19,6 @@ import { useState } from "react";
 import type { Condition, Site } from "site";
 import { navigate, useHydrated } from "system";
 
-const field = "flex flex-col gap-xs";
-const input = "min-h-control px-sm border border-input bg-neutral text-default";
-
 // Empty to add, or filled to edit one of yours. Shows on the model as you type; a click on the
 // body fills lat/lon. Saved in this browser. An edit keeps its code.
 function SiteForm({
@@ -37,20 +36,15 @@ function SiteForm({
 	const [form, setForm] = useState({
 		code: current?.code ?? "",
 		name: current?.name ?? "",
-		lat: String(current?.lat ?? 0),
-		lon: String(current?.lon ?? 0),
+		lat: current?.lat ?? 0,
+		lon: current?.lon ?? 0,
 		sunlight: current?.sunlight ?? true,
 		earth_visibility: current?.earth_visibility ?? true,
 	});
-	const lat = Number(form.lat);
-	const lon = ((Number(form.lon) % 360) + 360) % 360 || 0;
+	const { lat, lon } = form;
 	const taken = !current && items.some((s) => s.code === form.code);
 	const valid =
-		/^[A-Z0-9-]{1,12}$/.test(form.code) &&
-		!taken &&
-		lat >= -90 &&
-		lat <= 90 &&
-		(form.sunlight || form.earth_visibility);
+		/^[A-Z0-9-]{1,12}$/.test(form.code) && !taken && (form.sunlight || form.earth_visibility);
 
 	useView({
 		lat,
@@ -59,12 +53,12 @@ function SiteForm({
 		sunlight: form.sunlight,
 		earth_visibility: form.earth_visibility,
 		// Keep the camera still on pick (scene holds while onPick is set); store full precision.
-		onPick: (la, lo) => setForm((f) => ({ ...f, lat: String(la), lon: String(lo) })),
+		onPick: (la, lo) => setForm((f) => ({ ...f, lat: la, lon: lo })),
 	});
 
 	return (
 		<form
-			className="flex flex-col gap-md p-md"
+			className="flex flex-col gap-sm p-md"
 			action={() => {
 				if (!valid) return;
 				save({
@@ -80,7 +74,7 @@ function SiteForm({
 			}}
 		>
 			<label className={field}>
-				<span className="text-label text-secondary">Code name</span>
+				<Label>Code name</Label>
 				<input
 					className={input}
 					value={form.code}
@@ -92,7 +86,7 @@ function SiteForm({
 				/>
 			</label>
 			<label className={field}>
-				<span className="text-label text-secondary">Description</span>
+				<Label>Description</Label>
 				<input
 					className={input}
 					value={form.name}
@@ -101,37 +95,33 @@ function SiteForm({
 				/>
 			</label>
 			<div className="grid grid-cols-2 gap-sm">
-				<label className={field}>
-					<span className="text-label text-secondary">Latitude °</span>
-					<input
-						className={input}
-						type="number"
-						step="any"
-						min={-90}
-						max={90}
-						value={form.lat}
-						onChange={(event) => setForm((f) => ({ ...f, lat: event.target.value }))}
+				<div className={field}>
+					<Label>Latitude</Label>
+					<CoordinateInput
+						label="Latitude"
+						kind="latitude"
+						value={lat}
+						onChange={(next) => setForm((f) => ({ ...f, lat: next }))}
 					/>
-				</label>
-				<label className={field}>
-					<span className="text-label text-secondary">Longitude °E</span>
-					<input
-						className={input}
-						type="number"
-						step="any"
-						value={form.lon}
-						onChange={(event) => setForm((f) => ({ ...f, lon: event.target.value }))}
+				</div>
+				<div className={field}>
+					<Label help="You can click in the 3D model">Longitude</Label>
+					<CoordinateInput
+						label="Longitude"
+						kind="longitude"
+						value={lon}
+						onChange={(next) => setForm((f) => ({ ...f, lon: next }))}
 					/>
-				</label>
+				</div>
 			</div>
-			<p className="text-caption">
-				{taken
-					? `${form.code} is already a site on this body.`
-					: "Or click the body in the model to pick the point."}
-			</p>
+			{taken ? (
+				<p role="alert" className="text-caption">
+					{form.code} is already a site on this body.
+				</p>
+			) : null}
 			<ToggleGroup
 				multiple
-				label="Look for"
+				label="Look for (conditions)"
 				value={(Object.keys(conditions) as Condition[]).filter((condition) => form[condition])}
 				onChange={(next) => {
 					const list = next as Condition[];
@@ -157,7 +147,7 @@ function SiteForm({
 					<Tooltip label={`Delete ${current.code}`}>
 						<Button
 							aria-label={`Delete ${current.code}`}
-							className="px-0 aspect-square"
+							className="px-0 w-control"
 							onClick={() => {
 								removeSite(current.code);
 								onRemoved?.(current.code);
@@ -197,7 +187,7 @@ export function SitesPanel({ code, site }: Shown) {
 							variant={adding ? "neutral" : "accent"}
 							aria-label={adding ? "Close" : "Add a site"}
 							aria-expanded={adding}
-							className="px-0 aspect-square border-0"
+							className="px-0 w-control border-0"
 							onClick={() => setOpen(adding ? null : "new")}
 						>
 							{adding ? <Xmark icon /> : <Plus icon />}
@@ -223,7 +213,7 @@ export function SitesPanel({ code, site }: Shown) {
 									<button
 										type="button"
 										aria-label="Cancel"
-										className="flex items-center justify-center aspect-square min-h-control hover:bg-neutralHover"
+										className="flex items-center justify-center w-control min-h-control hover:bg-neutralHover"
 										onClick={() => setOpen(null)}
 									>
 										<Xmark icon />
@@ -258,7 +248,7 @@ export function SitesPanel({ code, site }: Shown) {
 										<button
 											type="button"
 											aria-label={`Edit ${item.code}`}
-											className="flex items-center justify-center aspect-square min-h-control hover:bg-neutralHover"
+											className="flex items-center justify-center w-control min-h-control hover:bg-neutralHover"
 											onClick={() => setOpen(item.code)}
 										>
 											<EditPencil icon />

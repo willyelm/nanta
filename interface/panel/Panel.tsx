@@ -91,7 +91,7 @@ export function PanelBar({
 					<a
 						href={back}
 						aria-label="Back"
-						className="flex items-center justify-center aspect-square min-h-control hover:bg-neutralHover"
+						className="flex items-center justify-center w-control min-h-control hover:bg-neutralHover"
 					>
 						<NavArrowLeft icon />
 					</a>

@@ -65,8 +65,8 @@ export function ConditionsPanel({
 	});
 	return (
 		<Panel as="section" aria-label="Reading" className={readingClass(expanded)}>
-			<div className="flex items-center divide-x divide-divider">
-				<div className="flex-1 min-w-0">
+			<div className="flex min-h-control items-stretch divide-x divide-divider">
+				<div className="flex flex-1 min-w-0">
 					{candidates.length ? (
 						<CandidatesStrip
 							items={candidates}
@@ -205,7 +205,7 @@ export function PinCandidate({ code, site, window, onChange }: Shown & { onChang
 				variant={pinned ? "neutral" : "accent"}
 				aria-label={label}
 				aria-pressed={pinned}
-				className="px-0 aspect-square border-0"
+				className="px-0 w-control border-0"
 				onClick={toggle}
 			>
 				{pinned ? <PinSlash icon /> : <Pin icon />}

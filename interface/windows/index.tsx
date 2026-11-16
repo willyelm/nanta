@@ -1,5 +1,6 @@
 import { Button } from "interface/button";
 import { DateRangeInput, MAX_DAYS } from "interface/date";
+import { field, input, Label } from "interface/field";
 import EditPencil from "interface/icon/edit-pencil.svg";
 import Plus from "interface/icon/plus.svg";
 import Trash from "interface/icon/trash.svg";
@@ -12,9 +13,6 @@ import { Tooltip } from "interface/tooltip";
 import { useState } from "react";
 import { type Api, json, navigate, resumable, useHydrated } from "system";
 import type { Window } from "window";
-
-const field = "flex flex-col gap-xs";
-const input = "min-h-control px-sm border border-input bg-neutral text-default";
 
 export const [, useWindowCatalog] = resumable(async (api: Api) =>
 	json<Window[]>(api("/api/windows")),
@@ -62,7 +60,7 @@ function WindowForm({
 		days <= MAX_DAYS;
 	return (
 		<form
-			className="flex flex-col gap-md p-md"
+			className="flex flex-col gap-sm p-md"
 			action={() => {
 				if (!valid) return;
 				saveWindow({ ...form, label: `${form.from} – ${form.to}` });
@@ -70,7 +68,7 @@ function WindowForm({
 			}}
 		>
 			<label className={field}>
-				<span className="text-label text-secondary">Code name</span>
+				<Label>Code name</Label>
 				<input
 					className={input}
 					value={form.code}
@@ -82,7 +80,7 @@ function WindowForm({
 				/>
 			</label>
 			<div className={field}>
-				<span className="text-label text-secondary">Dates (UTC)</span>
+				<Label help={`End is at most ${MAX_DAYS} days after start`}>Dates (UTC)</Label>
 				<DateRangeInput
 					label={`Window ${form.code}`}
 					start={form.from}
@@ -91,11 +89,11 @@ function WindowForm({
 					onEndChange={(to) => setForm((f) => ({ ...f, to }))}
 				/>
 			</div>
-			<p className="text-caption">
-				{taken
-					? `${form.code} is a predefined window.`
-					: `End is at most ${MAX_DAYS} days after start (Horizons).`}
-			</p>
+			{taken ? (
+				<p role="alert" className="text-caption">
+					{form.code} is a predefined window.
+				</p>
+			) : null}
 			<div className="flex gap-sm">
 				<Button type="submit" variant="accent" disabled={!valid} className="flex-1">
 					{current ? "Save changes" : "Add window"}
@@ -104,7 +102,7 @@ function WindowForm({
 					<Tooltip label={`Delete ${current.code}`}>
 						<Button
 							aria-label={`Delete ${current.code}`}
-							className="px-0 aspect-square"
+							className="px-0 w-control"
 							onClick={() => {
 								removeWindow(current.code);
 								onRemoved?.(current.code);
@@ -166,7 +164,7 @@ export function WindowsPanel({
 							variant={adding ? "neutral" : "accent"}
 							aria-label={adding ? "Close" : "Add a window"}
 							aria-expanded={adding}
-							className="px-0 aspect-square border-0"
+							className="px-0 w-control border-0"
 							onClick={() => setOpen(adding ? null : "new")}
 						>
 							{adding ? <Xmark icon /> : <Plus icon />}
@@ -184,7 +182,7 @@ export function WindowsPanel({
 									<button
 										type="button"
 										aria-label="Cancel"
-										className="flex items-center justify-center aspect-square min-h-control hover:bg-neutralHover"
+										className="flex items-center justify-center w-control min-h-control hover:bg-neutralHover"
 										onClick={() => setOpen(null)}
 									>
 										<Xmark icon />
@@ -205,7 +203,7 @@ export function WindowsPanel({
 										<button
 											type="button"
 											aria-label={`Edit ${w.code}`}
-											className="flex items-center justify-center aspect-square min-h-control hover:bg-neutralHover"
+											className="flex items-center justify-center w-control min-h-control hover:bg-neutralHover"
 											onClick={() => setOpen(w.code)}
 										>
 											<EditPencil icon />

@@ -29,8 +29,9 @@ export function ToggleGroup({
 }) {
 	const id = useId();
 	return (
-		<fieldset className="flex flex-col gap-xs">
-			<legend className="text-label text-secondary">{label}</legend>
+		<fieldset>
+			{/* A legend sits outside the fieldset's layout, so gap can't space it: a margin does. */}
+			<legend className="mb-xs text-label text-secondary">{label}</legend>
 			<ToggleContext value={{ multiple, name: name ?? id, value, onChange }}>
 				<div className="flex h-control gap-xs p-xs border border-control box-border">
 					{children}

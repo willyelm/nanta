@@ -38,7 +38,7 @@ export function ExpandReading({ expanded, onToggle }: { expanded: boolean; onTog
 			<Button
 				aria-label={label}
 				aria-pressed={expanded}
-				className="px-0 aspect-square border-0"
+				className="px-0 w-control border-0"
 				onClick={onToggle}
 			>
 				{expanded ? <ArrowUnionVertical icon /> : <ArrowSeparateVertical icon />}
@@ -85,7 +85,11 @@ export function CandidatesStrip({
 	const live =
 		typeof location !== "undefined" ? new URLSearchParams(location.search) : new URLSearchParams();
 	return (
-		<ul aria-label="Candidates" className="flex items-stretch gap-sm p-xs overflow-x-auto">
+		<ul
+			aria-label="Candidates"
+			// No scrollbar: it would add its height to the bar. It still scrolls sideways.
+			className="flex flex-1 min-h-control items-stretch overflow-x-auto [scrollbar-width:none] divide-x divide-divider"
+		>
 			{items.map((candidate) => {
 				const label = candidateLabel(candidate);
 				const href = keepHref(
@@ -169,7 +173,7 @@ function CandidateBox({
 	};
 	return (
 		<li
-			className="group relative flex shrink-0 border border-control"
+			className="group relative flex shrink-0"
 			onPointerEnter={against ? open : undefined}
 			onPointerLeave={against ? close : undefined}
 		>
@@ -177,7 +181,7 @@ function CandidateBox({
 				<Overlay placement="bottom" align="start">
 					<Button
 						aria-label={`Compare ${label} with the reading`}
-						className="self-stretch h-auto px-sm border-0 border-e border-divider"
+						className="self-stretch h-auto px-sm border-0"
 						onClick={(event) => {
 							setLoaded(true);
 							// Open from the hover preview: keep it open instead of toggling it shut.
