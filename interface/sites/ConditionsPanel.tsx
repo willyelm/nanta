@@ -2,8 +2,8 @@ import { Button } from "interface/button";
 import { Conditions } from "interface/horizon/Conditions";
 import { HorizonChart } from "interface/horizon/HorizonChart";
 import { Reading } from "interface/horizon/Reading";
-import Link from "interface/icon/link.svg";
-import LinkSlash from "interface/icon/link-slash.svg";
+import Pin from "interface/icon/pin.svg";
+import PinSlash from "interface/icon/pin-slash.svg";
 import { Panel } from "interface/panel";
 import {
 	CandidatesStrip,
@@ -21,6 +21,7 @@ import {
 	savedCandidates,
 } from "interface/sites/store";
 import { useKeep, useTimeScrub } from "interface/sites/url";
+import { Skeleton } from "interface/skeleton";
 import { Slider } from "interface/slider";
 import { useView } from "interface/space";
 import { Tooltip } from "interface/tooltip";
@@ -67,12 +68,17 @@ export function ConditionsPanel({
 			<div className="flex items-center divide-x divide-divider">
 				<div className="flex-1 min-w-0">
 					{candidates.length ? (
-						<CandidatesStrip items={candidates} current={current} onRemove={refreshCandidates} />
+						<CandidatesStrip
+							items={candidates}
+							current={current}
+							against={{ ...shown, at }}
+							onRemove={refreshCandidates}
+						/>
 					) : expanded ? (
 						<ReadingContext site={shown.site} window={shown.window} />
 					) : null}
 				</div>
-				<CompareCandidate {...shown} onChange={refreshCandidates} />
+				<PinCandidate {...shown} onChange={refreshCandidates} />
 				{onExpand ? <ExpandReading expanded={expanded} onToggle={onExpand} /> : null}
 			</div>
 			<div className="grid flex-1 min-h-0 gap-md p-md md:grid-cols-4">
@@ -130,35 +136,72 @@ export function ConditionsPanel({
 	);
 }
 
-// Pair this site and window into the comparison bar, or unlink it.
-export function CompareCandidate({
-	code,
-	site,
-	window,
-	onChange,
-}: Shown & { onChange?: () => void }) {
+// The reading's shape while it loads: the bar, then compass over table, conditions, and imagery,
+// so nothing jumps when it arrives.
+export function ReadingSkeleton() {
+	return (
+		<>
+			<div aria-hidden="true" className="flex items-center justify-end gap-sm min-h-control px-xs">
+				<Skeleton width="var(--spacing-control)" height="var(--spacing-control)" />
+			</div>
+			<div aria-hidden="true" className="grid flex-1 min-h-0 gap-md p-md md:grid-cols-4">
+				<div className="flex flex-col gap-md min-h-0 overflow-hidden">
+					<Skeleton className="aspect-square" height="auto" />
+					<Skeleton width="70%" height="0.75rem" />
+					{[1, 2, 3, 4].map((row) => (
+						<Skeleton key={row} height="0.75rem" />
+					))}
+				</div>
+				<div className="md:col-span-2 flex flex-col gap-md min-h-0 overflow-hidden">
+					<div className="flex justify-between gap-sm">
+						<Skeleton width="10ch" height="0.75rem" />
+						<Skeleton width="14ch" height="0.75rem" />
+						<Skeleton width="10ch" height="0.75rem" />
+					</div>
+					<Skeleton height="var(--spacing-control)" />
+					<Skeleton width="80%" height="0.75rem" />
+					{[1, 2].map((group) => (
+						<div key={group} className="flex flex-col gap-sm">
+							<Skeleton width="12ch" height="0.75rem" />
+							<Skeleton width="50%" height="1.25rem" />
+							<Skeleton width="70%" height="0.75rem" />
+							<Skeleton height="var(--spacing-chart)" />
+						</div>
+					))}
+				</div>
+				<div className="flex flex-col gap-xs min-h-0 overflow-hidden">
+					<Skeleton className="aspect-square" height="auto" />
+					<Skeleton width="80%" height="0.75rem" />
+				</div>
+			</div>
+		</>
+	);
+}
+
+// Pin this site and window to the candidates bar, or unpin it.
+export function PinCandidate({ code, site, window, onChange }: Shown & { onChange?: () => void }) {
 	const id = candidateCode(site, window);
 	const hydrated = useHydrated();
 	// Bump after toggle so the button re-reads storage for this site/window.
 	const [, setTick] = useState(0);
-	const linked = hydrated && savedCandidates().some((candidate) => candidate.code === id);
-	const label = linked ? `Unlink ${id} from comparison` : `Compare ${id}`;
+	const pinned = hydrated && savedCandidates().some((candidate) => candidate.code === id);
+	const label = pinned ? `Unpin ${id}` : `Pin ${id}`;
 	const toggle = () => {
-		if (linked) removeCandidate(id);
+		if (pinned) removeCandidate(id);
 		else saveCandidate({ code: id, body: code, site, window });
 		setTick((tick) => tick + 1);
 		onChange?.();
 	};
 	return (
-		<Tooltip label={linked ? "Comparing" : "Compare"}>
+		<Tooltip label={pinned ? "Unpin" : "Pin"}>
 			<Button
-				variant={linked ? "neutral" : "accent"}
+				variant={pinned ? "neutral" : "accent"}
 				aria-label={label}
-				aria-pressed={linked}
+				aria-pressed={pinned}
 				className="px-0 aspect-square border-0"
 				onClick={toggle}
 			>
-				{linked ? <LinkSlash icon /> : <Link icon />}
+				{pinned ? <PinSlash icon /> : <Pin icon />}
 			</Button>
 		</Tooltip>
 	);

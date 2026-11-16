@@ -5,6 +5,7 @@ import {
 	type KeyboardEvent,
 	type PointerEvent,
 	type ReactElement,
+	type ReactNode,
 	useRef,
 } from "react";
 
@@ -22,7 +23,13 @@ type Trigger = {
 // repeats it for the eye only, so it's hidden from screen readers.
 //
 //   <Tooltip label="Add a site"><Button as="a" aria-label="Add a site">…</Button></Tooltip>
-export function Tooltip({ label, children }: { label: string; children: ReactElement<Trigger> }) {
+export function Tooltip({
+	label,
+	children,
+}: {
+	label: ReactNode;
+	children: ReactElement<Trigger>;
+}) {
 	const tip = useRef<HTMLSpanElement>(null);
 	const props = children.props;
 

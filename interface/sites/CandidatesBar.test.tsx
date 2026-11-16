@@ -43,9 +43,7 @@ test("candidates strip shows body/site over window, with a remove control", asyn
 	assert.equal(links[1]?.textContent, "301/SCRJUN27");
 	assert.equal(links[1]?.getAttribute("aria-current"), "true");
 	assert.equal(links[1]?.getAttribute("href"), "/301/sites/SCR?window=JUN27&az=40&el=25&d=12.5");
-	const remove = container.querySelector<HTMLButtonElement>(
-		'[aria-label="Unlink 399/KSC TODAY from comparison"]',
-	);
+	const remove = container.querySelector<HTMLButtonElement>('[aria-label="Unpin 399/KSC TODAY"]');
 	assert.ok(remove);
 	assert.match(remove?.className ?? "", /\bmin-h-utility\b/);
 	assert.match(remove?.className ?? "", /\bopacity-0\b/);

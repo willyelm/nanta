@@ -31,6 +31,9 @@
 
 	--text-color-default: oklch(17.8% 0 0);
 	--text-color-secondary: oklch(38.7% 0 0);
+	/* A compare diff, like a game's item compare: more of a condition, or less. 6:1 or more. */
+	--text-color-more: #116329;
+	--text-color-less: #a40e26;
 	--text-color-onAccent: var(--background-color-neutral);
 
 	/* chart: hex for WebGL (three.js reads hex and rgb only). Fixed in both schemes: each sits at
@@ -127,6 +130,8 @@
 
 	--text-color-default: oklch(94.6% 0 0);
 	--text-color-secondary: oklch(77.3% 0 0);
+	--text-color-more: #56d364;
+	--text-color-less: #ff7b72;
 
 	--border-color-control: oklch(64% 0 0);
 	--border-color-input: oklch(58% 0 0);
