@@ -12,7 +12,6 @@ export type Site = {
 	earth_visibility: boolean;
 	lat: number; // degrees, north positive
 	lon: number; // degrees east, 0 to 360
-	radius?: number; // km: the area around the point that counts as the site
 };
 
 // The site catalog, from public sources, each cited above its entry. Coordinates are rounded to
@@ -55,7 +54,7 @@ export const sites: Site[] = [
 	// published; this is a point on the ridge, to replace when one is.
 	{
 		code: "SCR",
-		name: "Shackleton Connecting Ridge (Blue Moon MK1)",
+		name: "Shackleton connecting ridge",
 		body: "301",
 		...moon,
 		lat: -89.45,
