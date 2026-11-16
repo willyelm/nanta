@@ -1,5 +1,5 @@
 import type { Position, Sky } from "position";
-import type { PointerEvent } from "react";
+import { type PointerEvent, useMemo } from "react";
 import type { Condition } from "site";
 import { conditions, samples } from "./catalog";
 
@@ -8,6 +8,51 @@ const SIZE = 220;
 const C = SIZE / 2;
 const R = 90;
 const SUN = 0.2665; // the Sun's angular radius, in degrees
+
+type Track = {
+	condition: Condition;
+	positions: Position[];
+	d: string;
+	stroke: string;
+	dashed: boolean;
+	sun: boolean;
+};
+
+// Geometry that only depends on the samples: rebuilt when the sky or conditions change, kept
+// across time picks so a dragged scrub doesn't rebuild every path string.
+function prepare(list: Condition[], sky: Sky) {
+	const tracks: Track[] = list.map((condition) => {
+		const style = conditions[condition];
+		const positions = samples(sky, condition);
+		return {
+			condition,
+			positions,
+			d: "",
+			stroke: `var(--chart-color-${style.color})`,
+			dashed: style.dashed,
+			sun: style.body === "sun",
+		};
+	});
+	const all = tracks.flatMap((t) => t.positions.map((p) => p.elevation));
+	if (all.length === 0) return null;
+	// The center is the window's highest elevation, the edge its lowest; the horizon sits between.
+	const low = Math.min(-2, Math.floor(Math.min(...all) - 1));
+	const high = Math.max(2, Math.ceil(Math.max(...all) + 1));
+	const r = (elevation: number) => (R * (high - elevation)) / (high - low);
+	const point = (p: Position) => {
+		const a = (p.azimuth * Math.PI) / 180;
+		return { x: C + r(p.elevation) * Math.sin(a), y: C - r(p.elevation) * Math.cos(a) };
+	};
+	for (const track of tracks) {
+		track.d = track.positions
+			.map((p, i) => {
+				const { x, y } = point(p);
+				return `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`;
+			})
+			.join("");
+	}
+	return { tracks, low, high, r, point, horizon: r(0) };
+}
 
 // The sky from the site as a compass, seen from above: bearing around (north up), elevation from
 // the center outward, zoomed to the window so a degree reads. The ring is the horizon; beyond it
@@ -19,34 +64,25 @@ export function HorizonChart({
 	sky,
 	at,
 	onPick,
+	onFlush,
+	onDragStart,
 }: {
 	list: Condition[];
 	sky: Sky;
 	at: number;
 	onPick: (at: number) => void;
+	// Start/end of a drag: local time ignores URL echoes while the pointer is down.
+	onDragStart?: () => void;
+	onFlush?: () => void;
 }) {
-	const tracks = list.map((condition) => ({ condition, positions: samples(sky, condition) }));
-	const all = tracks.flatMap((t) => t.positions.map((p) => p.elevation));
-	if (all.length === 0) return null;
-	// The center is the window's highest elevation, the edge its lowest; the horizon sits between.
-	const low = Math.min(-2, Math.floor(Math.min(...all) - 1));
-	const high = Math.max(2, Math.ceil(Math.max(...all) + 1));
-	const r = (elevation: number) => (R * (high - elevation)) / (high - low);
-	const point = (p: Position) => {
-		const a = (p.azimuth * Math.PI) / 180;
-		return { x: C + r(p.elevation) * Math.sin(a), y: C - r(p.elevation) * Math.cos(a) };
-	};
-	const path = (positions: Position[]) =>
-		positions
-			.map((p, i) => {
-				const { x, y } = point(p);
-				return `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`;
-			})
-			.join("");
+	const prepared = useMemo(() => prepare(list, sky), [list, sky]);
+	if (!prepared) return null;
+	const { tracks, low, high, r, point, horizon } = prepared;
 
 	// The sample nearest the pointer, on any path.
 	const pick = (event: PointerEvent<SVGSVGElement>) => {
 		if (event.type === "pointermove" && event.buttons === 0) return;
+		if (event.type === "pointerdown") onDragStart?.();
 		const box = event.currentTarget.getBoundingClientRect();
 		const px = ((event.clientX - box.left) / box.width) * SIZE;
 		const py = ((event.clientY - box.top) / box.height) * SIZE;
@@ -61,7 +97,6 @@ export function HorizonChart({
 		onPick(best.at);
 	};
 
-	const horizon = r(0);
 	return (
 		<svg
 			viewBox={`0 0 ${SIZE} ${SIZE}`}
@@ -70,6 +105,8 @@ export function HorizonChart({
 			aria-label="Compass from the site: bearing around, north up; elevation from the center out. The ring is the horizon: inside, the site sees the body (sunlight is power, the Earth a direct link); outside, the ground is in the way. The table has the numbers."
 			onPointerDown={pick}
 			onPointerMove={pick}
+			onPointerUp={onFlush}
+			onPointerCancel={onFlush}
 		>
 			{/* Ground: everything beyond the horizon ring. */}
 			<circle cx={C} cy={C} r={R} fill="var(--chart-color-horizon)" opacity={0.18} />
@@ -110,20 +147,18 @@ export function HorizonChart({
 					{elevation}°
 				</text>
 			))}
-			{tracks.map(({ condition, positions }) => {
-				const style = conditions[condition];
+			{tracks.map(({ condition, positions, d, stroke, dashed, sun }) => {
 				const now = positions[Math.min(at, positions.length - 1)];
-				const stroke = `var(--chart-color-${style.color})`;
 				const here = now ? point(now) : null;
 				return (
 					<g key={condition}>
 						<path
-							d={path(positions)}
+							d={d}
 							fill="none"
 							stroke={stroke}
 							strokeWidth={1}
 							opacity={0.6}
-							strokeDasharray={style.dashed ? "4 3" : undefined}
+							strokeDasharray={dashed ? "4 3" : undefined}
 						/>
 						{here ? (
 							<>
@@ -135,12 +170,12 @@ export function HorizonChart({
 									y2={here.y}
 									stroke={stroke}
 									strokeWidth={2}
-									strokeDasharray={style.dashed ? "4 3" : undefined}
+									strokeDasharray={dashed ? "4 3" : undefined}
 								/>
 								<circle
 									cx={here.x}
 									cy={here.y}
-									r={style.body === "sun" ? Math.max(r(0) - r(SUN), 2.5) : 3.5}
+									r={sun ? Math.max(r(0) - r(SUN), 2.5) : 3.5}
 									fill={stroke}
 								/>
 							</>
@@ -151,18 +186,4 @@ export function HorizonChart({
 			<circle cx={C} cy={C} r={2} fill="var(--text-color-default)" />
 		</svg>
 	);
-}
-
-// "Sun 0.8° below the horizon, bearing 12°. Earth 5.4° above, bearing 131°."
-export function summarize(list: Condition[], sky: Sky, at: number) {
-	return list
-		.map((condition, i) => {
-			const positions = samples(sky, condition);
-			const p = positions[Math.min(at, positions.length - 1)];
-			if (!p) return "";
-			const side = p.elevation >= 0 ? "above" : "below";
-			const where = i === 0 ? `${side} the horizon` : side;
-			return `${conditions[condition].label} ${Math.abs(p.elevation).toFixed(1)}° ${where}, bearing ${Math.round(p.azimuth)}°.`;
-		})
-		.join(" ");
 }

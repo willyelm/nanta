@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { HorizonChart, summarize } from "./HorizonChart.tsx";
+import { summarize } from "./Conditions.tsx";
+import { HorizonChart } from "./HorizonChart.tsx";
 
 const track = (elevations: number[], azimuth: number) =>
 	elevations.map((elevation, i) => ({

@@ -5,6 +5,20 @@ import { conditions, samples } from "./catalog";
 const HOUR = 3_600_000;
 const hours = (a: Position, b: Position) => (Date.parse(b.time) - Date.parse(a.time)) / HOUR;
 
+// "Sun 0.8° below the horizon, bearing 12°. Earth 5.4° above, bearing 131°."
+export function summarize(list: Condition[], sky: Sky, at: number) {
+	return list
+		.map((condition, i) => {
+			const positions = samples(sky, condition);
+			const p = positions[Math.min(at, positions.length - 1)];
+			if (!p) return "";
+			const side = p.elevation >= 0 ? "above" : "below";
+			const where = i === 0 ? `${side} the horizon` : side;
+			return `${conditions[condition].label} ${Math.abs(p.elevation).toFixed(1)}° ${where}, bearing ${Math.round(p.azimuth)}°.`;
+		})
+		.join(" ");
+}
+
 // How long a body is above the horizon in the window, in hours, from the sample spacing.
 export function duration(positions: Position[]): number {
 	const step = positions.length > 1 ? hours(positions[0], positions[1]) : 0;
@@ -22,23 +36,34 @@ export function until(positions: Position[], at: number): { up: boolean; hours: 
 
 const format = (value: number) => `${Math.round(value)} h`;
 
-// Each of the site's conditions at sample `at`: hours above the horizon, and the next change.
+// Each flagged condition as a group: live numbers large, supporting detail as captions, curve under.
 export function Conditions({ list, sky, at }: { list: Condition[]; sky: Sky; at: number }) {
 	const first = list.length ? samples(sky, list[0]) : [];
 	const total = first.length > 1 ? hours(first[0], first[first.length - 1]) : 0;
 	return (
 		<section className="flex flex-col gap-md" aria-label="Conditions">
-			{list.map((condition) => (
-				<Row
-					key={condition}
-					name={conditions[condition].name}
-					positions={samples(sky, condition)}
-					at={at}
-					total={total}
-					states={conditions[condition].states}
-					changes={conditions[condition].changes}
-				/>
-			))}
+			<p className="text-caption text-secondary">{summarize(list, sky, at)}</p>
+			{list.map((condition) => {
+				const meta = conditions[condition];
+				return (
+					<article key={condition} className="flex flex-col gap-sm">
+						<Row
+							name={meta.name}
+							positions={samples(sky, condition)}
+							at={at}
+							total={total}
+							states={meta.states}
+							changes={meta.changes}
+						/>
+						<Curve
+							positions={samples(sky, condition)}
+							at={at}
+							color={meta.color}
+							dashed={meta.dashed}
+						/>
+					</article>
+				);
+			})}
 		</section>
 	);
 }
@@ -60,20 +85,26 @@ function Row({
 }) {
 	const lasting = duration(positions);
 	const now = until(positions, at);
+	const sample = positions[Math.min(at, Math.max(positions.length - 1, 0))];
+	const elevation = sample
+		? `${sample.elevation >= 0 ? "+" : ""}${sample.elevation.toFixed(1)}°`
+		: "—";
 	const next =
 		now.hours === null
-			? `no change in the window`
+			? "no change in the window"
 			: `${changes[now.up ? 0 : 1]} in ${format(now.hours)}`;
 	return (
-		<div className="flex flex-col gap-xs">
-			<h3 className="text-label">{name}</h3>
-			<p className="text-default tabular-nums">
-				{format(lasting)} of {format(total)} above the horizon
+		<header className="flex flex-col gap-xs">
+			<h3 className="text-caption text-secondary uppercase">{name}</h3>
+			<p className="text-subheading text-default tabular-nums">
+				<span>{elevation}</span>
+				<span className="text-secondary"> · </span>
+				<span>{states[now.up ? 0 : 1]}</span>
 			</p>
-			<p className="tabular-nums">
-				{states[now.up ? 0 : 1]}, {next}
+			<p className="text-caption text-secondary tabular-nums">
+				{format(lasting)} of {format(total)} above the horizon · {next}
 			</p>
-		</div>
+		</header>
 	);
 }
 
@@ -98,7 +129,6 @@ export function Curve({
 	const y = (value: number) => ((top - value) / (top - bottom)) * 40;
 	const line = values.map((v, i) => `${x(i)},${y(v)}`).join(" ");
 	const zero = y(0);
-	// The area between the curve and the horizon, above it only.
 	const above = `0,${zero} ${values.map((v, i) => `${x(i)},${y(Math.max(v, 0))}`).join(" ")} 100,${zero}`;
 	const stroke = `var(--chart-color-${color})`;
 	return (
