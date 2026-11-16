@@ -48,3 +48,9 @@ test("keepHref carries camera pose when switching a candidate window", () => {
 	const href = keepHref("/301/sites/SCR", { window: "JUN27", time: null }, live);
 	assert.equal(href, "/301/sites/SCR?window=JUN27&az=12&el=30&d=20");
 });
+
+test("keepHref keeps the expanded reading across moves, and drops it on request", () => {
+	const live = new URLSearchParams("window=JUN27&reading=full");
+	assert.equal(keepHref("/301/sites/CY3", {}, live), "/301/sites/CY3?window=JUN27&reading=full");
+	assert.equal(keepHref("/301/sites/CY3", { reading: null }, live), "/301/sites/CY3?window=JUN27");
+});

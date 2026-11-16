@@ -20,12 +20,13 @@ function liveCamera(live: URLSearchParams, key: (typeof CAMERA)[number]) {
 export type KeepChange = {
 	window?: string | null;
 	time?: string | null;
+	reading?: string | null;
 	az?: string | null;
 	el?: string | null;
 	d?: string | null;
 };
 
-// A path with the window, time, and camera kept from the URL, so they survive every move: a
+// A path with the window, time, reading (`full` when expanded), and camera kept from the URL, so they survive every move: a
 // site, editing it, back, saving. `change` sets one, or drops it with null. Camera angles prefer
 // `live` (usually `location.search`, which the scene writes with history.replaceState).
 export function keepHref(
@@ -39,6 +40,8 @@ export function keepHref(
 	const time = change.time === undefined ? fallback.get("time") : change.time;
 	if (window) query.set("window", window);
 	if (time) query.set("time", time);
+	const reading = change.reading === undefined ? fallback.get("reading") : change.reading;
+	if (reading) query.set("reading", reading);
 	for (const key of CAMERA) {
 		const value = change[key] === undefined ? liveCamera(live, key) : change[key];
 		if (value) query.set(key, value);

@@ -20,7 +20,7 @@ export function duration(seconds: number) {
 	return `${two(d)}d ${two(h)}h ${two(m)}m`;
 }
 
-// The first page: bodies on the left, Window Selection on the right. Saved candidates keep a
+// The first page: Bodies on the left, Windows on the right. Saved candidates keep a
 // comparison bar across the bottom even before a site is open.
 export function BodiesPage() {
 	const window = useSearchParams().get("window") ?? "TODAY";
