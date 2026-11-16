@@ -42,6 +42,7 @@ import {
 	line,
 	MOON,
 	names,
+	orientation,
 	plus,
 	radius,
 	SCALE,
@@ -354,7 +355,12 @@ export function Space() {
 		const light = (sun: Vector3) => {
 			for (const body of all) {
 				if (body !== "sun" && meshes[body].visible)
-					shade(grids[body], plus(sun, meshes[body].position, -1).normalize());
+					shade(
+						grids[body],
+						plus(sun, meshes[body].position, -1)
+							.normalize()
+							.applyQuaternion(meshes[body].quaternion.clone().invert()),
+					);
 			}
 		};
 		const aim = (look: Vector3, from: Vector3, up: Vector3, near: number) => {
@@ -393,6 +399,7 @@ export function Space() {
 				sunlight.visible = false;
 				sunpoint.visible = true;
 				const now = next.time ?? Date.now();
+				for (const body of all) meshes[body].quaternion.copy(orientation(body, now));
 				for (const s of states) {
 					const body = byCode[s.code];
 					const p = advance(s, now - Date.parse(s.time));
@@ -422,6 +429,10 @@ export function Space() {
 						star.mesh.position.copy(starOver(home, star.ra, star.dec, when));
 				}
 				const base = radius[home];
+				// The scene is the home body's frame: it sits unturned, the others turned relative to it.
+				const homeTurn = orientation(home, when).invert();
+				for (const body of all)
+					meshes[body].quaternion.copy(homeTurn.clone().multiply(orientation(body, when)));
 				const f = frame(next.lat!, next.lon!);
 				Object.assign(axes, { site: true, ...f });
 				const site = f.up;

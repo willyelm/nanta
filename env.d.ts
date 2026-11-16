@@ -34,8 +34,16 @@ declare module "three" {
 	}
 	export class Quaternion {
 		copy(quaternion: Quaternion): this;
+		clone(): Quaternion;
+		invert(): this;
+		multiply(quaternion: Quaternion): this;
+		setFromRotationMatrix(matrix: Matrix4): this;
 		setFromUnitVectors(from: Vector3, to: Vector3): this;
 		setFromAxisAngle(axis: Vector3, angle: number): this;
+	}
+	export class Matrix4 {
+		set(...elements: number[]): this;
+		multiply(matrix: Matrix4): this;
 	}
 	export class Object3D {
 		position: Vector3;

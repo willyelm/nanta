@@ -213,7 +213,11 @@ One scene, built once, never swapped. A selection moves only the camera.
   looking toward the Earth's bearing, or the Sun's. The other bodies sit along
   their true directions from the site; distance is drawn on a log scale.
 - The Sun lights every body from where it is, so day, night, and the line
-  between them show. Sight lines run from the site to the Sun and the Earth.
+  between them show.
+- Each body turns as the IAU model says, its poles and grid true for the time.
+  At a site the Sun and the Earth are Horizons' own azimuth and elevation; the
+  stars and the other bodies come from the same turn, within about 0.3° of
+  Horizons, the Moon's wobble included. Sight lines run from the site to the Sun and the Earth.
 - The brightest stars, and the four on the ecliptic, are placed in their true
   directions, over a faint filler.
 

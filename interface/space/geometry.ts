@@ -5,6 +5,8 @@ import {
 	Line,
 	LineBasicMaterial,
 	LineDashedMaterial,
+	Matrix4,
+	Quaternion,
 	Vector3,
 } from "three";
 
@@ -134,13 +136,44 @@ export function starAt(ra: number, dec: number) {
 }
 
 // How each body turns (IAU WGCCRE): the pole's right ascension and declination, and the prime
-// meridian's angle W = w0 + rate × days since J2000, all in degrees. Close to a degree, which
-// is enough to set the stars over a site; librations are left out.
-export const spin: Record<Exclude<Body, "sun">, [number, number, number, number]> = {
-	moon: [269.9949, 66.5392, 38.3213, 13.17635815],
-	earth: [0, 90, 190.147, 360.9856235],
-	mars: [317.681, 52.887, 176.63, 350.89198226],
-};
+// meridian's angle W, in degrees, at `d` days since J2000. Checked against Horizons az/el: the
+// Moon keeps its periodic terms, since without them its pole is off by up to 1.5°, which at the
+// south pole is the whole Sun. Earth keeps the J2000 pole (closer to Horizons with this W), and
+// Mars the IAU 2000 values (2015 lands farther from Horizons). All within about 0.3°.
+export function spin(body: Exclude<Body, "sun">, d: number): [number, number, number] {
+	const T = d / 36525;
+	if (body === "earth") return [0, 90, 190.147 + 360.9856235 * d];
+	if (body === "mars")
+		return [317.68143 - 0.1061 * T, 52.8865 - 0.0609 * T, 176.63 + 350.89198226 * d];
+	const E = [
+		[125.045, -0.0529921],
+		[250.089, -0.1059842],
+		[260.008, 13.0120009],
+		[176.625, 13.3407154],
+		[357.529, 0.9856003],
+		[311.589, 26.4057084],
+		[134.963, 13.064993],
+		[276.617, 0.3287146],
+		[34.226, 1.7484877],
+		[15.134, -0.1589763],
+		[119.743, 0.0036096],
+		[239.961, 0.1643573],
+		[25.053, 12.9590088],
+	].map(([a, b]) => (a + b * d) * toRad);
+	const sum = (f: (x: number) => number, k: number[]) =>
+		k.reduce((total, c, i) => total + c * f(E[i]), 0);
+	const ra = [-3.8787, -0.1204, 0.07, -0.0172, 0, 0.0072, 0, 0, 0, -0.0052, 0, 0, 0.0043];
+	const dec = [1.5419, 0.0239, -0.0278, 0.0068, 0, -0.0029, 0.0009, 0, 0, 0.0008, 0, 0, -0.0009];
+	const w = [
+		3.561, 0.1208, -0.0642, 0.0158, 0.0252, -0.0066, -0.0047, -0.0046, 0.0028, 0.0052, 0.004,
+		0.0019, -0.0044,
+	];
+	return [
+		269.9949 + 0.0031 * T + sum(Math.sin, ra),
+		66.5392 + 0.013 * T + sum(Math.cos, dec),
+		38.3213 + 13.17635815 * d - 1.4e-12 * d * d + sum(Math.sin, w),
+	];
+}
 export const J2000 = Date.UTC(2000, 0, 1, 12);
 
 // A star's direction in a body's own frame at `time`, as a scene point on the sky sphere (body
@@ -160,8 +193,8 @@ export function eclipticOver(body: Exclude<Body, "sun">, [x, y, z]: number[], ti
 
 // An equatorial vector in a body's own frame at `time`, as a scene vector (body north is y).
 export function toBody(body: Exclude<Body, "sun">, v: number[], time: number) {
-	const [pa, pd, w0, rate] = spin[body];
-	const w = (w0 + rate * ((time - J2000) / 86_400_000)) * toRad;
+	const [pa, pd, meridian] = spin(body, (time - J2000) / 86_400_000);
+	const w = (meridian % 360) * toRad;
 	let [x, y, z] = v;
 	// Rz(90° + pole RA), then Rx(90° − pole Dec), then Rz(W): equatorial to body-fixed.
 	const rz = (t: number) => {
@@ -172,6 +205,39 @@ export function toBody(body: Exclude<Body, "sun">, v: number[], time: number) {
 	[y, z] = [y * Math.cos(t) + z * Math.sin(t), -y * Math.sin(t) + z * Math.cos(t)];
 	rz(w);
 	return vec(x, z, -y);
+}
+
+// How a body sits in space at `time`: the turn from its own frame (north is y, as the grid and
+// the site frame are drawn) to the ecliptic scene, so its grid, poles, and day line are true.
+export function orientation(body: Body, time: number) {
+	if (body === "sun") return new Quaternion();
+	const [x, y, z] = [
+		[1, 0, 0],
+		[0, 1, 0],
+		[0, 0, 1],
+	].map((e) => eclipticOver(body, e, time));
+	// Columns: where the ecliptic axes land in the body frame. Its transpose takes body to
+	// ecliptic, then ecliptic x, y, z is scene x, -z, y.
+	const toEcliptic = new Matrix4().set(
+		x.x,
+		x.y,
+		x.z,
+		0,
+		y.x,
+		y.y,
+		y.z,
+		0,
+		z.x,
+		z.y,
+		z.z,
+		0,
+		0,
+		0,
+		0,
+		1,
+	);
+	const toScene = new Matrix4().set(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
+	return new Quaternion().setFromRotationMatrix(toScene.multiply(toEcliptic));
 }
 
 // A filler of faint stars, the same on every load (a fixed seed), not a catalog.
