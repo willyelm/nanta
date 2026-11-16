@@ -62,6 +62,10 @@ export const ecliptic = ([x, y, z]: number[], k = 1) => vec(x * k, z * k, -y * k
 // site's body; the Sun is fixed, since true size (400 Moon radii) can't fit.
 export const SUN_SIZE = 6;
 export const distance = (km: number, base: number) => 1.5 * Math.cbrt(km / base);
+// Where a body `km` away along `toward` sits in a site's scene: out from the site itself, so the
+// direction seen from the site is true even though distances are squashed.
+export const seen = (site: Vector3, toward: Vector3, km: number, base: number) =>
+	plus(site, toward.clone().normalize(), distance(km, base));
 export const size = (body: Body, base: number) => (body === "sun" ? SUN_SIZE : radius[body] / base);
 
 export const toRad = Math.PI / 180;

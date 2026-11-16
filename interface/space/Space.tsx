@@ -37,7 +37,6 @@ import {
 	all,
 	codes,
 	direction,
-	distance,
 	ecliptic,
 	eclipticOver,
 	filler,
@@ -52,6 +51,7 @@ import {
 	plus,
 	radius,
 	SCALE,
+	seen,
 	shade,
 	size,
 	spaceSize,
@@ -561,18 +561,17 @@ export function Space() {
 				sunpoint.visible = false;
 				const placing = next.onPick != null;
 				const i = next.at ?? 0;
-				// A body `km` away along `toward`, from `origin`, at the scene's distance and size.
-				const place = (body: Body, origin: Vector3, toward: Vector3, km: number) =>
-					go(body, plus(origin, toward.normalize(), distance(km, base)), size(body, base), snap);
+				const place = (body: Body, toward: Vector3, km: number) =>
+					go(body, seen(site, toward, km, base), size(body, base), snap);
 				// Sky az/el belong to one fixed site. While placing/editing, lat/lon are a draft, so
 				// keep Sun/Earth on the body-centered helio frame and only move the marker + sights.
 				if (!placing) {
 					for (const [body, positions] of Object.entries(next.sky ?? {}) as [Body, Position[]][]) {
 						const p = positions[Math.min(i, positions.length - 1)];
-						if (p && body !== home) place(body, site, direction(f, p), p.range);
+						if (p && body !== home) place(body, direction(f, p), p.range);
 					}
 				}
-				// The rest from the space states, around the body's center.
+				// The rest from the space states: the direction from the body's center, set out from the site.
 				const center = home !== "sun" && helio(states, home, when);
 				for (const body of all) {
 					const from = !placed.has(body) && helio(states, body, when);
@@ -582,7 +581,7 @@ export function Space() {
 						[0, 1, 2].map((axis) => from[axis] - center[axis]),
 						when,
 					);
-					place(body, vec(), toward, toward.length());
+					place(body, toward, toward.length());
 				}
 				hideUnplaced();
 				// Sight lines: explicit Look for flags (SiteForm), else which bodies the sky loaded.

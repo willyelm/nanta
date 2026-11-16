@@ -6,7 +6,9 @@ import {
 	frame,
 	latLon,
 	orientation,
+	plus,
 	pointOnBody,
+	seen,
 	toRad,
 } from "./geometry.ts";
 
@@ -58,4 +60,14 @@ test("orientation turns a body-frame direction back onto the scene", () => {
 		const back = eclipticOver(body, v, T).applyQuaternion(orientation(body, T));
 		assert.ok(back.distanceTo(ecliptic(v)) < 1e-9, body);
 	}
+});
+
+test("seen sets a body out from the site, so its direction from the site stays true", () => {
+	// The Moon low in the east from Earth: near enough that setting it out from Earth's center,
+	// at the squashed scene distance, would bend it by degrees as seen from the site.
+	const f = frame(28.573, 279.351);
+	const toward = plus(f.east, f.up, 0.1).normalize();
+	const mesh = seen(f.up, toward, 384_400, 6_371);
+	const looking = mesh.sub(f.up).normalize();
+	assert.ok(looking.dot(toward) > 1 - 1e-12);
 });
