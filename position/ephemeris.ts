@@ -43,7 +43,8 @@ export async function ephemeris(
 		COMMAND: `'${ids[body]}'`,
 		CENTER: `'coord@${center}'`,
 		COORD_TYPE: "'GEODETIC'",
-		SITE_COORD: `'${lon},${lat},0'`,
+		// Mars is IAU west-positive: Horizons wants its east longitude as a negative number.
+		SITE_COORD: `'${center === "499" ? -lon : lon},${lat},0'`,
 		MAKE_EPHEM: "'YES'",
 		EPHEM_TYPE: "'OBSERVER'",
 		START_TIME: `'${from}'`,
