@@ -1,6 +1,6 @@
 # Nanta
 
-**Plan locations against changing conditions.**
+**Choose the path under the Sun and the Earth.**
 
 Nanta compares candidate locations and times against the conditions a mission
 needs, and shows when each one works, for how long, and what changes if the plan
@@ -20,9 +20,18 @@ way.
   Horizons within a few tenths of a degree.
 - **Imagery.** NASA pictures of the site, ringed at its point.
 
+<a href="https://www.spaceappschallenge.org/">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="public/space-apps-white.svg">
+    <img src="public/space-apps.svg" alt="NASA Space Apps Challenge" width="160">
+  </picture>
+</a>
+
 Built for the
 [NASA Space Apps Challenge 2026](https://www.spaceappschallenge.org/) challenge
 [Lunar Landing Site Navigator](https://www.spaceappschallenge.org/2026/challenges/lunar-landing-site-navigator/).
+Project page: [Nanta on Space Apps](https://www.spaceappschallenge.org/) (TODO:
+the team's project URL).
 
 ## Name
 
@@ -59,14 +68,21 @@ npm run dev
 
 - [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/), for Sun and Earth
   positions from a site on any body, and each body's place in space.
+  Ephemerides: NASA/JPL-Caltech Solar System Dynamics.
 - [Moon Trek](https://trek.nasa.gov/moon/), NASA, for lunar imagery: the LRO
   wide-angle camera mosaic and LOLA color relief, as map tiles. Imagery:
   NASA/GSFC/Arizona State University (LROC).
 - [Mars Trek](https://trek.nasa.gov/mars/) and
   [Mercury Trek](https://trek.nasa.gov/mercury/), NASA, for Viking, MOLA, and
-  MESSENGER mosaics.
+  MESSENGER mosaics. Imagery: NASA/JPL-Caltech, and NASA/JHU-APL/Carnegie
+  Institution of Washington (MESSENGER).
 - [NASA GIBS](https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api),
-  for Earth: Blue Marble, and the day's VIIRS picture from NOAA-20.
+  for Earth: Blue Marble, and the day's VIIRS picture from NOAA-20. We
+  acknowledge the use of imagery provided by services from NASA's Global
+  Imagery Browse Services (GIBS), part of NASA's Earth Science Data and
+  Information System (ESDIS).
+
+This project is not endorsed by NASA. Data and imagery courtesy of NASA.
 
 ## Use of AI tools
 
