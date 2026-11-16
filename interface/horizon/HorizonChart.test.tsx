@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { HorizonChart } from "./HorizonChart.tsx";
+import { HorizonChart, summarize } from "./HorizonChart.tsx";
 
 const track = (elevations: number[], azimuth: number) =>
 	elevations.map((elevation, i) => ({
@@ -12,7 +12,7 @@ const track = (elevations: number[], azimuth: number) =>
 		range: 1,
 	}));
 
-test("draws a path per condition, the Sun at its time, and picks a time", async () => {
+test("draws a path and a pointer per condition, and picks a time", async () => {
 	const container = document.body.appendChild(document.createElement("div"));
 	const root = createRoot(container);
 	const sky = { sun: track([-0.5, 0.2, 1], 0), earth: track([5, 5.2, 5.4], 130) };
@@ -28,9 +28,13 @@ test("draws a path per condition, the Sun at its time, and picks a time", async 
 		),
 	);
 	assert.equal(container.querySelectorAll("path").length, 2);
-	assert.equal(container.querySelectorAll("ellipse").length, 1);
+	assert.equal(container.querySelectorAll("line").length, 2);
+	assert.equal(
+		summarize(["sunlight", "earth_visibility"], sky, 1),
+		"Sun 0.2° above the horizon, bearing 10°. Earth 5.2° above, bearing 140°.",
+	);
 	const svg = container.querySelector("svg") as SVGSVGElement;
-	svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 360, height: 150 }) as DOMRect;
+	svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 220, height: 220 }) as DOMRect;
 	await act(async () => {
 		svg.dispatchEvent(
 			new window.PointerEvent("pointerdown", { bubbles: true, clientX: 30, clientY: 80 }),
