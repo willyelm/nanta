@@ -58,9 +58,9 @@ export function ReadingContext({ site, window }: { site?: string; window: string
 	);
 }
 
-// Saved candidates as boxes: site over window, click to open, × to remove.
+// Saved candidates as boxes: body/site over window, click to open, × to remove.
 export function candidateLabel(candidate: Candidate) {
-	return `${candidate.site} ${candidate.window}`;
+	return `${candidate.body}/${candidate.site} ${candidate.window}`;
 }
 
 export function CandidatesStrip({
@@ -98,7 +98,9 @@ export function CandidatesStrip({
 								"hover:bg-neutralHover pressed:bg-neutralActive",
 							)}
 						>
-							<span>{candidate.site}</span>
+							<span>
+								{candidate.body}/{candidate.site}
+							</span>
 							<span className="text-secondary text-caption">{candidate.window}</span>
 						</a>
 						<Tooltip label={`Unlink ${label}`}>

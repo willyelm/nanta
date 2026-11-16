@@ -5,18 +5,18 @@ import { createRoot } from "react-dom/client";
 import { CandidatesBar, CandidatesStrip, candidateLabel } from "./CandidatesBar.tsx";
 import { removeCandidate, saveCandidate, savedCandidates } from "./store.ts";
 
-test("candidate labels join site and window", () => {
+test("candidate labels join body/site and window", () => {
 	assert.equal(
 		candidateLabel({ code: "KSC·TODAY", body: "399", site: "KSC", window: "TODAY" }),
-		"KSC TODAY",
+		"399/KSC TODAY",
 	);
 	assert.equal(
 		candidateLabel({ code: "KSC·JUN27", body: "399", site: "KSC", window: "JUN27" }),
-		"KSC JUN27",
+		"399/KSC JUN27",
 	);
 });
 
-test("candidates strip shows site over window, with a remove control", async () => {
+test("candidates strip shows body/site over window, with a remove control", async () => {
 	localStorage.removeItem("nanta.candidates");
 	history.replaceState(null, "", "/399/sites/KSC?window=TODAY&az=40&el=25&d=12.5");
 	const container = document.body.appendChild(document.createElement("div"));
@@ -39,12 +39,12 @@ test("candidates strip shows site over window, with a remove control", async () 
 	);
 	const links = [...container.querySelectorAll("a")];
 	assert.equal(links.length, 2);
-	assert.equal(links[0]?.textContent, "KSCTODAY");
-	assert.equal(links[1]?.textContent, "SCRJUN27");
+	assert.equal(links[0]?.textContent, "399/KSCTODAY");
+	assert.equal(links[1]?.textContent, "301/SCRJUN27");
 	assert.equal(links[1]?.getAttribute("aria-current"), "true");
 	assert.equal(links[1]?.getAttribute("href"), "/301/sites/SCR?window=JUN27&az=40&el=25&d=12.5");
 	const remove = container.querySelector<HTMLButtonElement>(
-		'[aria-label="Unlink KSC TODAY from comparison"]',
+		'[aria-label="Unlink 399/KSC TODAY from comparison"]',
 	);
 	assert.ok(remove);
 	assert.match(remove?.className ?? "", /\bmin-h-utility\b/);
@@ -70,7 +70,7 @@ test("candidates bar stays hidden until something is saved", async () => {
 	saveCandidate({ code: "KSC·JUN27", body: "399", site: "KSC", window: "JUN27" });
 	await act(async () => root.render(<CandidatesBar />));
 	assert.ok(container.querySelector("[aria-label=Candidates]"));
-	assert.equal(container.querySelector("a")?.textContent, "KSCJUN27");
+	assert.equal(container.querySelector("a")?.textContent, "399/KSCJUN27");
 	removeCandidate("KSC·JUN27");
 	await act(async () => root.unmount());
 	container.remove();
