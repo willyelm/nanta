@@ -39,6 +39,14 @@ const page = get("*", async (request) => {
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<meta name="description" content="Plan locations against changing conditions." />
+				<meta name="author" content="Will Medina" />
+				<link rel="author" href="https://willmedina.com" />
+				<meta property="og:type" content="website" />
+				<meta property="og:site_name" content="Nanta" />
+				<meta property="og:title" content="Nanta: Choose the path under the Sun and the Earth" />
+				<meta property="og:description" content="Plan locations against changing conditions." />
+				<meta property="og:image" content="/favicon.png" />
+				<meta name="twitter:card" content="summary" />
 				<link rel="icon" href="/favicon.png" type="image/png" />
 				<script type="importmap">{importMap}</script>
 				<link rel="stylesheet" href={MANIFEST.style} />

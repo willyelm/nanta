@@ -3,7 +3,8 @@
 	"type": "module",
 	"private": true,
 	"description": "Plan locations against changing conditions",
-	"author": "Will Medina <williams.medinaa@gmail.com>",
+	"author": "Will Medina <williams.medinaa@gmail.com> (https://willmedina.com)",
+	"homepage": "https://willmedina.com",
 	"license": "Apache-2.0",
 	"scripts": {
 		"build": "node scripts/build.ts",
