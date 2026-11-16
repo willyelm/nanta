@@ -3,6 +3,7 @@ import { conditions, flagged, samples } from "interface/horizon/catalog";
 import { saved } from "interface/sites/store";
 import { useWindows } from "interface/windows";
 import type { Positions, Sky } from "position";
+import { useMemo } from "react";
 import type { Condition, Site, SitePage as SiteList } from "site";
 import { type Api, json, resumable, useHydrated } from "system";
 
@@ -60,7 +61,10 @@ export function useShown({ code, site, window }: Shown) {
 	const chosen = useSites(code).find((item) => item.code === site);
 	const span = useWindows().find((w) => w.code === window);
 	const [from, to] = span ? [span.from, span.to] : ["", ""];
-	const list = chosen ? flagged(chosen) : [];
+	// Stable across time scrubs: only the site's flags change the list, not each render.
+	const sunlight = chosen?.sunlight ?? false;
+	const earth = chosen?.earth_visibility ?? false;
+	const list = useMemo(() => flagged({ sunlight, earth_visibility: earth }), [sunlight, earth]);
 	const sky = useHorizon(code, chosen?.lat ?? 0, chosen?.lon ?? 0, from, to, span ? list : []);
 	const first = list.length ? samples(sky, list[0]) : [];
 	return { list, sky, first };

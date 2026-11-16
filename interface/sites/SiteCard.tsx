@@ -1,28 +1,31 @@
 import { useView } from "interface/space";
 import type { Site } from "site";
 
-// A site as a card, only what matters to pick it: the code name over its description, then
-// latitude and longitude, each label over its value.
+// Two rows: code with latitude and longitude lined up in tabular columns, then the description
+// taking the full width below (ellipsis when long).
 export function SiteCard({ site }: { site: Site }) {
 	return (
-		<dl className="flex items-start gap-md">
-			<div className="flex-1 min-w-0">
+		<dl className="flex flex-col gap-xs w-full min-w-0">
+			<div className="flex items-center gap-md min-w-0">
 				<dt className="sr-only">Code</dt>
-				<dd className="text-heading uppercase">{site.code}</dd>
-				{/* One line, cut with an ellipsis; the full text stays for hover and screen readers. */}
+				<dd className="uppercase flex-1 min-w-0 truncate">{site.code}</dd>
+				<div className="flex gap-md shrink-0 text-caption text-end">
+					<div className="w-[8ch]">
+						<dt className="sr-only">Latitude</dt>
+						<dd className="tabular-nums">{site.lat.toFixed(3)}°</dd>
+					</div>
+					<div className="w-[9ch]">
+						<dt className="sr-only">Longitude</dt>
+						<dd className="tabular-nums">{site.lon.toFixed(3)}°E</dd>
+					</div>
+				</div>
+			</div>
+			<div className="min-w-0">
+				<dt className="sr-only">Description</dt>
 				<dd className="text-caption text-secondary truncate" title={site.name}>
 					{site.name}
 				</dd>
 			</div>
-			{[
-				["Latitude", `${site.lat.toFixed(3)}°`],
-				["Longitude", `${site.lon.toFixed(3)}°E`],
-			].map(([term, value]) => (
-				<div key={term} className="flex flex-col gap-xs text-end text-caption whitespace-nowrap">
-					<dt className="text-secondary">{term}</dt>
-					<dd className="tabular-nums">{value}</dd>
-				</div>
-			))}
 		</dl>
 	);
 }

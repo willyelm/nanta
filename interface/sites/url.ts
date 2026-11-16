@@ -1,15 +1,48 @@
-import { useSearchParams } from "system";
+import { useEffect, useRef, useState } from "react";
+import { replace, useSearchParams } from "system";
 
-// A path with the window and time kept from the URL, so they survive every move: a site,
-// editing it, back, saving. `change` sets either one, or drops it with null.
+// Camera pose abbreviations in the URL: az, el, d.
+const CAMERA = ["az", "el", "d"] as const;
+const CAMERA_ALIASES: Record<(typeof CAMERA)[number], string[]> = {
+	az: ["az", "azimuth"],
+	el: ["el", "elevation"],
+	d: ["d", "distance"],
+};
+
+function liveCamera(live: URLSearchParams, key: (typeof CAMERA)[number]) {
+	for (const name of CAMERA_ALIASES[key]) {
+		const value = live.get(name);
+		if (value) return value;
+	}
+	return null;
+}
+
+// A path with the window, time, and camera kept from the URL, so they survive every move: a
+// site, editing it, back, saving. `change` sets one, or drops it with null. On the client,
+// camera angles come from `location.search` (the scene writes them with history.replaceState);
+// on the server, from the router's search params.
 export function useKeep() {
 	const params = useSearchParams();
-	return (path: string, change: { window?: string | null; time?: string | null } = {}) => {
+	return (
+		path: string,
+		change: {
+			window?: string | null;
+			time?: string | null;
+			az?: string | null;
+			el?: string | null;
+			d?: string | null;
+		} = {},
+	) => {
 		const query = new URLSearchParams();
+		const live = typeof location !== "undefined" ? new URLSearchParams(location.search) : params;
 		const window = change.window === undefined ? params.get("window") : change.window;
 		const time = change.time === undefined ? params.get("time") : change.time;
 		if (window) query.set("window", window);
 		if (time) query.set("time", time);
+		for (const key of CAMERA) {
+			const value = change[key] === undefined ? liveCamera(live, key) : change[key];
+			if (value) query.set(key, value);
+		}
 		const text = query.toString();
 		return text ? `${path}?${text}` : path;
 	};
@@ -17,3 +50,76 @@ export function useKeep() {
 
 // The time in the URL, as an hour: "2027-06-01T06:00".
 export const hourOf = (ms: number) => new Date(ms).toISOString().slice(0, 16);
+
+// One pending replace while a slider or chart is dragged. The last href wins.
+let pending: string | null = null;
+let timer = 0;
+
+function later(href: string, ms = 120) {
+	pending = href;
+	if (timer) clearTimeout(timer);
+	timer = window.setTimeout(() => {
+		timer = 0;
+		const next = pending;
+		pending = null;
+		if (next) replace(next);
+	}, ms);
+}
+
+// Hold an href for flush without scheduling a replace (keeps focus during keyboard scrub).
+function queue(href: string) {
+	pending = href;
+	if (timer) clearTimeout(timer);
+	timer = 0;
+}
+
+function flush() {
+	if (!pending && !timer) return;
+	if (timer) clearTimeout(timer);
+	timer = 0;
+	const next = pending;
+	pending = null;
+	if (next) replace(next);
+}
+
+function cancel() {
+	if (timer) clearTimeout(timer);
+	timer = 0;
+	pending = null;
+}
+
+// Local time index that follows the pointer; the URL catches up on release. Back/forward still
+// come from `fromUrl` when you are not dragging. While dragging, do not replace the URL until
+// end — a mid-scrub replace steals focus and breaks arrow keys.
+export function useTimeScrub(fromUrl: number, href: (at: number) => string) {
+	const [at, setAt] = useState(fromUrl);
+	const dragging = useRef(false);
+
+	useEffect(() => {
+		if (dragging.current) return;
+		cancel();
+		setAt(fromUrl);
+	}, [fromUrl]);
+
+	return {
+		at,
+		setTime(index: number) {
+			setAt(index);
+			const next = href(index);
+			if (dragging.current) queue(next);
+			else later(next);
+		},
+		onDragStart() {
+			dragging.current = true;
+		},
+		onDragEnd() {
+			dragging.current = false;
+			flush();
+		},
+	};
+}
+
+// Exported for tests of the coalesce behaviour.
+export const replaceLater = later;
+export const flushReplace = flush;
+export const cancelReplace = cancel;

@@ -1,97 +1,101 @@
 import { Button } from "interface/button";
-import { Conditions, Curve } from "interface/horizon/Conditions";
-import { conditions, samples } from "interface/horizon/catalog";
-import { HorizonChart, summarize } from "interface/horizon/HorizonChart";
+import { Conditions } from "interface/horizon/Conditions";
+import { HorizonChart } from "interface/horizon/HorizonChart";
 import { Reading } from "interface/horizon/Reading";
 import Bookmark from "interface/icon/bookmark.svg";
 import Check from "interface/icon/check.svg";
 import { Panel } from "interface/panel";
 import { type Shown, useShown } from "interface/sites/data";
+import { ExpandReading, ReadingContext, readingClass } from "interface/sites/Reading";
 import {
 	candidateCode,
 	removeCandidate,
 	saveCandidate,
 	savedCandidates,
 } from "interface/sites/store";
-import { useKeep } from "interface/sites/url";
+import { useKeep, useTimeScrub } from "interface/sites/url";
+import { Slider } from "interface/slider";
 import { useView } from "interface/space";
 import { Tooltip } from "interface/tooltip";
 import { stamp } from "interface/windows";
 import { useState } from "react";
-import { replace, useHydrated, useSearchParams } from "system";
+import { useHydrated, useLocation, useSearchParams } from "system";
 
-// The conditions, across the bottom: the time slider as its bar, then the horizon from the site,
-// each condition with its curve, and the table. It also puts the samples on the model; picking on
-// the chart or the slider moves the time everywhere.
-export function ConditionsPanel(shown: Shown) {
+// Index of the sample the URL names, or the current hour in the window, or the first.
+function indexOf(first: { time: string }[], wanted: string) {
+	const found = first.findIndex((sample) => sample.time.startsWith(wanted));
+	const current = first.findLastIndex((sample) => Date.parse(sample.time) <= Date.now());
+	return wanted && found >= 0 ? found : Math.max(current, 0);
+}
+
+// The reading across the bottom: horizon, conditions with the time scrub, and the table. Expand
+// fills the screen; while expanded, a strip keeps the site and window in view.
+export function ConditionsPanel({
+	expanded = false,
+	onExpand,
+	...shown
+}: Shown & { expanded?: boolean; onExpand?: () => void }) {
 	const { list, sky, first } = useShown(shown);
 	const keep = useKeep();
 	const params = useSearchParams();
-	// The sample comes from the URL (?time=); without one, the current hour if it's in the window
-	// (as in NOW), else the window's first.
+	const { pathname } = useLocation();
 	const wanted = params.get("time") ?? "";
-	const found = first.findIndex((sample) => sample.time.startsWith(wanted));
-	const current = first.findLastIndex((sample) => Date.parse(sample.time) <= Date.now());
-	const at = wanted && found >= 0 ? found : Math.max(current, 0);
-	const setAt = (index: number) => {
+	const { at, setTime, onDragStart, onDragEnd } = useTimeScrub(indexOf(first, wanted), (index) => {
 		const sample = first[index];
-		if (sample) replace(keep(location.pathname, { time: sample.time.slice(0, 16) }));
-	};
+		return keep(pathname, { time: sample?.time.slice(0, 16) ?? null });
+	});
 	const time = stamp(first[at]);
-	// The bodies move to the chosen sample's moment, in space and around the site.
 	useView({
 		sky,
 		at,
 		time: first[at] ? Date.parse(first[at].time) : undefined,
-		caption: summarize(list, sky, at),
 	});
 	return (
-		// A fixed share of the screen, 30% but never under 15rem (240px): each column scrolls.
-		<Panel
-			as="section"
-			aria-label="Conditions"
-			className="max-w-none shrink-0 h-[30dvh] min-h-[15rem] divide-y divide-divider"
-		>
-			{/* The time across the window, start to end, as the panel's bar; then save. */}
+		<Panel as="section" aria-label="Reading" className={readingClass(expanded)}>
 			<div className="flex items-center divide-x divide-divider">
-				<label className="flex flex-1 items-center gap-sm px-md min-h-control text-caption tabular-nums">
-					<span className="sr-only">Time</span>
-					<span className="text-secondary">{stamp(first[0])}</span>
-					<input
-						type="range"
-						className="flex-1"
-						min={0}
-						max={Math.max(first.length - 1, 0)}
-						value={at}
-						onChange={(event) => setAt(Number(event.target.value))}
-					/>
-					<span className="text-secondary">{stamp(first[first.length - 1])}</span>
-					<output className="text-default">{time} UTC</output>
-				</label>
+				{expanded ? (
+					<div className="flex-1 min-w-0">
+						<ReadingContext site={shown.site} window={shown.window} />
+					</div>
+				) : (
+					<div className="flex-1" />
+				)}
 				<SaveCandidate {...shown} />
+				{onExpand ? <ExpandReading expanded={expanded} onToggle={onExpand} /> : null}
 			</div>
-			{/* The sky, then the reading: the chart, conditions and curves, the table. Side by side
-			    on wide screens, stacked on narrow ones. */}
-			<div className="grid flex-1 min-h-0 gap-lg p-md md:grid-cols-3">
-				{/* The compass: square, as tall as the panel allows. */}
-				<div className="flex min-h-0 justify-center">
-					<HorizonChart list={list} sky={sky} at={at} onPick={setAt} />
+			<div className="grid flex-1 min-h-0 gap-md p-md md:grid-cols-4">
+				<div className="flex min-h-0 items-start justify-center md:justify-start">
+					<div className="w-full max-w-[9rem] aspect-square shrink-0">
+						<HorizonChart
+							list={list}
+							sky={sky}
+							at={at}
+							onPick={setTime}
+							onDragStart={onDragStart}
+							onFlush={onDragEnd}
+						/>
+					</div>
 				</div>
-				<div className="flex flex-col gap-md min-h-0 overflow-auto">
+				<div className="md:col-span-2 flex flex-col gap-md min-h-0 overflow-auto">
+					<div className="flex flex-col gap-xs shrink-0 min-w-0">
+						<div className="flex items-baseline justify-between gap-sm text-caption tabular-nums">
+							<span className="text-secondary">{stamp(first[0])}</span>
+							<output className="text-default">{time} UTC</output>
+							<span className="text-secondary">{stamp(first[first.length - 1])}</span>
+						</div>
+						<Slider
+							id="reading-time"
+							label="Time"
+							min={0}
+							max={Math.max(first.length - 1, 0)}
+							value={at}
+							valueText={`${time} UTC`}
+							onChange={setTime}
+							onChangeStart={onDragStart}
+							onChangeEnd={onDragEnd}
+						/>
+					</div>
 					<Conditions list={list} sky={sky} at={at} />
-					{list.map((condition) => (
-						<figure key={condition} className="flex flex-col gap-xs">
-							<figcaption className="text-label">
-								{conditions[condition].label} elevation
-							</figcaption>
-							<Curve
-								positions={samples(sky, condition)}
-								at={at}
-								color={conditions[condition].color}
-								dashed={conditions[condition].dashed}
-							/>
-						</figure>
-					))}
 				</div>
 				<div className="min-h-0 overflow-auto">
 					<Reading list={list} sky={sky} at={at} />
@@ -101,8 +105,6 @@ export function ConditionsPanel(shown: Shown) {
 	);
 }
 
-// Saves the site and window on screen as a candidate, a plan to compare later. Once saved, it
-// says so; pressing again removes it.
 export function SaveCandidate({ code, site, window }: Shown) {
 	const id = candidateCode(site, window);
 	const hydrated = useHydrated();
