@@ -180,6 +180,13 @@ export function navigate(to: string) {
 	else location.assign(to);
 }
 
+// Like navigate, but replaces the current history entry: for state that changes continuously,
+// like a slider's position, so back doesn't step through every value.
+export function replace(to: string) {
+	if ("navigation" in window) navigation.navigate(to, { history: "replace" });
+	else location.replace(to);
+}
+
 // Calls the app's handler for an API path, as if the request came from `url`.
 async function local(path: string, url: string): Promise<Response> {
 	if (!app) throw new Error("server rendering needs the app's router() to exist");
