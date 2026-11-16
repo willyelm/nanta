@@ -57,9 +57,6 @@ export function useKeep() {
 	};
 }
 
-// The time in the URL, as an hour: "2027-06-01T06:00".
-export const hourOf = (ms: number) => new Date(ms).toISOString().slice(0, 16);
-
 // One pending replace while a slider or chart is dragged. The last href wins.
 let pending: string | null = null;
 let timer = 0;

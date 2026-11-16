@@ -15,11 +15,6 @@ export type Space = {
 // Set while Space is mounted.
 export const slot: { current: Space | null } = { current: null };
 
-export function useSpace(): Space {
-	if (!slot.current) throw new Error("useSpace needs Space mounted");
-	return slot.current;
-}
-
 export function read(to: XYZ, out: Vector3) {
 	if (Array.isArray(to)) out.set(to[0], to[1], to[2]);
 	else out.set(to.x, to.y, to.z);
